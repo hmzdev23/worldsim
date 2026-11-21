@@ -10,6 +10,7 @@ test("earthquake headline appears on play and focuses the map", async ({ page })
   page.on("pageerror", (error) => errors.push(error.message));
 
   await page.goto("/");
+  await expect(page.getByRole("status")).toContainText("stream connected");
   const wire = page.getByRole("region", { name: "WORLD//WIRE" });
   await expect(wire).toContainText("No reports yet");
   await expect(page.locator(".maplibregl-canvas")).toBeVisible();
@@ -36,9 +37,24 @@ test("earthquake headline appears on play and focuses the map", async ({ page })
 
 test("reset hides the headline again", async ({ page }) => {
   await page.goto("/");
+  await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   const wire = page.getByRole("region", { name: "WORLD//WIRE" });
   await expect(wire.getByRole("button").first()).toBeVisible();
   await page.getByRole("button", { name: "Reset playback" }).click();
   await expect(wire).toContainText("No reports yet");
+});
+
+test("hovering a country identifies it on the map", async ({ page }, testInfo) => {
+  await page.goto("/");
+  await expect(page.getByRole("button", { name: "Zoom in" })).toBeEnabled();
+  const map = page.locator(".map-canvas");
+  const bounds = await map.boundingBox();
+  if (!bounds) throw new Error("map canvas is missing");
+
+  const target = testInfo.project.name === "mobile"
+    ? { x: 0.28, country: "Canada" }
+    : { x: 0.08, country: "United States of America" };
+  await page.mouse.move(bounds.x + bounds.width * target.x, bounds.y + bounds.height * 0.15);
+  await expect(page.locator(".map-caption span")).toHaveText(target.country);
 });

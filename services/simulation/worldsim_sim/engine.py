@@ -192,7 +192,7 @@ class Simulation:
         return self.clock()
 
     def set_speed(self, speed: int) -> Message:
-        if speed not in SPEEDS or isinstance(speed, bool):
+        if isinstance(speed, bool) or not isinstance(speed, int) or speed not in SPEEDS:
             raise ValueError(f"speed must be one of {SPEEDS}")
         self.speed = speed
         return self.clock()
@@ -252,6 +252,8 @@ def replay(batch: dict[str, Any], speed: int = 1, step_minutes: int = 1) -> list
     Same messages a WebSocket client would see, without the server. Useful
     in tests and as a drop-in for tests/integration/mock_stream.replay.
     """
+    if isinstance(step_minutes, bool) or not isinstance(step_minutes, int) or step_minutes <= 0:
+        raise ValueError("step_minutes must be a positive integer")
     sim = Simulation.from_batch(batch, speed=speed)
     messages = [sim.snapshot()]
     last = max((e["sim_time_minutes"] for e in sim.timeline), default=0)

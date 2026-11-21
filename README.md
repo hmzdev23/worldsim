@@ -148,9 +148,35 @@ The first deliverable is a deterministic Japan earthquake demo. A fixture event 
 
 The [master brief](WORLDSIM_MASTER_BRIEF.md) records the original design and discussion. This README and the GitHub issues describe the current setup.
 
+## Run the full Japan demo
+
+Set up the local dependencies once:
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -r services/simulation/requirements.txt
+cd apps/web && npm ci && cd ../..
+```
+
+Then start the simulation stream and web demo together:
+
+```bash
+./scripts/run-demo.sh
+```
+
+Open [localhost:3000](http://localhost:3000), choose **Play**, and the applied
+Japan earthquake arrives through the local simulation stream. Its map animation
+and WORLD//WIRE card appear together; click the card to focus the epicenter.
+Pause, change speed, seek, and reset to replay the deterministic fixture.
+Countries have hover outlines on top of the real satellite imagery. Press
+Ctrl+C in the terminal to stop both servers.
+
+This demo uses no model login, API key, or Codex installation. Its imagery
+tiles require an internet connection; the event data remain local and fixed.
+
 ## Run the earthquake demo check
 
-The offline demo check runs the shared fixture through a mock simulation stream into WORLD//WIRE and confirms that each news card focuses the map on its event. It needs no model login.
+The offline demo check replays the shared fixture through the simulation engine into WORLD//WIRE and confirms that each news card focuses the map on its event. It needs no model login.
 
 ```bash
 python3 -m venv .venv && .venv/bin/pip install jsonschema   # optional, enables contract checks
