@@ -1,15 +1,19 @@
+import fixture from "../../../contracts/fixtures/japan-earthquake.json";
+
 export type MapLocation = {
-  longitude: number;
-  latitude: number;
+  lat: number;
+  lon: number;
+  zoom?: number;
 };
 
-// Frontend fixture for WEB-001. The shared event contract is tracked in #1.
+const [event] = fixture.events;
+
 export const earthquake = {
   title: "Earthquake off Japan",
   description:
     "A fictional offshore earthquake near Miyagi. Follow the shockwave as it expands from the epicenter.",
-  location: { longitude: 142.35, latitude: 38.24 },
-  magnitude: "7.8 Mw",
-  region: "Miyagi coast, Japan",
+  location: event.location,
+  magnitude: `${event.payload.magnitude} Mw`,
+  region: `Miyagi coast, ${event.location.country}`,
   durationSeconds: 24,
 } as const;

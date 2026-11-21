@@ -15,7 +15,7 @@ const worldBounds: [[number, number], [number, number]] = [
   [-175, -57],
   [179, 76],
 ];
-const epicenter = [earthquake.location.longitude, earthquake.location.latitude] as const;
+const epicenter = [earthquake.location.lon, earthquake.location.lat] as const;
 const pulseLayers = ["pulse-first", "pulse-second", "pulse-third"];
 
 const grid: FeatureCollection<LineString> = {
@@ -118,6 +118,10 @@ function transitionDuration(duration: number) {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : duration;
 }
 
+function focusMapLocation(map: Map, { lat, lon, zoom = 4.65 }: MapLocation) {
+  map.flyTo({ center: [lon, lat], zoom, duration: transitionDuration(1500) });
+}
+
 export function WorldMap({
   elapsedSeconds,
   ref,
@@ -132,12 +136,8 @@ export function WorldMap({
   const [country, setCountry] = useState("");
 
   useImperativeHandle(ref, () => ({
-    focusLocation({ longitude, latitude }) {
-      mapRef.current?.flyTo({
-        center: [longitude, latitude],
-        zoom: 4.65,
-        duration: transitionDuration(1500),
-      });
+    focusLocation(location) {
+      if (mapRef.current) focusMapLocation(mapRef.current, location);
     },
   }), []);
 
@@ -202,7 +202,22 @@ export function WorldMap({
       setMapReady(true);
     });
 
+    const focusFromNewsroom = (event: Event) => {
+      const location = (event as CustomEvent<Partial<MapLocation>>).detail;
+      if (
+        typeof location?.lat !== "number" || !Number.isFinite(location.lat) ||
+        typeof location.lon !== "number" || !Number.isFinite(location.lon) ||
+        Math.abs(location.lat) > 90 || Math.abs(location.lon) > 180
+      ) return;
+      const zoom = typeof location.zoom === "number" && Number.isFinite(location.zoom)
+        ? location.zoom
+        : undefined;
+      focusMapLocation(map, { lat: location.lat, lon: location.lon, zoom });
+    };
+    window.addEventListener("worldsim:focus", focusFromNewsroom);
+
     return () => {
+      window.removeEventListener("worldsim:focus", focusFromNewsroom);
       map.remove();
       mapRef.current = null;
     };

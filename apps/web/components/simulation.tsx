@@ -82,7 +82,7 @@ export function Simulation() {
             <div><dt>Region</dt><dd>{earthquake.region}</dd></div>
             <div>
               <dt>Epicenter</dt>
-              <dd>{earthquake.location.latitude.toFixed(2)}° N, {earthquake.location.longitude.toFixed(2)}° E</dd>
+              <dd>{earthquake.location.lat.toFixed(2)}° N, {earthquake.location.lon.toFixed(2)}° E</dd>
             </div>
           </dl>
           <button className="focus-button" type="button" onClick={focusEpicenter}>
