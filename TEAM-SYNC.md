@@ -28,14 +28,14 @@ Status and branch or PR: [state and link]
 Need from the team, or ready for: [who can use it, and how]
 ```
 
-| Owner | Status |
-| --- | --- |
-| Mathys | **DONE:** [#26 closed](https://github.com/hmzdev23/worldsim/issues/26), [PR #36 merged](https://github.com/hmzdev23/worldsim/pull/36) |
-| Hamza | **DONE:** [#29 closed](https://github.com/hmzdev23/worldsim/issues/29), [PRs #32 and #36 merged](https://github.com/hmzdev23/worldsim/pull/32) |
-| Anthony | **DONE:** [#27 closed](https://github.com/hmzdev23/worldsim/issues/27), [PR #31 merged](https://github.com/hmzdev23/worldsim/pull/31) |
-| Amir | **DONE:** [#28 closed](https://github.com/hmzdev23/worldsim/issues/28), [PRs #33 and #35 merged](https://github.com/hmzdev23/worldsim/pull/33) |
+| Owner | Active task | File boundary |
+| --- | --- | --- |
+| Hamza | [#40 headline alerts](https://github.com/hmzdev23/worldsim/issues/40) | Web UI only |
+| Amir | [#41 alert-ready news](https://github.com/hmzdev23/worldsim/issues/41) | Newsroom only |
+| Anthony | [#42 end clock accurately](https://github.com/hmzdev23/worldsim/issues/42) | Simulation engine/tests only |
+| Mathys | [#43 non-Japan pipeline fixture](https://github.com/hmzdev23/worldsim/issues/43) | Director test fixtures/tests only |
 
-**No assigned demo tasks remain. Check live issues for new work; do not reopen completed tasks.**
+Separate file ownership is intentional to avoid merge conflicts. All four tasks are open and may proceed in parallel from latest `main`.
 The [event and stream contracts](contracts/README.md) and [Japan fixture](contracts/fixtures/japan-earthquake.json) are on `main`. Impact values are fictional cumulative snapshots, never daily additions.
 
 ## Issue/PR status rule

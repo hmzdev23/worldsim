@@ -21,35 +21,32 @@ Running the Japan earthquake demo does not require Codex or a model login.
 
 ### 3. Pick your task by name
 
-All four assigned demo tasks are complete and their issues are closed.
-Do not restart them. Check the [open GitHub issues](https://github.com/hmzdev23/worldsim/issues)
-for the next task before coding.
+The previous Japan demo tasks are complete. The next implementation is
+split across these open issues. Check the linked live issue before coding.
 
-| Team member | Status | Completed work |
+| Team member | Active task | Owned files |
 | --- | --- | --- |
-| Mathys | **DONE** | [#26](https://github.com/hmzdev23/worldsim/issues/26) · [PR #36](https://github.com/hmzdev23/worldsim/pull/36) |
-| Hamza | **DONE** | [#29](https://github.com/hmzdev23/worldsim/issues/29) · [PRs #32 and #36](https://github.com/hmzdev23/worldsim/pull/32) |
-| Anthony | **DONE** | [#27](https://github.com/hmzdev23/worldsim/issues/27) · [PR #31](https://github.com/hmzdev23/worldsim/pull/31) |
-| Amir | **DONE** | [#28](https://github.com/hmzdev23/worldsim/issues/28) · [PRs #33 and #35](https://github.com/hmzdev23/worldsim/pull/33) |
+| Hamza | [#40 — Prominent event headline alerts](https://github.com/hmzdev23/worldsim/issues/40) | Web alert component, simulation/map integration, styles, desktop E2E |
+| Amir | [#41 — Alert-ready news copy](https://github.com/hmzdev23/worldsim/issues/41) | `services/newsroom/` and newsroom tests |
+| Anthony | [#42 — Stop clock at scenario end](https://github.com/hmzdev23/worldsim/issues/42) | `services/simulation/` and simulation tests |
+| Mathys | [#43 — Non-Japan pipeline proof](https://github.com/hmzdev23/worldsim/issues/43) | New test-only fixtures and tests under `tests/director/` |
 
-**Before starting any task**, check the live GitHub issue state. If closed, do
-not repeat the work; find an open issue or ask Hamza to assign the next task.
-Nobody needs to install Codex or provide an API key for the deterministic demo.
+These assignments own separate paths. Do not edit another owner's files or
+shared contracts for this work. Hamza's alert consumes the existing news item
+shape; tell the team in issue #13 before proposing any shared interface change.
 
-For a newly assigned issue, tell your coding agent:
+Use this prompt for your assigned issue:
 
 ```text
 I'm [NAME], working on WORLD//SIM issue #[NUMBER].
 Repo: https://github.com/hmzdev23/worldsim
-Check that my issue is OPEN before editing. Read README.md, AGENTS.md,
-TEAM-SYNC.md, the full issue, and recent comments in issue #13. If closed,
-stop and report its merged PR instead of repeating the work. Otherwise, work
-only on that issue, branch from latest main, and preserve local changes.
-Keep shared code reusable for arbitrary scenarios; use local fixtures for
-offline checks. No Codex install, model, API credits, or credentials. Open a
-PR linked to the issue, using `Closes #N` only if all acceptance criteria are
-complete; for partial work use `Refs #N` and document what remains. After
-merge, verify GitHub closed the issue if the work is complete.
+Check that my issue is OPEN. Read README.md, AGENTS.md, TEAM-SYNC.md, the
+whole issue, and recent comments in issue #13. Work only in my issue's owned
+files. If another issue is closed, do not repeat it. Branch from latest main,
+preserve local changes, and use deterministic offline fixtures. No Codex
+install, model, API credits, or credentials. Run the checks in my issue, open
+a PR linked to it, and post the PR in #13. Do not change shared contracts or
+another owner's files without coordinating first.
 ```
 
 ## First demo
