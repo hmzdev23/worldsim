@@ -4,6 +4,7 @@ import { Crosshair, GlobeHemisphereWest, Pause, Play, ArrowCounterClockwise } fr
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { earthquake } from "../lib/earthquake";
 import { WorldMap, type WorldMapHandle } from "./world-map";
+import { WorldWire } from "./world-wire";
 
 const speeds = [1, 2, 4];
 const duration = earthquake.durationSeconds;
@@ -93,6 +94,7 @@ export function Simulation() {
             <span><i className="key-epicenter" aria-hidden="true" /> Epicenter</span>
             <span><i className="key-wave" aria-hidden="true" /> Shockwave</span>
           </div>
+          <WorldWire revealed={elapsed > 0} />
         </aside>
 
         <section className="timeline" aria-label="Simulation playback">
