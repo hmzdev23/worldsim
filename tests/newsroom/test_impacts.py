@@ -105,15 +105,15 @@ class ImpactCopyTests(unittest.TestCase):
         self.assertEqual(len({s["headline"] for s in self.stories.values()}), len(self.stories))
 
     def test_quantified_wording(self):
-        self.assertIn("An estimated 210,000 people displaced", self.text("evt-0003"))
-        self.assertIn("145,000 in shelters", self.text("evt-0003"))
-        self.assertIn("An estimated 1.8 million households without power", self.text("evt-0004"))
+        self.assertEqual(self.stories["evt-0003"]["headline"], "Evacuations ordered in Sendai, Japan")
+        self.assertIn("210,000 displaced, 145,000 in shelters", self.text("evt-0003"))
+        self.assertIn("1.8 million households without power", self.text("evt-0004"))
         self.assertIn("420,000 households without water", self.text("evt-0004"))
-        self.assertIn("Losses estimated at $38 billion", self.text("evt-0011"))
-        self.assertIn("An estimated 12 km² contaminated", self.text("evt-0010"))
+        self.assertIn("$38 billion in economic losses", self.text("evt-0011"))
+        self.assertIn("12 km² contaminated", self.text("evt-0010"))
         self.assertIn("310 km² flooded", self.text("evt-0010"))
         self.assertIn("2.5 million tonnes of debris", self.text("evt-0010"))
-        self.assertIn("60,000 households still without power", self.text("evt-0013"))
+        self.assertIn("60,000 households without power", self.text("evt-0013"))
 
     def test_casualty_figures_are_labeled_estimates(self):
         self.assertIn("Simulated estimates so far: 40 dead, 310 injured, 120 missing.", self.text("evt-0001"))
@@ -126,15 +126,26 @@ class ImpactCopyTests(unittest.TestCase):
             self.assertNotIn(fmt_count(total) + " dead", all_text)
 
     def test_aid_names_contributors_and_quantities(self):
-        self.assertTrue(self.stories["evt-0008"]["headline"].startswith(
-            "United States has now sent 500 personnel and 120 tonnes of aid to Sendai Airport"))
+        self.assertEqual(self.stories["evt-0008"]["headline"],
+                         "United States sends 500 personnel, 120 tonnes of aid to Sendai Airport")
         self.assertIn("water purification units", self.text("evt-0008"))
         aus = self.text("evt-0009")
-        self.assertIn("Australia has now sent 180 personnel and 45 tonnes of aid", aus)
+        self.assertIn("Australia sends 180 personnel, 45 tonnes of aid", aus)
         self.assertIn("search-and-rescue teams", aus)
-        self.assertIn("2 countries have now sent help", aus)
+        self.assertIn("2 countries have sent help so far", aus)
         self.assertNotIn("United States", aus, "each story reports its own sender")
         self.assertNotIn("680", aus, "contributors are never added together")
+
+    def test_repeat_aid_from_same_country_reads_as_running_total(self):
+        events = chain()["events"]
+        repeat = copy.deepcopy(events[8])
+        repeat.update(id="evt-0099", sim_time_minutes=repeat["sim_time_minutes"] + 60, payload={
+            "origin": "United States",
+            "impacts": {**events[8]["payload"]["impacts"], "aid_contributors": [
+                {"country": "United States", "personnel": 900, "cargo_tonnes": 300}]},
+        })
+        story = next(i for i in derive_news(events + [repeat]) if i["event_id"] == "evt-0099")
+        self.assertTrue(story["headline"].startswith("United States has now sent 900 personnel, 300 tonnes"))
 
     def test_aid_without_quantities_or_origin(self):
         event = chain()["events"][7]
@@ -145,9 +156,10 @@ class ImpactCopyTests(unittest.TestCase):
         event["payload"] = {}
         self.assertTrue(news_for_event(event)["headline"].startswith("International aid heads to"))
 
-    def test_figure_in_headline_is_not_repeated_in_dek(self):
-        self.assertNotIn("210,000", self.stories["evt-0003"]["dek"])
-        self.assertNotIn("1.8 million", self.stories["evt-0004"]["dek"])
+    def test_zero_figures_are_left_out(self):
+        event = chain()["events"][3]
+        event["payload"]["impacts"]["households_without_water"] = 0
+        self.assertNotIn("without water", news_for_event(event)["dek"])
 
     def test_stories_without_impacts_fall_back_to_plain_copy(self):
         for event in chain()["events"]:
@@ -157,10 +169,21 @@ class ImpactCopyTests(unittest.TestCase):
             self.assertNotIn("estimate", story["headline"].lower())
             self.assertNotIn("Simulated estimates", story["dek"])
 
-    def test_recovery_with_power_fully_restored(self):
-        event = chain()["events"][12]
-        event["payload"]["impacts"]["households_without_power"] = 0
-        self.assertTrue(news_for_event(event)["headline"].startswith("Power restored across Sendai"))
+    def test_recovery_headline_follows_what_improved(self):
+        events = [e for e in chain()["events"] if e["status"] == "applied"]
+        base = events[-1]["payload"]["impacts"]
+
+        def recovery_after(**changes):
+            event = copy.deepcopy(events[-1])
+            event.update(id="evt-0099", sim_time_minutes=event["sim_time_minutes"] + 60)
+            event["payload"]["impacts"] = {**base, **changes}
+            return next(i for i in derive_news(events + [event]) if i["event_id"] == "evt-0099")["headline"]
+
+        self.assertTrue(recovery_after(households_without_power=0).startswith("Power restored across Sendai"))
+        self.assertTrue(recovery_after(households_without_power=1000).startswith("Power returning across Sendai"))
+        self.assertTrue(recovery_after(displaced=1000).startswith("Displacement eases in Sendai"))
+        self.assertTrue(recovery_after(households_without_water=10).startswith("Water service returning in Sendai"))
+        self.assertTrue(recovery_after().startswith("Recovery continues in Sendai"))
 
 
 class ReadImpactsTests(unittest.TestCase):
