@@ -3,6 +3,7 @@
 import { Crosshair, GlobeHemisphereWest, Pause, Play, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
 import { earthquake, scenarioStartMinute, scenarioEndMinute, type ScenarioEvent } from "../lib/earthquake";
+import { HeadlineAlert, headlineForEvent, type HeadlineItem } from "./headline-alert";
 import { ImpactDashboard } from "./impact-dashboard";
 import { WorldMap, type WorldMapHandle } from "./world-map";
 import { WorldWire } from "./world-wire";
@@ -15,10 +16,11 @@ const duration = Math.max(1, (scenarioEndMinute - startMinute) / minutesPerSecon
 
 type Playback = { state: "playing" | "paused"; speed: number };
 type AppliedEvent = ScenarioEvent;
-type StreamMessage =
-  | { kind: "snapshot"; sim_time_minutes: number; playback: Playback; events: AppliedEvent[] }
-  | { kind: "event"; sim_time_minutes: number; event: AppliedEvent }
-  | { kind: "clock"; sim_time_minutes: number; playback: Playback };
+type StreamMessage = { simulation_id: string; branch_id: string; sim_time_minutes: number } & (
+  | { kind: "snapshot"; playback: Playback; events: AppliedEvent[] }
+  | { kind: "event"; event: AppliedEvent }
+  | { kind: "clock"; playback: Playback }
+);
 
 function formatSimTime(minutes: number) {
   const day = Math.floor(minutes / 1440) + 1;
@@ -37,7 +39,10 @@ export function Simulation() {
   const socketRef = useRef<WebSocket | null>(null);
   const [connectionState, setConnectionState] = useState<"connecting" | "connected" | "reconnecting">("connecting");
   const [simTime, setSimTime] = useState(startMinute);
-  const [appliedEvents, setAppliedEvents] = useState<AppliedEvent[]>([]);
+  const [{ appliedEvents, headlineQueue }, setEventState] = useState<{
+    appliedEvents: AppliedEvent[];
+    headlineQueue: HeadlineItem[];
+  }>({ appliedEvents: [], headlineQueue: [] });
   const [playback, setPlayback] = useState<Playback>({ state: "paused", speed: 1 });
   const connected = connectionState === "connected";
   const speed = playback.speed;
@@ -61,6 +66,7 @@ export function Simulation() {
         }
       };
       socket.onmessage = (message) => {
+        if (stopped) return;
         let data: StreamMessage;
         try {
           data = JSON.parse(message.data as string) as StreamMessage;
@@ -70,11 +76,20 @@ export function Simulation() {
         if (data.kind === "snapshot") {
           setSimTime(data.sim_time_minutes);
           setPlayback(data.playback);
-          setAppliedEvents(data.events);
+          setEventState({ appliedEvents: data.events, headlineQueue: [] });
         } else if (data.kind === "event") {
-          setAppliedEvents((events) => events.some((event) => event.id === data.event.id)
-            ? events
-            : [...events, data.event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence));
+          const { event } = data;
+          setEventState((previous) => {
+            if (event.status !== "applied" || previous.appliedEvents.some((applied) => applied.id === event.id)) {
+              return previous;
+            }
+            return {
+              appliedEvents: [...previous.appliedEvents, event].sort(
+                (a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence,
+              ),
+              headlineQueue: [...previous.headlineQueue, headlineForEvent(event, data, formatSimTime(event.sim_time_minutes))],
+            };
+          });
         } else if (data.kind === "clock") {
           setSimTime(data.sim_time_minutes);
           setPlayback(data.playback);
@@ -148,7 +163,16 @@ export function Simulation() {
       </header>
 
       <div className="workspace">
-        <WorldMap ref={mapRef} elapsedSeconds={elapsed} events={appliedEvents} />
+        <WorldMap ref={mapRef} elapsedSeconds={elapsed} events={appliedEvents}>
+          <HeadlineAlert
+            item={headlineQueue[0]}
+            queuedCount={Math.max(0, headlineQueue.length - 1)}
+            onAdvance={() => setEventState((previous) => ({
+              ...previous,
+              headlineQueue: previous.headlineQueue.slice(1),
+            }))}
+          />
+        </WorldMap>
 
         <aside className="scenario-panel" aria-labelledby="scenario-title">
           <div className="scenario-heading">
