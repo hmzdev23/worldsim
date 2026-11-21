@@ -21,7 +21,15 @@ try:
 except Exception:  # pragma: no cover - simulation deps (jsonschema, fastapi) missing
     Simulation = None
 
-ICELAND_RAW = ROOT / "tests" / "director" / "fixtures" / "iceland-eruption.json"
+# #54 moves this Director fixture from tests/director/fixtures/ to services/director/fixtures/.
+ICELAND_RAW = next(
+    path
+    for path in (
+        ROOT / "services" / "director" / "fixtures" / "iceland-eruption.json",
+        ROOT / "tests" / "director" / "fixtures" / "iceland-eruption.json",
+    )
+    if path.exists()
+)
 JAPAN = ROOT / "contracts" / "fixtures" / "japan-earthquake.json"
 ITEM_FIELDS = {"id", "event_id", "event_type", "severity", "label", "headline", "dek",
                "sim_time_minutes", "sequence", "sim_time_label", "focus", "provenance"}
