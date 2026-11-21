@@ -79,7 +79,7 @@ A scenario run is a simulation that the browser creates from a prompt. Each run 
 | `GET /scenarios/{id}` | The run's status: `generating`, `ready` or `failed`. Poll it after creating a run. `404` for an unknown ID. |
 | `GET /scenarios/{id}/timeline` | Same as `/timeline`, for this run. Includes `end_minutes`. |
 | `GET /scenarios/{id}/snapshot` | Same as `/snapshot`, for this run. |
-| `GET /scenarios/{id}/news` | `{simulation_id, branch_id, sim_time_minutes, items}`. `items` holds WORLD//WIRE items, newest first, for events the clock has reached. Future events never appear. |
+| `GET /scenarios/{id}/news` | Amir's `worldwire.news_response` (#51): `{schema_version, simulation_id, branch_id, sim_time_minutes, items}`. `items` holds WORLD//WIRE items, newest first, for events the clock has reached. Future events never appear. |
 | `POST /scenarios/{id}/control` | Same control body as `/control`, scoped to this run. |
 | `WS /scenarios/{id}/stream` | Same as `/stream`, for this run. Every message has `simulation_id` set to the run ID. |
 
@@ -105,12 +105,13 @@ The status body:
 - **How a run starts:** the run ID is also its `simulation_id`, and the Director builds the batch with it. A run becomes `ready` only once every event in the batch is applied. It starts paused, one minute before its first event, and like the demo it stops at its own `end_minutes`.
 - **If generation fails:**
   - Any failure fails the run, including a rejected event, so a run is never only partly ready.
-  - The status includes `error: {code, message, retryable}`. `message` is short text you can show in the UI.
-  - `code` is the Director's error code. It can also be `invalid_events` (the batch didn't apply), `codex_timeout`, or `internal` (anything unexpected).
+  - The status includes the Director's UI-safe error (`worlddirector.public_error`, #50): `{"error", "state", "retryable", "status", "message"}`.
+  - `state` is one of `invalid_prompt`, `invalid_request`, `timeout`, `invalid_output` or `unavailable`. `message` is short text you can show in the UI, and `retryable` says whether to offer "Try again".
+  - A batch that doesn't apply reports `invalid_events` (`invalid_output`), and anything unexpected reports `internal_error` (`unavailable`).
   - Raw model output and error details are only written to the server log.
   - To retry, create a new run.
-- **How the Director is called:** in a worker thread, so it never blocks the clock or other requests, with a timeout (`--director-timeout`, default 180 s). At most 2 runs generate at once, and the server keeps the 16 newest runs.
-- **Offline runs:** `--scenario-fixture NAME` makes every run use that Director fixture instead of a model, for example `--scenario-fixture global-pandemic`. Use it for offline demos and end-to-end tests. A request can also name a fixture with `{"fixture": "global-pandemic"}`.
+- **How the Director is called:** through `worlddirector.prepare_scenario` (#50), in a worker thread, so it never blocks the clock or other requests, with a timeout (`--director-timeout`, default 180 s). At most 2 runs generate at once, and the server keeps the 16 newest runs.
+- **Offline runs:** `--scenario-fixture NAME` makes every run use that Director fixture instead of a model, for example `--scenario-fixture global-pandemic`, or `iceland-eruption` once #54 is merged. A prompt is still required. Use it for offline demos and end-to-end tests. A request can also name a fixture with `{"fixture": "global-pandemic"}`.
 
 `tests/simulation/test_scenarios.py` runs offline with a stub Director that returns the Iceland eruption fixture. It covers:
 
