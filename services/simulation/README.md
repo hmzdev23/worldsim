@@ -102,6 +102,12 @@ The status body:
 }
 ```
 
+- **Generation progress:** while a run is `generating`, the status also has `stage`, `elapsed_s` (since the run was created) and `stage_elapsed_s`. `stage` is the step actually running, never a percentage:
+  - `queued`, then `starting`;
+  - the Director's own stages, `prompt`, `model`, `parse` and `validate` (`fixture` instead of `model` and `parse` for fixture runs), when the Director reports them (`worlddirector.Stages`, #61). An older Director stays on `starting`;
+  - `applying` while the simulation checks and applies the batch.
+
+  A `ready` or `failed` run reports `generation_s` instead. For example: `{"status": "generating", "stage": "model", "elapsed_s": 41.3, "stage_elapsed_s": 40.9, ...}`.
 - **How a run starts:** the run ID is also its `simulation_id`, and the Director builds the batch with it. A run becomes `ready` only once every event in the batch is applied. It starts paused, one minute before its first event, and like the demo it stops at its own `end_minutes`.
 - **If generation fails:**
   - Any failure fails the run, including a rejected event, so a run is never only partly ready.
