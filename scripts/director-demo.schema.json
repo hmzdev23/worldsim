@@ -1,0 +1,20 @@
+{
+  "type": "object",
+  "properties": {
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "simulation_day": { "type": "integer" },
+          "location": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["simulation_day", "location", "description"],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": ["events"],
+  "additionalProperties": false
+}
