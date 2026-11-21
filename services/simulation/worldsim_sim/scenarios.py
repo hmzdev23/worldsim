@@ -35,14 +35,22 @@ MAX_PROMPT_CHARS = 2000
 # Raise an exception with a `code` attribute (worlddirector.DirectorError) to fail.
 Generator = Callable[..., dict]
 
-# DirectorError code -> (message for the UI, retryable). Raw errors stay in the server log.
-FRIENDLY_ERRORS = {
-    "invalid_scenario": ("Describe a fictional scenario in a sentence or two, then try again.", True),
-    "codex_timeout": ("Preparing the scenario took too long. Try again.", True),
-    "codex_missing": ("The scenario Director is not set up on this server.", False),
-    "fixture_missing": ("That sample scenario is not available.", False),
-}
-DEFAULT_ERROR = ("The Director could not prepare a playable scenario. Try again.", True)
+# DirectorError code -> (UI state, retryable, HTTP status, message). Mirrors
+# worlddirector.public_error (#50), which is used instead when it is installed.
+PUBLIC_ERRORS = {
+    "invalid_scenario": ("invalid_prompt", False, 422, "Describe a fictional scenario in 1 to 2000 characters."),
+    "invalid_request": ("invalid_request", False, 400, "The scenario request was malformed."),
+    "codex_timeout": ("timeout", True, 504, "The Director took too long to predict this scenario. Try again."),
+    "invalid_json": ("invalid_output", True, 502, "The Director's prediction could not be read. Try again."),
+    "invalid_events": (
+        "invalid_output", True, 502,
+        "The Director's prediction did not pass validation. Try again or rephrase the scenario.",
+    ),
+    "codex_failed": ("unavailable", True, 503, "The Director is unavailable right now. Try again shortly."),
+    "codex_missing": ("unavailable", False, 503, "The Director is not set up on this server."),
+    "fixture_missing": ("unavailable", False, 500, "The requested sample scenario is not available."),
+}  # fmt: skip
+FALLBACK_ERROR = ("unavailable", True, 500, "Something went wrong while preparing the scenario. Try again.")
 
 
 def _import(package: str, service: str):
@@ -54,16 +62,41 @@ def _import(package: str, service: str):
 
 
 def director_generator(prompt: str, *, fixture: str | None, simulation_id: str, branch_id: str, timeout_s: float) -> dict:
-    """The real Director (#50). With `fixture`, no model is called."""
+    """The real Director: `prepare_scenario` (#50) when present, else `generate`.
+
+    With `fixture`, no model is called.
+    """
     worlddirector = _import("worlddirector", "director")
-    return worlddirector.generate(
-        prompt, fixture=fixture, simulation_id=simulation_id, branch_id=branch_id, timeout_s=timeout_s
-    )
+    call = getattr(worlddirector, "prepare_scenario", None) or worlddirector.generate
+    return call(prompt, fixture=fixture, simulation_id=simulation_id, branch_id=branch_id, timeout_s=timeout_s)
 
 
-def news_items(events: list[dict]) -> list[dict]:
-    """WORLD//WIRE items for released events (#51), newest first."""
-    return _import("worldwire", "newsroom").derive_news(events)
+def public_error(code: str) -> dict[str, Any]:
+    """UI-safe failure: {"error", "state", "retryable", "status", "message"}. Never the raw detail."""
+    try:
+        worlddirector = _import("worlddirector", "director")
+    except ImportError:  # pragma: no cover - the Director ships in this repo
+        worlddirector = None
+    if worlddirector is not None and hasattr(worlddirector, "public_error"):
+        return worlddirector.public_error(worlddirector.DirectorError(code, code))
+    state, retryable, status, message = PUBLIC_ERRORS.get(code, FALLBACK_ERROR)
+    return {"error": code, "state": state, "retryable": retryable, "status": status, "message": message}
+
+
+def news_response(snapshot: Message) -> dict[str, Any]:
+    """WORLD//WIRE for a run's released snapshot: `worldwire.news_response` (#51) when present."""
+    worldwire = _import("worldwire", "newsroom")
+    if hasattr(worldwire, "news_response"):
+        return worldwire.news_response(snapshot)
+    now = snapshot["sim_time_minutes"]
+    events = [e for e in snapshot["events"] if e.get("status") == "applied" and e["sim_time_minutes"] <= now]
+    return {
+        "schema_version": snapshot["schema_version"],
+        "simulation_id": snapshot["simulation_id"],
+        "branch_id": snapshot["branch_id"],
+        "sim_time_minutes": now,
+        "items": worldwire.derive_news(events),
+    }
 
 
 class GenerationError(Exception):
@@ -132,10 +165,8 @@ class Run:
         return out
 
 
-def _title(prompt: str, fixture: str | None) -> str:
+def _title(prompt: str) -> str:
     text = " ".join(prompt.split())
-    if not text and fixture:
-        text = f"Sample scenario: {fixture.replace('-', ' ')}"
     return text if len(text) <= 80 else text[:79].rstrip() + "…"
 
 
@@ -188,7 +219,7 @@ class ScenarioRegistry:
         await self._evict()
         run_id = f"run-{secrets.token_hex(5)}"
         fixture = self.fixture or fixture
-        run = Run(id=run_id, prompt=prompt, fixture=fixture, title=_title(prompt, fixture))
+        run = Run(id=run_id, prompt=prompt, fixture=fixture, title=_title(prompt))
         self._runs[run_id] = run
         task = asyncio.create_task(self._generate(run))
         self._tasks.add(task)
@@ -219,11 +250,10 @@ class ScenarioRegistry:
         if isinstance(exc, (asyncio.TimeoutError, TimeoutError)):
             code = "codex_timeout"
         else:
-            code = getattr(exc, "code", None) or "internal"
-        message, retryable = FRIENDLY_ERRORS.get(code, DEFAULT_ERROR)
+            code = getattr(exc, "code", None) or "internal_error"
         log.warning("scenario %s failed (%s): %r %s", run.id, code, exc, getattr(exc, "detail", ""))
         run.status = "failed"
-        run.error = {"code": code, "message": message, "retryable": retryable}
+        run.error = public_error(code)
 
     async def _evict(self) -> None:
         finished = sorted((r for r in self._runs.values() if r.status != "generating"), key=lambda r: r.created)

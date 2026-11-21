@@ -34,7 +34,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .engine import Message, Simulation
-from .scenarios import MAX_PROMPT_CHARS, Channel, RegistryFull, Run, ScenarioRegistry, news_items
+from .scenarios import MAX_PROMPT_CHARS, Channel, RegistryFull, Run, ScenarioRegistry, news_response
 
 log = logging.getLogger("worldsim_sim")
 
@@ -189,7 +189,7 @@ def create_app(
             raise HTTPException(status_code=422, detail=f"prompt must be text of at most {MAX_PROMPT_CHARS} characters")
         if fixture is not None and not isinstance(fixture, str):
             raise HTTPException(status_code=422, detail="fixture must be a fixture name")
-        if not prompt.strip() and not fixture and not registry.fixture:
+        if not prompt.strip():
             raise HTTPException(status_code=422, detail="Describe a scenario to simulate")
         try:
             run = await registry.create(prompt.strip(), fixture)
@@ -211,13 +211,8 @@ def create_app(
 
     @app.get("/scenarios/{run_id}/news")
     async def scenario_news(run_id: str) -> dict[str, Any]:
-        snap = ready(run_id).sim.snapshot()  # released events only, never the future
-        return {
-            "simulation_id": snap["simulation_id"],
-            "branch_id": snap["branch_id"],
-            "sim_time_minutes": snap["sim_time_minutes"],
-            "items": news_items(snap["events"]),
-        }
+        # Released events only (a snapshot), never the future.
+        return news_response(ready(run_id).sim.snapshot())
 
     @app.post("/scenarios/{run_id}/control")
     async def scenario_control(run_id: str, body: dict[str, Any] = Body(...)) -> Message:

@@ -33,7 +33,9 @@ try:
 except ImportError:  # pragma: no cover
     build_batch = None
 
-ICELAND = ROOT / "tests" / "director" / "fixtures" / "iceland-eruption.json"
+# DIR-005 (#54) moves this fixture into services/director/fixtures.
+ICELAND = next(p for p in (ROOT / "services" / "director" / "fixtures" / "iceland-eruption.json",
+                           ROOT / "tests" / "director" / "fixtures" / "iceland-eruption.json") if p.exists())
 JAPAN = ROOT / "contracts" / "fixtures" / "japan-earthquake.json"
 
 
@@ -204,6 +206,7 @@ class ScenarioRunTests(unittest.TestCase):
         url = f"/scenarios/{run['id']}/news"
         body = self.client.get(url).json()
         self.assertEqual((body["simulation_id"], body["branch_id"], body["items"]), (run["id"], "main", []))
+        self.assertEqual((body["schema_version"], body["sim_time_minutes"]), ("0.1", run["start_minutes"]))
         timeline = self.client.get(f"/scenarios/{run['id']}/timeline").json()["events"]
         middle = timeline[len(timeline) // 2]["sim_time_minutes"]
         self.client.post(f"/scenarios/{run['id']}/control", json={"action": "seek", "sim_time_minutes": middle})
@@ -218,11 +221,13 @@ class ScenarioRunTests(unittest.TestCase):
 
     # ---- failure and retry --------------------------------------------------
 
-    def assert_failed(self, prompt, code, retryable=True):
+    def assert_failed(self, prompt, code, state, retryable=True):
         run = self.wait(self.create(prompt)["id"])
         self.assertEqual(run["status"], "failed")
-        self.assertEqual((run["error"]["code"], run["error"]["retryable"]), (code, retryable))
-        self.assertNotIn("detail", run["error"])
+        error = run["error"]
+        self.assertEqual(set(error), {"error", "state", "retryable", "status", "message"})
+        self.assertEqual((error["error"], error["state"], error["retryable"]), (code, state, retryable))
+        self.assertTrue(error["message"])
         self.assertNotIn("secret", json.dumps(run))
         for path in ("timeline", "snapshot", "news"):
             self.assertEqual(self.client.get(f"/scenarios/{run['id']}/{path}").status_code, 409)
@@ -233,21 +238,21 @@ class ScenarioRunTests(unittest.TestCase):
         return run
 
     def test_director_failure_is_friendly_and_retry_makes_a_new_run(self):
-        failed = self.assert_failed("fail", "codex_failed")
+        failed = self.assert_failed("fail", "codex_failed", "unavailable")
         self.assertIn("Try again", failed["error"]["message"])
         retry = self.ready_run()
         self.assertNotEqual(retry["id"], failed["id"])
         self.assertEqual(self.client.get(f"/scenarios/{failed['id']}").json()["status"], "failed")
 
     def test_failure_kinds(self):
-        self.assert_failed("bad prompt", "invalid_scenario")
-        self.assert_failed("partial", "invalid_events")  # never a partial run
-        self.assert_failed("wrong id", "invalid_events")
-        self.assert_failed("crash", "internal")
+        self.assert_failed("bad prompt", "invalid_scenario", "invalid_prompt", retryable=False)
+        self.assert_failed("partial", "invalid_events", "invalid_output")  # never a partial run
+        self.assert_failed("wrong id", "invalid_events", "invalid_output")
+        self.assert_failed("crash", "internal_error", "unavailable")
 
     def test_generator_that_overruns_its_timeout_fails_the_run(self):
         self.registry.grace_s = 0  # the stub ignores timeout_s=0.3 and sleeps 1s
-        self.assert_failed("slow", "codex_timeout")
+        self.assert_failed("slow", "codex_timeout", "timeout")
 
     def test_bounded_jobs_and_runs(self):
         self.director.release.clear()
@@ -283,14 +288,15 @@ class RealDirectorFixtureTests(unittest.TestCase):
         demo = Simulation.from_batch(load(JAPAN), state="paused")
         registry = ScenarioRegistry(fixture="global-pandemic")  # real director_generator, no model call
         with TestClient(create_app(demo, tick_seconds=3600, scenarios=registry)) as client:
-            run = client.post("/scenarios", json={"prompt": ""}).json()
+            self.assertEqual(client.post("/scenarios", json={"prompt": ""}).status_code, 422)
+            run = client.post("/scenarios", json={"prompt": "A new flu strain spreads"}).json()
             for _ in range(400):
                 run = client.get(f"/scenarios/{run['id']}").json()
                 if run["status"] != "generating":
                     break
                 time.sleep(0.01)
             self.assertEqual(run["status"], "ready", run)
-            self.assertEqual(run["title"], "Sample scenario: global pandemic")
+            self.assertEqual(run["title"], "A new flu strain spreads")
             events = client.get(f"/scenarios/{run['id']}/timeline").json()["events"]
             self.assertTrue(events)
             self.assertTrue(all(e["provenance"]["source"] == "fixture" for e in events))
