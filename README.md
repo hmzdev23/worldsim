@@ -43,7 +43,7 @@ start from the latest origin/main on a new feature branch.
 Start the highest-priority unblocked work in my issue. Use mock data
 if a teammate's dependency is still in progress. Tell me what you
 started, which branch you're using, and any blockers. When the work
-is ready, run the relevant checks and open a PR linked to my issue.
+is ready, open a PR linked to my issue.
 ```
 
 </details>
@@ -69,7 +69,7 @@ start from the latest origin/main on a new feature branch.
 Start the highest-priority unblocked work in my issue. Use mock data
 if a teammate's dependency is still in progress. Tell me what you
 started, which branch you're using, and any blockers. When the work
-is ready, run the relevant checks and open a PR linked to my issue.
+is ready, open a PR linked to my issue.
 ```
 
 </details>
@@ -95,7 +95,7 @@ start from the latest origin/main on a new feature branch.
 Start the highest-priority unblocked work in my issue. Use mock data
 if a teammate's dependency is still in progress. Tell me what you
 started, which branch you're using, and any blockers. When the work
-is ready, run the relevant checks and open a PR linked to my issue.
+is ready, open a PR linked to my issue.
 ```
 
 </details>
@@ -121,12 +121,12 @@ start from the latest origin/main on a new feature branch.
 Start the highest-priority unblocked work in my issue. Use mock data
 if a teammate's dependency is still in progress. Tell me what you
 started, which branch you're using, and any blockers. When the work
-is ready, run the relevant checks and open a PR linked to my issue.
+is ready, open a PR linked to my issue.
 ```
 
 </details>
 
-Review the [shared event contract](https://github.com/hmzdev23/worldsim/issues/1) together and track the [earthquake demo](https://github.com/hmzdev23/worldsim/issues/6) in GitHub. Use feature branches and get peer review before merging to `main`.
+Review the [shared event contract](https://github.com/hmzdev23/worldsim/issues/1) together and track the [earthquake demo](https://github.com/hmzdev23/worldsim/issues/6) in GitHub. Use feature branches and merge through GitHub PRs.
 
 ## First demo
 
