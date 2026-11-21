@@ -16,7 +16,8 @@ test("earthquake headline appears on play and focuses the map", async ({ page })
   await expect(page.locator(".maplibregl-canvas")).toBeVisible();
 
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  const card = wire.getByRole("button").first();
+  // The fixture is a multi-day chain and the wire lists newest first, so find the quake's card by headline.
+  const card = wire.getByRole("button").filter({ hasText: /earthquake strikes/i });
   await expect(card).toContainText("SIMULATED");
   await expect(card).toContainText("DAY 1 · 06:42");
   await expect(card).toContainText(/earthquake strikes/i);
@@ -33,6 +34,18 @@ test("earthquake headline appears on play and focuses the map", async ({ page })
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow, "page should not scroll horizontally").toBe(false);
   expect(errors).toEqual([]);
+});
+
+test("wire only shows events the stream has applied", async ({ page }) => {
+  const last = fixture.events[fixture.events.length - 1];
+  await page.goto("/");
+  await expect(page.getByRole("status")).toContainText("stream connected");
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  const wire = page.getByRole("region", { name: "WORLD//WIRE" });
+  await expect(wire.getByRole("button").filter({ hasText: /earthquake strikes/i })).toBeVisible();
+  const cards = await wire.getByRole("button").count();
+  expect(cards).toBeLessThan(fixture.events.length);
+  await expect(wire).not.toContainText(`DAY ${Math.floor(last.sim_time_minutes / 1440) + 1} ·`);
 });
 
 test("reset hides the headline again", async ({ page }) => {

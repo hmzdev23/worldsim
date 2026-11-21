@@ -27,6 +27,7 @@ FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures"
 DEFAULT_MODEL = "gpt-6-luna"
 DEFAULT_EFFORT = "high"
 DEFAULT_TIMEOUT_S = 240
+MAX_FIXTURE_EVENTS = 200  # hand-written fixtures may be longer than one model batch
 
 PROMPT = """You are the World Director for WORLD//SIM, a clearly fictional crisis
 simulation. Given the hypothetical scenario below, predict how it unfolds as
@@ -56,6 +57,14 @@ Fields:
   REQUIRED for other_hazard; vei (volcano), diameter_m (meteor), yield_kt
   (nuclear), pathogen (disease), target (what was hit), origin (aid sender or
   attacker), radius_km (rough affected radius, any type).
+- impacts: your fictional estimate of SCENARIO-WIDE totals as of this event,
+  never the change caused by this event alone. Running totals (deaths,
+  injuries, economic_loss_usd, flooded/contaminated area, debris, and each
+  aid contributor's personnel and cargo_tonnes) never go down, and an aid
+  contributor never disappears from aid_contributors. missing, displaced,
+  sheltered and households without power/water are current levels and fall
+  during recovery. Use null for anything you can't estimate. Keep numbers
+  plausible for the scenario.
 - caused_by: 0-based indexes of earlier events in YOUR list that led to this
   one. caused_by_events: IDs of events from the history that led to it.
 
@@ -254,11 +263,11 @@ def generate(
     branch_id = branch_id or "main"
     if fixture:
         raw = load_fixture(fixture)
-        source, model_name = "fixture", None
+        source, model_name, max_events = "fixture", None, MAX_FIXTURE_EVENTS
         simulation_id = simulation_id or f"demo-{fixture}"
     else:
         raw = run_codex(scenario, history=past, model=model, effort=effort, timeout_s=timeout_s, runner=runner)
-        source, model_name = "model", model
+        source, model_name, max_events = "model", model, MAX_EVENTS
         simulation_id = simulation_id or f"sim-{_slug(scenario)}"
     return build_batch(
         raw,
@@ -268,4 +277,5 @@ def generate(
         model=model_name,
         first_id=first_id,
         history=past,
+        max_events=max_events,
     )

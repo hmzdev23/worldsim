@@ -18,9 +18,994 @@
       },
       "severity": 0.9,
       "visual": "earthquake_shockwave",
-      "payload": { "magnitude": 7.8, "depth_km": 24 },
+      "payload": {
+        "description": "A powerful offshore earthquake shakes northeastern Japan.",
+        "magnitude": 7.8,
+        "depth_km": 24,
+        "radius_km": 300,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 8,
+          "injuries": 310,
+          "missing": 40,
+          "displaced": 0,
+          "sheltered": 0,
+          "households_without_power": 900000,
+          "households_without_water": 0,
+          "economic_loss_usd": 2000000000,
+          "flooded_area_km2": 0,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 0
+        }
+      },
       "parent_ids": [],
-      "provenance": { "source": "fixture" }
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0002",
+      "sim_time_minutes": 405,
+      "sequence": 0,
+      "type": "tsunami_warning",
+      "status": "applied",
+      "location": {
+        "name": "Miyagi coast",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.43,
+        "lon": 141.3
+      },
+      "severity": 0.8,
+      "visual": "weather_disaster",
+      "payload": {
+        "description": "Tsunami warnings trigger evacuations of low-lying coastal areas.",
+        "radius_km": 200,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 8,
+          "injuries": 310,
+          "missing": 40,
+          "displaced": 18000,
+          "sheltered": 10800,
+          "households_without_power": 900000,
+          "households_without_water": 0,
+          "economic_loss_usd": 2000000000,
+          "flooded_area_km2": 0,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 0
+        }
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0003",
+      "sim_time_minutes": 420,
+      "sequence": 0,
+      "type": "evacuation",
+      "status": "applied",
+      "location": {
+        "name": "Ishinomaki",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.43,
+        "lon": 141.3
+      },
+      "severity": 0.6,
+      "visual": "evacuation_flow",
+      "payload": {
+        "description": "Coastal residents of Ishinomaki head for higher ground and evacuation centers.",
+        "radius_km": 15,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 8,
+          "injuries": 310,
+          "missing": 40,
+          "displaced": 86000,
+          "sheltered": 51600,
+          "households_without_power": 900000,
+          "households_without_water": 0,
+          "economic_loss_usd": 2000000000,
+          "flooded_area_km2": 0,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 0
+        }
+      },
+      "parent_ids": [
+        "evt-0002"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0004",
+      "sim_time_minutes": 438,
+      "sequence": 0,
+      "type": "infrastructure_failure",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
+      "severity": 0.6,
+      "visual": "power_grid_failure",
+      "payload": {
+        "description": "Regional power outages halt rail service and hospitals switch to backup generators.",
+        "target": "regional power grid",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 8,
+          "injuries": 310,
+          "missing": 40,
+          "displaced": 86000,
+          "sheltered": 51600,
+          "households_without_power": 2300000,
+          "households_without_water": 0,
+          "economic_loss_usd": 3500000000,
+          "flooded_area_km2": 0,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 0
+        }
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0005",
+      "sim_time_minutes": 455,
+      "sequence": 0,
+      "type": "flooding",
+      "status": "applied",
+      "location": {
+        "name": "Sendai coastal plain",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.2,
+        "lon": 140.98
+      },
+      "severity": 0.9,
+      "visual": "weather_disaster",
+      "payload": {
+        "description": "Tsunami waves flood coastal lowlands from Natori to Sendai port.",
+        "radius_km": 30,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 190,
+          "injuries": 920,
+          "missing": 1350,
+          "displaced": 140000,
+          "sheltered": 84000,
+          "households_without_power": 2300000,
+          "households_without_water": 0,
+          "economic_loss_usd": 11000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 3200000
+        }
+      },
+      "parent_ids": [
+        "evt-0002"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0006",
+      "sim_time_minutes": 480,
+      "sequence": 0,
+      "type": "government_response",
+      "status": "applied",
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
+      "severity": 0.5,
+      "visual": "emergency_mobilization",
+      "payload": {
+        "description": "The national government sets up an emergency headquarters and deploys Self-Defense Forces.",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 240,
+          "injuries": 1050,
+          "missing": 1500,
+          "displaced": 140000,
+          "sheltered": 84000,
+          "households_without_power": 2300000,
+          "households_without_water": 0,
+          "economic_loss_usd": 11000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 3200000
+        }
+      },
+      "parent_ids": [
+        "evt-0001",
+        "evt-0005"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0007",
+      "sim_time_minutes": 615,
+      "sequence": 0,
+      "type": "aftershock",
+      "status": "applied",
+      "location": {
+        "name": "off the coast of Fukushima",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 37.6,
+        "lon": 141.9
+      },
+      "severity": 0.5,
+      "visual": "earthquake_shockwave",
+      "payload": {
+        "description": "A strong aftershock adds strain to damaged structures.",
+        "magnitude": 6.4,
+        "depth_km": 30,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 262,
+          "injuries": 1240,
+          "missing": 1500,
+          "displaced": 140000,
+          "sheltered": 84000,
+          "households_without_power": 2300000,
+          "households_without_water": 0,
+          "economic_loss_usd": 13000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 3200000
+        }
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0008",
+      "sim_time_minutes": 840,
+      "sequence": 0,
+      "type": "infrastructure_failure",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.26,
+        "lon": 140.88
+      },
+      "severity": 0.5,
+      "visual": "power_grid_failure",
+      "payload": {
+        "description": "Broken water mains leave much of the Sendai area without running water.",
+        "target": "water mains",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 262,
+          "injuries": 1240,
+          "missing": 1500,
+          "displaced": 140000,
+          "sheltered": 84000,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 14500000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 3200000
+        }
+      },
+      "parent_ids": [
+        "evt-0001",
+        "evt-0007"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0009",
+      "sim_time_minutes": 1260,
+      "sequence": 0,
+      "type": "government_response",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
+      "severity": 0.4,
+      "visual": "emergency_mobilization",
+      "payload": {
+        "description": "Miyagi Prefecture opens hundreds of extra shelters and closes schools across the coast.",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 410,
+          "injuries": 1900,
+          "missing": 1720,
+          "displaced": 212000,
+          "sheltered": 127200,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 14500000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 3200000
+        }
+      },
+      "parent_ids": [
+        "evt-0003",
+        "evt-0005"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0010",
+      "sim_time_minutes": 1560,
+      "sequence": 0,
+      "type": "international_aid",
+      "status": "applied",
+      "location": {
+        "name": "Yamagata Airport",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.41,
+        "lon": 140.37
+      },
+      "severity": 0.4,
+      "visual": "animated_transport_route",
+      "payload": {
+        "description": "US search-and-rescue teams and airlifted supplies arrive inland and head for the coast.",
+        "origin": "United States",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 640,
+          "injuries": 2400,
+          "missing": 1650,
+          "displaced": 212000,
+          "sheltered": 127200,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 14500000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 3200000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0006"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0011",
+      "sim_time_minutes": 1740,
+      "sequence": 0,
+      "type": "international_aid",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
+      "severity": 0.3,
+      "visual": "animated_transport_route",
+      "payload": {
+        "description": "South Korean medical teams set up field clinics near flooded neighborhoods.",
+        "origin": "South Korea",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 640,
+          "injuries": 2400,
+          "missing": 1650,
+          "displaced": 212000,
+          "sheltered": 127200,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 14500000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 0,
+          "debris_tonnes": 3200000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0006"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0012",
+      "sim_time_minutes": 2040,
+      "sequence": 0,
+      "type": "contamination",
+      "status": "applied",
+      "location": {
+        "name": "Watari",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.04,
+        "lon": 140.87
+      },
+      "severity": 0.4,
+      "visual": "fallout_cloud",
+      "payload": {
+        "description": "Saltwater and debris contaminate coastal farmland, halting the spring planting.",
+        "radius_km": 10,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 640,
+          "injuries": 2400,
+          "missing": 1650,
+          "displaced": 212000,
+          "sheltered": 127200,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 19000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0005"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0013",
+      "sim_time_minutes": 2280,
+      "sequence": 0,
+      "type": "economic_shock",
+      "status": "applied",
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.77
+      },
+      "severity": 0.5,
+      "visual": "market_shock",
+      "payload": {
+        "description": "Factory shutdowns in the northeast stall supply chains for electronics and car parts.",
+        "target": "manufacturing supply chains",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 640,
+          "injuries": 2400,
+          "missing": 1650,
+          "displaced": 212000,
+          "sheltered": 127200,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 38000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0004"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0014",
+      "sim_time_minutes": 2600,
+      "sequence": 0,
+      "type": "aftershock",
+      "status": "applied",
+      "location": {
+        "name": "off the coast of Fukushima",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 37.5,
+        "lon": 141.8
+      },
+      "severity": 0.5,
+      "visual": "earthquake_shockwave",
+      "payload": {
+        "description": "A second strong aftershock rattles the Fukushima coast as repairs begin.",
+        "magnitude": 6.1,
+        "depth_km": 28,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 905,
+          "injuries": 3100,
+          "missing": 1480,
+          "displaced": 212000,
+          "sheltered": 127200,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 38000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0015",
+      "sim_time_minutes": 2950,
+      "sequence": 0,
+      "type": "evacuation",
+      "status": "applied",
+      "location": {
+        "name": "Iwaki",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 37.05,
+        "lon": 140.89
+      },
+      "severity": 0.4,
+      "visual": "evacuation_flow",
+      "payload": {
+        "description": "Residents of damaged coastal neighborhoods in Iwaki move to inland shelters.",
+        "radius_km": 15,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 905,
+          "injuries": 3100,
+          "missing": 1480,
+          "displaced": 226000,
+          "sheltered": 135600,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 38000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0014"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0016",
+      "sim_time_minutes": 3120,
+      "sequence": 0,
+      "type": "international_aid",
+      "status": "applied",
+      "location": {
+        "name": "Ishinomaki",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.43,
+        "lon": 141.3
+      },
+      "severity": 0.3,
+      "visual": "animated_transport_route",
+      "payload": {
+        "description": "Australian crews deliver water purification units to shelters without running water.",
+        "origin": "Australia",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 905,
+          "injuries": 3100,
+          "missing": 1480,
+          "displaced": 226000,
+          "sheltered": 135600,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 38000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            },
+            {
+              "country": "Australia",
+              "personnel": 75,
+              "cargo_tonnes": 45,
+              "cargo": "water purification units"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0008"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0017",
+      "sim_time_minutes": 3480,
+      "sequence": 0,
+      "type": "international_aid",
+      "status": "applied",
+      "location": {
+        "name": "Sendai Port",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 141.02
+      },
+      "severity": 0.3,
+      "visual": "animated_transport_route",
+      "payload": {
+        "description": "A rescue team and relief goods from Taiwan reach the reopened port.",
+        "origin": "Taiwan",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 1210,
+          "injuries": 3900,
+          "missing": 1240,
+          "displaced": 226000,
+          "sheltered": 135600,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 38000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            },
+            {
+              "country": "Australia",
+              "personnel": 75,
+              "cargo_tonnes": 45,
+              "cargo": "water purification units"
+            },
+            {
+              "country": "Taiwan",
+              "personnel": 60,
+              "cargo_tonnes": 50,
+              "cargo": "rescue team and relief goods"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0006"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0018",
+      "sim_time_minutes": 3900,
+      "sequence": 0,
+      "type": "economic_shock",
+      "status": "applied",
+      "location": {
+        "name": "Kesennuma",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.9,
+        "lon": 141.57
+      },
+      "severity": 0.4,
+      "visual": "market_shock",
+      "payload": {
+        "description": "Fishing ports stay closed and seafood exports from the coast stop.",
+        "target": "fishing and seafood exports",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 1210,
+          "injuries": 3900,
+          "missing": 1240,
+          "displaced": 226000,
+          "sheltered": 135600,
+          "households_without_power": 2300000,
+          "households_without_water": 640000,
+          "economic_loss_usd": 52000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            },
+            {
+              "country": "Australia",
+              "personnel": 75,
+              "cargo_tonnes": 45,
+              "cargo": "water purification units"
+            },
+            {
+              "country": "Taiwan",
+              "personnel": 60,
+              "cargo_tonnes": 50,
+              "cargo": "rescue team and relief goods"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0005"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0019",
+      "sim_time_minutes": 4300,
+      "sequence": 0,
+      "type": "recovery",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
+      "severity": 0.3,
+      "visual": "recovery_pulse",
+      "payload": {
+        "description": "Power is restored to most households across Miyagi.",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 1210,
+          "injuries": 3900,
+          "missing": 1240,
+          "displaced": 226000,
+          "sheltered": 135600,
+          "households_without_power": 180000,
+          "households_without_water": 300000,
+          "economic_loss_usd": 52000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            },
+            {
+              "country": "Australia",
+              "personnel": 75,
+              "cargo_tonnes": 45,
+              "cargo": "water purification units"
+            },
+            {
+              "country": "Taiwan",
+              "personnel": 60,
+              "cargo_tonnes": 50,
+              "cargo": "rescue team and relief goods"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0004",
+        "evt-0006"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0020",
+      "sim_time_minutes": 4700,
+      "sequence": 0,
+      "type": "recovery",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.26,
+        "lon": 140.88
+      },
+      "severity": 0.2,
+      "visual": "recovery_pulse",
+      "payload": {
+        "description": "Some rail lines reopen and families begin leaving shelters for relatives' homes.",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "deaths": 1480,
+          "injuries": 4300,
+          "missing": 1050,
+          "displaced": 168000,
+          "sheltered": 100800,
+          "households_without_power": 180000,
+          "households_without_water": 210000,
+          "economic_loss_usd": 61000000000,
+          "flooded_area_km2": 210,
+          "contaminated_area_km2": 95,
+          "debris_tonnes": 4100000,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 180,
+              "cargo_tonnes": 60,
+              "cargo": "search-and-rescue teams and relief supplies"
+            },
+            {
+              "country": "South Korea",
+              "personnel": 120,
+              "cargo_tonnes": 30,
+              "cargo": "medical teams and supplies"
+            },
+            {
+              "country": "Australia",
+              "personnel": 75,
+              "cargo_tonnes": 45,
+              "cargo": "water purification units"
+            },
+            {
+              "country": "Taiwan",
+              "personnel": 60,
+              "cargo_tonnes": 50,
+              "cargo": "rescue team and relief goods"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0019"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
     }
   ]
 }

@@ -24,6 +24,42 @@
       "type": "string",
       "pattern": "^evt-[A-Za-z0-9_-]{1,64}$"
     },
+    "impacts": {
+      "type": "object",
+      "description": "Fictional scenario estimates: scenario-wide totals as of this event, never deltas. Read the latest applied event at or before time T to get the state at T. These never decrease: deaths, injuries, economic_loss_usd, flooded_area_km2, contaminated_area_km2, debris_tonnes, and each aid contributor's personnel and cargo_tonnes (a contributor never disappears). These are current levels and can fall: missing, displaced, sheltered, households_without_power, households_without_water. An omitted key means no estimate yet, not zero.",
+      "required": ["basis"],
+      "additionalProperties": false,
+      "properties": {
+        "basis": { "const": "fictional_estimate", "description": "Marks every number here as an invented scenario estimate." },
+        "deaths": { "type": "integer", "minimum": 0 },
+        "injuries": { "type": "integer", "minimum": 0 },
+        "missing": { "type": "integer", "minimum": 0 },
+        "displaced": { "type": "integer", "minimum": 0, "description": "People evacuated or without a home right now." },
+        "sheltered": { "type": "integer", "minimum": 0, "description": "Of the displaced, people in shelters right now." },
+        "households_without_power": { "type": "integer", "minimum": 0 },
+        "households_without_water": { "type": "integer", "minimum": 0 },
+        "economic_loss_usd": { "type": "number", "minimum": 0, "description": "Direct economic loss so far, in US dollars." },
+        "flooded_area_km2": { "type": "number", "minimum": 0 },
+        "contaminated_area_km2": { "type": "number", "minimum": 0 },
+        "debris_tonnes": { "type": "number", "minimum": 0 },
+        "aid_contributors": {
+          "type": "array",
+          "maxItems": 50,
+          "description": "Every country that has sent aid so far, with its running totals. Country names are unique.",
+          "items": {
+            "type": "object",
+            "required": ["country"],
+            "additionalProperties": false,
+            "properties": {
+              "country": { "type": "string", "minLength": 1, "maxLength": 80 },
+              "personnel": { "type": "integer", "minimum": 0 },
+              "cargo_tonnes": { "type": "number", "minimum": 0 },
+              "cargo": { "type": "string", "maxLength": 120, "description": "What it has sent, such as 'water purification units'." }
+            }
+          }
+        }
+      }
+    },
     "event": {
       "type": "object",
       "required": [
@@ -64,6 +100,7 @@
             "volcanic_eruption",
             "meteor_impact",
             "extreme_weather",
+            "flooding",
             "disease_outbreak",
             "military_strike",
             "nuclear_detonation",
@@ -141,7 +178,8 @@
             "radius_km": { "type": "number", "minimum": 0, "maximum": 20000, "description": "Approximate affected radius, for map scale." },
             "origin": { "type": "string", "maxLength": 80, "description": "Where it comes from: the aid sender, the attacking country, or 'unknown'." },
             "target": { "type": "string", "maxLength": 80, "description": "What was hit, such as 'power grid' or 'banking'." },
-            "pathogen": { "type": "string", "maxLength": 80 }
+            "pathogen": { "type": "string", "maxLength": 80 },
+            "impacts": { "$ref": "#/$defs/impacts" }
           }
         },
         "parent_ids": {

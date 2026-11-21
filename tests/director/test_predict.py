@@ -36,7 +36,7 @@ def day1():
 
 
 def new_event(**overrides):
-    ev = copy.deepcopy(load_fixture("japan-earthquake-day3")["events"][0])
+    ev = copy.deepcopy(load_fixture("japan-earthquake-continued")["events"][0])
     ev.update(overrides)
     return {"events": [ev]}
 
@@ -44,19 +44,19 @@ def new_event(**overrides):
 class ContinuationTest(unittest.TestCase):
     def test_continues_ids_simulation_and_causes(self):
         history = day1()
-        batch = generate(fixture="japan-earthquake-day3", history=history)
+        batch = generate(fixture="japan-earthquake-continued", history=history)
         self.assertEqual(batch["simulation_id"], history["simulation_id"])
         self.assertEqual(batch["branch_id"], history["branch_id"])
-        self.assertEqual([e["id"] for e in batch["events"]], ["evt-0007", "evt-0008", "evt-0009", "evt-0010"])
-        self.assertEqual(batch["events"][0]["parent_ids"], ["evt-0001"])
-        self.assertEqual(batch["events"][1]["parent_ids"], ["evt-0007"])  # in-batch cause gets its new ID
+        self.assertEqual([e["id"] for e in batch["events"]], ["evt-0021", "evt-0022", "evt-0023"])
+        self.assertEqual(batch["events"][0]["parent_ids"], ["evt-0005", "evt-0018"])
+        self.assertEqual(batch["events"][2]["parent_ids"], ["evt-0005", "evt-0021"])  # in-batch cause gets its new ID
         last = max(e["sim_time_minutes"] for e in history["events"])
         self.assertTrue(all(e["sim_time_minutes"] >= last for e in batch["events"]))
 
     def test_needs_history_for_past_causes(self):
         with self.assertRaises(DirectorError) as ctx:
-            generate(fixture="japan-earthquake-day3")
-        self.assertIn("unknown event 'evt-0001'", ctx.exception.detail)
+            generate(fixture="japan-earthquake-continued")
+        self.assertIn("unknown event 'evt-0005'", ctx.exception.detail)
 
     def test_rejects_events_before_now(self):
         with self.assertRaises(DirectorError) as ctx:
@@ -64,33 +64,33 @@ class ContinuationTest(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "invalid_events")
 
     def test_cause_at_the_same_minute_is_allowed(self):
-        raw = new_event(sim_time_minutes=2040, caused_by_events=["evt-0006"])
+        raw = new_event(sim_time_minutes=4700, caused_by_events=["evt-0020"])
         ev = build_batch(raw, simulation_id="t", history=day1()["events"])["events"][0]
-        self.assertEqual(ev["parent_ids"], ["evt-0006"])
+        self.assertEqual(ev["parent_ids"], ["evt-0020"])
 
     def test_sequence_continues_at_shared_minute(self):
         history = day1()["events"]
-        ev = build_batch(new_event(sim_time_minutes=2040), simulation_id="t", history=history)["events"][0]
-        self.assertEqual(ev["sequence"], 1)  # evt-0006 already holds (2040, 0)
+        ev = build_batch(new_event(sim_time_minutes=4700), simulation_id="t", history=history)["events"][0]
+        self.assertEqual(ev["sequence"], 1)  # evt-0020 already holds (4700, 0)
 
     def test_only_applied_history_counts(self):
         history = day1()
-        history["events"][-1]["status"] = "rejected"  # aid at minute 2040 never happened
-        batch = generate(fixture="japan-earthquake-day3", history=history)
-        self.assertEqual(batch["events"][0]["id"], "evt-0006")
+        history["events"][-1]["status"] = "rejected"  # the last recovery event never happened
+        batch = generate(fixture="japan-earthquake-continued", history=history)
+        self.assertEqual(batch["events"][0]["id"], "evt-0020")
 
     def test_history_as_plain_list_and_explicit_ids(self):
-        batch = generate(fixture="japan-earthquake-day3", history=day1()["events"], simulation_id="custom", first_id=50)
+        batch = generate(fixture="japan-earthquake-continued", history=day1()["events"], simulation_id="custom", first_id=50)
         self.assertEqual(batch["simulation_id"], "custom")
         self.assertEqual(batch["events"][0]["id"], "evt-0050")
         with self.assertRaises(DirectorError) as ctx:
-            generate(fixture="japan-earthquake-day3", history=day1(), first_id=3)
+            generate(fixture="japan-earthquake-continued", history=day1(), first_id=3)
         self.assertIn("reuses existing event IDs", ctx.exception.message)
 
     def test_bad_history(self):
         for bad in ("nope", {"events": "nope"}, [{"id": "evt-1"}]):
             with self.assertRaises(DirectorError) as ctx:
-                generate(fixture="japan-earthquake-day3", history=bad)
+                generate(fixture="japan-earthquake-continued", history=bad)
             self.assertEqual(ctx.exception.code, "invalid_history")
 
     def test_cli_history_flag(self):
@@ -101,10 +101,10 @@ class ContinuationTest(unittest.TestCase):
             run = lambda *a: subprocess.run(  # noqa: E731
                 [sys.executable, "-m", "worlddirector", *a], cwd=DIRECTOR, capture_output=True, text=True
             )
-            ok = run("--fixture", "japan-earthquake-day3", "--history", path)
+            ok = run("--fixture", "japan-earthquake-continued", "--history", path)
             self.assertEqual(ok.returncode, 0, ok.stderr)
-            self.assertEqual(json.loads(ok.stdout)["events"][0]["id"], "evt-0007")
-            bad = run("--fixture", "japan-earthquake-day3", "--history", os.path.join(tmp, "missing.json"))
+            self.assertEqual(json.loads(ok.stdout)["events"][0]["id"], "evt-0021")
+            bad = run("--fixture", "japan-earthquake-continued", "--history", os.path.join(tmp, "missing.json"))
             self.assertEqual(json.loads(bad.stderr)["error"], "invalid_history")
 
 
@@ -122,8 +122,8 @@ class PromptTest(unittest.TestCase):
         self.assertEqual(prompt.count("<<<HISTORY"), 1)
         self.assertEqual(prompt.count("HISTORY>>>"), 1)
         self.assertEqual(prompt.count("<<<SCENARIO"), 1)
-        self.assertIn("at or after minute 2040", prompt)
-        self.assertIn('"id": "evt-0006"', prompt)
+        self.assertIn("at or after minute 4700", prompt)
+        self.assertIn('"id": "evt-0020"', prompt)
 
 
 class PandemicTest(unittest.TestCase):

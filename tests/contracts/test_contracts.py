@@ -85,6 +85,50 @@ class ContractTests(unittest.TestCase):
         for payload in ({"vei": 9}, {"yield_kt": -1}, {"radius_km": "big"}, {"description": "x" * 281}):
             self.assertTrue(self.errors(self.events, self.event_of("volcanic_eruption", **payload)), payload)
 
+    def test_fixture_is_a_multi_day_chain_with_resolving_parents(self):
+        events = self.fixture["events"]
+        self.assertGreater(events[-1]["sim_time_minutes"] - events[0]["sim_time_minutes"], 24 * 60)
+        seen = set()
+        for event in events:
+            for parent in event["parent_ids"]:
+                self.assertIn(parent, seen, f"{event['id']} names {parent} before it happens")
+            seen.add(event["id"])
+        aid = {e["payload"]["origin"] for e in events if e["type"] == "international_aid"}
+        self.assertGreaterEqual(len(aid), 2)
+
+    def test_fixture_impacts_are_labeled_running_totals(self):
+        snaps = [e["payload"]["impacts"] for e in self.fixture["events"]]
+        self.assertTrue(all(s["basis"] == "fictional_estimate" for s in snaps))
+        for key in ("deaths", "injuries", "economic_loss_usd", "debris_tonnes"):
+            values = [s.get(key, 0) for s in snaps]
+            self.assertEqual(values, sorted(values), f"{key} is cumulative and must never fall")
+        for earlier, later in zip(snaps, snaps[1:]):
+            before = {c["country"]: c for c in earlier.get("aid_contributors", [])}
+            after = {c["country"]: c for c in later.get("aid_contributors", [])}
+            self.assertLessEqual(set(before), set(after), "aid contributors never disappear")
+            for country, entry in before.items():
+                self.assertLessEqual(entry.get("personnel", 0), after[country].get("personnel", 0))
+            self.assertTrue(later.get("sheltered", 0) <= later.get("displaced", 0))
+
+    def test_impacts_shape_is_enforced(self):
+        def with_impacts(impacts):
+            doc = copy.deepcopy(self.fixture)
+            doc["events"][0]["payload"]["impacts"] = impacts
+            return doc
+
+        self.assertEqual(self.errors(self.events, with_impacts({"basis": "fictional_estimate"})), [])
+        for bad in (
+            {"deaths": 3},                                           # missing the fictional marker
+            {"basis": "official", "deaths": 3},                      # wrong marker
+            {"basis": "fictional_estimate", "deaths": -1},
+            {"basis": "fictional_estimate", "deaths": 1.5},
+            {"basis": "fictional_estimate", "casualties": 3},        # unknown key
+            {"basis": "fictional_estimate", "aid_contributors": [{"personnel": 5}]},  # no country
+            {"basis": "fictional_estimate", "aid_contributors": [{"country": "Chile", "ships": 2}]},
+            {"basis": "fictional_estimate", "injured": 3},           # old name
+        ):
+            self.assertTrue(self.errors(self.events, with_impacts(bad)), bad)
+
     def header(self, minutes):
         return {"schema_version": "0.1", "simulation_id": "demo-japan-earthquake",
                 "branch_id": "main", "sim_time_minutes": minutes}

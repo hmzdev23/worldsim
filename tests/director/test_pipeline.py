@@ -90,7 +90,7 @@ class DirectorPipelineTest(unittest.TestCase):
 
     def test_aid_headline_names_origin(self):
         feed = news_from_stream(self.messages)
-        aid = next(i for i in feed if i["event_id"] == "evt-0006")
+        aid = next(i for i in feed if i["event_id"] == "evt-0010")
         self.assertTrue(aid["headline"].startswith("United States sends aid"), aid["headline"])
 
 

@@ -1,11 +1,11 @@
 import type { ImpactSnapshot, ScenarioEvent } from "../lib/earthquake";
 
 const cards = [
-  { key: "fatalities_estimate", label: "Deaths", format: integer },
-  { key: "injuries_estimate", label: "Injured", format: integer },
-  { key: "missing_estimate", label: "Missing", format: integer },
-  { key: "displaced_people", label: "Displaced", format: integer },
-  { key: "people_in_shelters", label: "In shelters", format: integer },
+  { key: "deaths", label: "Deaths", format: integer },
+  { key: "injuries", label: "Injured", format: integer },
+  { key: "missing", label: "Missing", format: integer },
+  { key: "displaced", label: "Displaced", format: integer },
+  { key: "sheltered", label: "In shelters", format: integer },
   { key: "households_without_power", label: "No power", format: integer, suffix: " households" },
   { key: "households_without_water", label: "No water", format: integer, suffix: " households" },
   { key: "economic_loss_usd", label: "Economic loss", format: money },
@@ -24,8 +24,10 @@ function Sparkline({ values }: { values: number[] }) {
 }
 export function ImpactDashboard({ events }: { events: ScenarioEvent[] }) {
   const impact = latestImpact(events);
-  const environmental = impact && `${impact.flooded_area_km2 ?? "—"} km² flooded · ${impact.contaminated_sites ?? "—"} sites · ${impact.debris_tonnes == null ? "—" : integer(impact.debris_tonnes)} t debris`;
-  const relief = impact && `${impact.aid_countries?.length ? impact.aid_countries.join(", ") : "No contributors reported"} · ${impact.aid_personnel == null ? "—" : integer(impact.aid_personnel)} personnel · ${impact.aid_cargo_tonnes == null ? "—" : integer(impact.aid_cargo_tonnes)} t cargo`;
+  const environmental = impact && `${impact.flooded_area_km2 ?? "—"} km² flooded · ${impact.contaminated_area_km2 ?? "—"} km² contaminated · ${impact.debris_tonnes == null ? "—" : integer(impact.debris_tonnes)} t debris`;
+  const contributors = impact?.aid_contributors ?? [];
+  const total = (key: "personnel" | "cargo_tonnes") => contributors.some((c) => c[key] != null) ? integer(contributors.reduce((sum, c) => sum + (c[key] ?? 0), 0)) : "—";
+  const relief = impact && `${contributors.length ? contributors.map((c) => c.country).join(", ") : "No contributors reported"} · ${total("personnel")} personnel · ${total("cargo_tonnes")} t cargo`;
   return <section className="impact-dashboard" aria-labelledby="impact-title">
     <div className="impact-heading"><div><span className="section-label">Live situation</span><h2 id="impact-title">Cumulative impact estimates</h2></div><span className="estimate-tag">SIMULATED · ESTIMATES</span></div>
     <div className="impact-grid">{cards.map((card) => {

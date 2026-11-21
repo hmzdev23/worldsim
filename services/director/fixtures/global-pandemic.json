@@ -22,6 +22,7 @@
       "target": null,
       "pathogen": "novel respiratory virus",
       "label": null,
+      "impacts": null,
       "caused_by": [],
       "caused_by_events": []
     },
@@ -47,6 +48,7 @@
       "target": null,
       "pathogen": null,
       "label": null,
+      "impacts": null,
       "caused_by": [
         0
       ],
@@ -74,6 +76,7 @@
       "target": null,
       "pathogen": "novel respiratory virus",
       "label": null,
+      "impacts": null,
       "caused_by": [
         0
       ],
@@ -101,6 +104,7 @@
       "target": null,
       "pathogen": "novel respiratory virus",
       "label": null,
+      "impacts": null,
       "caused_by": [
         0
       ],
@@ -128,6 +132,7 @@
       "target": "air travel and global trade",
       "pathogen": null,
       "label": null,
+      "impacts": null,
       "caused_by": [
         2,
         3
@@ -156,6 +161,7 @@
       "target": null,
       "pathogen": null,
       "label": null,
+      "impacts": null,
       "caused_by": [
         2,
         3
@@ -184,6 +190,7 @@
       "target": "hospitals",
       "pathogen": null,
       "label": null,
+      "impacts": null,
       "caused_by": [
         2
       ],
@@ -211,6 +218,7 @@
       "target": null,
       "pathogen": null,
       "label": null,
+      "impacts": null,
       "caused_by": [
         5
       ],
@@ -238,6 +246,7 @@
       "target": null,
       "pathogen": null,
       "label": null,
+      "impacts": null,
       "caused_by": [
         5
       ],
@@ -265,6 +274,7 @@
       "target": null,
       "pathogen": null,
       "label": null,
+      "impacts": null,
       "caused_by": [
         1,
         5

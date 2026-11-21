@@ -30,8 +30,11 @@ def load(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-FIXTURE = load(CONTRACTS / "fixtures" / "japan-earthquake.json")
-QUAKE = FIXTURE["events"][0]
+FULL_FIXTURE = load(CONTRACTS / "fixtures" / "japan-earthquake.json")
+QUAKE = FULL_FIXTURE["events"][0]
+# Clock, ingest, and server mechanics are tested on the quake alone, so these
+# tests don't depend on how long the scenario fixture is.
+FIXTURE = {**FULL_FIXTURE, "events": [QUAKE]}
 
 
 def proposed(id_, minute, sequence=0, parents=(), **overrides):
@@ -143,6 +146,17 @@ class IngestTests(unittest.TestCase):
         event = proposed("evt-a", 450)
         self.sim.ingest(batch(event))
         self.assertEqual(event["status"], "proposed")
+
+
+class FullFixtureTests(unittest.TestCase):
+    def test_full_scenario_fixture_loads_and_replays_in_order(self):
+        sim = Simulation.from_batch(FULL_FIXTURE)  # raises if any event is rejected
+        self.assertEqual(len(sim.timeline), len(FULL_FIXTURE["events"]))
+        messages = replay(FULL_FIXTURE, speed=16)
+        released = [m["event"] for m in messages if m["kind"] == "event"]
+        keys = [(e["sim_time_minutes"], e["sequence"]) for e in released]
+        self.assertEqual(keys, sorted(keys))
+        self.assertEqual({e["id"] for e in released}, {e["id"] for e in FULL_FIXTURE["events"]})
 
 
 class ContractTests(unittest.TestCase):

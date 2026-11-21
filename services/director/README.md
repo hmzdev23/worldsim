@@ -18,8 +18,8 @@ The Director predicts how a scenario unfolds: the triggering hazard, direct dama
 To keep going, pass what has already happened as `history`. The Director then continues the same simulation: new events start at or after the latest past event, IDs continue (`evt-0007`, ...), `sequence` continues at shared minutes, and `parent_ids` can point back to past events. Only `applied` history events count, so rejected proposals are ignored.
 
 ```bash
-python3 -m worlddirector --fixture japan-earthquake > day1.json      # mark these applied, as the simulation would
-python3 -m worlddirector --fixture japan-earthquake-day3 --history day1.json
+python3 -m worlddirector --fixture japan-earthquake --applied > day1.json   # as if the simulation applied them
+python3 -m worlddirector --fixture japan-earthquake-continued --history day1.json
 python3 -m worlddirector "Continue the scenario" --history snapshot.json
 ```
 
@@ -33,12 +33,17 @@ With the simulation service running (`services/simulation`, SIM-001), `--sim` do
 
 ```bash
 python3 -m worlddirector "A M7.5 earthquake hits Lima" --sim                         # default http://127.0.0.1:8765
-python3 -m worlddirector --fixture japan-earthquake-day3 --sim http://127.0.0.1:8765  # offline continuation
+python3 -m worlddirector --fixture japan-earthquake-continued --sim http://127.0.0.1:8765  # offline continuation
 ```
 
 The snapshot only lists events the clock has already reached, so run `--sim` once playback reaches the last applied event. Otherwise new IDs can collide with events that are scheduled but not yet played.
 
-Fixtures: `japan-earthquake` (6 events, the team demo), `japan-earthquake-day3` (continues it and needs its history), and `global-pandemic`.
+Fixtures:
+- `japan-earthquake`: the 72-hour, 20-event team demo with `impacts` on every event. `contracts/fixtures/japan-earthquake.json` is generated from it with `--applied`, and a test keeps them identical.
+- `japan-earthquake-continued`: days 5 to 8, which needs the Japan chain as history.
+- `global-pandemic`: 10 events, 7 countries, 3 months.
+
+Fixtures can be longer than one model batch (12 events). Only model output is capped.
 
 The team uses the Japan fixture for development and testing. Actual AI prompting tests will run later on Hamza's computer using his signed-in Codex CLI. Codex mode uses an ephemeral, read-only sandbox and strips API-key environment variables so the signed-in ChatGPT account is used.
 
@@ -86,7 +91,7 @@ A batch that validates against [contracts/events.schema.json](../../contracts/ev
 - `parent_ids` comes from the model's `caused_by` (earlier events in this batch) and `caused_by_events` (past events from the history). A cause can't be later than the event it caused.
 - `visual` is derived from `type` (see `VISUALS` in `worlddirector/contract.py`, which fails on import if any contract type is missing).
 - `payload` always has `description`, plus whichever details the model filled for that event: `magnitude` and `depth_km` (required for quakes), `label` (required for `other_hazard`), `vei`, `diameter_m`, `yield_kt`, `radius_km`, `origin`, `target`, and `pathogen`. The meanings are listed in [contracts/README.md](../../contracts/README.md#event-types).
-- The `japan-earthquake` fixture covers the six earthquake-family types. Its first event is identical to the shared contract fixture.
+- `payload.impacts` is the model's fictional estimate of scenario-wide totals as of that event, using the shape in [contracts/README.md](../../contracts/README.md#impact-estimates-payloadimpacts). The Director adds `"basis": "fictional_estimate"`, drops unknown values, and rejects batches where a running total (deaths, losses, aid, and so on) goes down, including against the history.
 
 ## Validation and failures
 

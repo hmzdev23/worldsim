@@ -6,21 +6,29 @@ export type MapLocation = {
   zoom?: number;
 };
 
+// payload.impacts from contracts/events.schema.json: fictional scenario-wide
+// totals as of the event (never deltas). An omitted key means no estimate yet.
+export type AidContributor = {
+  country: string;
+  personnel?: number;
+  cargo_tonnes?: number;
+  cargo?: string;
+};
+
 export type ImpactSnapshot = {
-  fatalities_estimate?: number;
-  injuries_estimate?: number;
-  missing_estimate?: number;
-  displaced_people?: number;
-  people_in_shelters?: number;
+  basis: "fictional_estimate";
+  deaths?: number;
+  injuries?: number;
+  missing?: number;
+  displaced?: number;
+  sheltered?: number;
   households_without_power?: number;
   households_without_water?: number;
   economic_loss_usd?: number;
   flooded_area_km2?: number;
-  contaminated_sites?: number;
+  contaminated_area_km2?: number;
   debris_tonnes?: number;
-  aid_countries?: string[];
-  aid_personnel?: number;
-  aid_cargo_tonnes?: number;
+  aid_contributors?: AidContributor[];
 };
 
 export type ScenarioEvent = {
