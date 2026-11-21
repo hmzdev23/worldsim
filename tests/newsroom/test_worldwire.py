@@ -133,8 +133,8 @@ class WorldWireTests(unittest.TestCase):
         self.assertEqual(format_sim_time(24 * 60 + 75), "DAY 2 · 01:15")
 
     def test_committed_web_feed_is_up_to_date(self):
-        feed = json.loads((NEWSROOM / "feeds" / "japan-earthquake.json").read_text())
-        events = json.loads(FIXTURE.read_text())["events"]
+        feed = json.loads((NEWSROOM / "feeds" / "japan-earthquake.json").read_text(encoding="utf-8"))
+        events = json.loads(FIXTURE.read_text(encoding="utf-8"))["events"]
         self.assertEqual(
             feed, derive_news(events),
             "regenerate: cd services/newsroom && python3 -m worldwire "

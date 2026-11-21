@@ -2,18 +2,17 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-PY=python3
-[ -x "$ROOT/.venv/bin/python" ] && PY="$ROOT/.venv/bin/python"
+. "$ROOT/scripts/find-python.sh"
 
-if ! "$PY" -c "import fastapi, jsonschema, uvicorn" >/dev/null 2>&1; then
+if ! "${PY[@]}" -c "import fastapi, jsonschema, uvicorn" >/dev/null 2>&1; then
   echo "Simulation dependencies are missing. From the repo root, run:" >&2
-  echo "  python3 -m venv .venv && .venv/bin/pip install -r services/simulation/requirements.txt" >&2
+  echo "  ${PY[*]} -m venv .venv && $VENV_PIP install -r services/simulation/requirements.txt" >&2
   exit 1
 fi
 
 cd "$ROOT"
 export PYTHONPATH="$ROOT/services/simulation${PYTHONPATH:+:$PYTHONPATH}"
-exec "$PY" -m worldsim_sim \
+exec "${PY[@]}" -m worldsim_sim \
   --host 127.0.0.1 \
   --port 8765 \
   --start-minutes 401 \

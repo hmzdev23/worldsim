@@ -6,14 +6,14 @@
 #   --open  also writes the WORLD//WIRE preview page and opens it.
 set -euo pipefail
 cd "$(dirname "$0")/.."
+ROOT="$(pwd)"
+. "$ROOT/scripts/find-python.sh"
 
-PY=python3
-[ -x .venv/bin/python ] && PY=.venv/bin/python
-"$PY" -c "import jsonschema" 2>/dev/null || echo "note: jsonschema not installed; contract checks will be skipped (python3 -m venv .venv && .venv/bin/pip install jsonschema)" >&2
+"${PY[@]}" -c "import jsonschema" 2>/dev/null || echo "note: jsonschema not installed; contract checks will be skipped (${PY[*]} -m venv .venv && $VENV_PIP install jsonschema)" >&2
 
 for suite in contracts director simulation newsroom integration; do
   echo "== $suite"
-  "$PY" -m unittest discover -s "tests/$suite" -t "tests/$suite"
+  "${PY[@]}" -m unittest discover -s "tests/$suite" -t "tests/$suite"
 done
 
 case " $* " in *" --web "*)
@@ -23,6 +23,6 @@ esac
 
 case " $* " in *" --open "*)
   out="$(mktemp -d)/worldwire.html"
-  (cd services/newsroom && "$PY" -m worldwire ../../contracts/fixtures/japan-earthquake.json --html "$out")
+  (cd services/newsroom && "${PY[@]}" -m worldwire ../../contracts/fixtures/japan-earthquake.json --html "$out")
   command -v open >/dev/null && open "$out" || echo "Preview: $out"
 esac
