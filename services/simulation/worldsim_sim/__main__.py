@@ -2,6 +2,11 @@
 
 python -m worldsim_sim [fixture.json] [--port 8765] [--start-minutes 390]
                       [--speed 1] [--paused] [--minutes-per-second 1]
+                      [--scenario-fixture NAME] [--director-timeout 180]
+
+The fixture is the demo served at /stream. Runs created with POST /scenarios
+call the Director; --scenario-fixture makes every run use that Director
+fixture instead (offline, deterministic, no model credentials).
 """
 
 from __future__ import annotations
@@ -25,14 +30,21 @@ def build(argv: list[str] | None = None):
     parser.add_argument("--paused", action="store_true", help="start paused")
     parser.add_argument("--minutes-per-second", type=float, default=1.0, help="sim minutes per wall second at 1x")
     parser.add_argument("--tick-seconds", type=float, default=1.0)
+    parser.add_argument("--scenario-fixture", metavar="NAME",
+                        help="serve every POST /scenarios run from this Director fixture (e.g. global-pandemic)")
+    parser.add_argument("--director-timeout", type=float, default=180.0, help="seconds per scenario generation")
     args = parser.parse_args(argv)
 
+    from .scenarios import ScenarioRegistry
     from .server import create_app
 
     batch = json.loads(args.fixture.read_text(encoding="utf-8"))
     sim = Simulation.from_batch(batch, speed=args.speed, state="paused" if args.paused else "playing")
     sim.seek(args.start_minutes)
-    app = create_app(sim, tick_seconds=args.tick_seconds, minutes_per_second=args.minutes_per_second)
+    scenarios = ScenarioRegistry(timeout_s=args.director_timeout, fixture=args.scenario_fixture)
+    app = create_app(
+        sim, tick_seconds=args.tick_seconds, minutes_per_second=args.minutes_per_second, scenarios=scenarios
+    )
     return app, args
 
 
