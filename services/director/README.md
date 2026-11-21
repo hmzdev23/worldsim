@@ -4,10 +4,32 @@ Turns a hypothetical scenario into a validated batch of **proposed** WORLD//SIM 
 
 ```bash
 cd services/director
-python3 -m worlddirector --fixture japan-earthquake        # deterministic, offline, no Codex
-python3 -m unittest discover -s ../../tests/director       # tests (Codex is faked)
+python3 -m worlddirector --fixture japan-earthquake        # deterministic, offline, no model
+python3 -m worlddirector --fixture global-pandemic         # 10 events over 3 months, 7 countries
+python3 -m worlddirector "A M7.5 earthquake hits Lima"     # real prediction through the model
+python3 -m unittest discover -s ../../tests/director       # tests (the model is faked)
 ../../scripts/smoke-demo.sh                                # everyone's checks, Director included
 ```
+
+## Predicting, then continuing
+
+The Director predicts how a scenario unfolds: the triggering hazard, direct damage, failing services, responses, spread to other places, second-order effects, and eventually recovery. It returns up to 12 events per call over as long as the scenario needs (up to one simulated year).
+
+To keep going, pass what has already happened as `history`. The Director then continues the same simulation: new events start at or after the latest past event, IDs continue (`evt-0007`, ...), `sequence` continues at shared minutes, and `parent_ids` can point back to past events. Only `applied` history events count, so rejected proposals are ignored.
+
+```bash
+python3 -m worlddirector --fixture japan-earthquake > day1.json      # mark these applied, as the simulation would
+python3 -m worlddirector --fixture japan-earthquake-day3 --history day1.json
+python3 -m worlddirector "Continue the scenario" --history snapshot.json
+```
+
+```python
+batch = generate("A M7.5 earthquake hits Lima")
+# ...the simulation applies some events...
+more = generate("A M7.5 earthquake hits Lima", history=snapshot)   # a batch, a snapshot, or a list of events
+```
+
+Fixtures: `japan-earthquake` (6 events, the team demo), `japan-earthquake-day3` (continues it and needs its history), and `global-pandemic`.
 
 The team uses the Japan fixture for development and testing. Actual AI prompting tests will run later on Hamza's computer using his signed-in Codex CLI. Codex mode uses an ephemeral, read-only sandbox and strips API-key environment variables so the signed-in ChatGPT account is used.
 
@@ -51,15 +73,15 @@ A batch that validates against [contracts/events.schema.json](../../contracts/ev
 
 - `status` is always `"proposed"`. The simulation marks events `applied` or `rejected`, and only applied events reach the stream, map, and WORLD//WIRE.
 - `provenance` is `{"source": "fixture"}` or `{"source": "model", "model": "gpt-6-luna"}`.
-- Events are sorted by `(sim_time_minutes, sequence)`. IDs start at `--first-id` (default 1), so a later batch can continue the sequence.
-- `parent_ids` comes from the model's `caused_by` indexes. A cause must be an earlier event in the same batch.
+- Events are sorted by `(sim_time_minutes, sequence)`. IDs start after the history, or at `--first-id` if you set it.
+- `parent_ids` comes from the model's `caused_by` (earlier events in this batch) and `caused_by_events` (past events from the history). A cause can't be later than the event it caused.
 - `visual` is derived from `type` (see `VISUALS` in `worlddirector/contract.py`, which fails on import if any contract type is missing).
 - `payload` always has `description`, plus whichever details the model filled for that event: `magnitude` and `depth_km` (required for quakes), `label` (required for `other_hazard`), `vei`, `diameter_m`, `yield_kt`, `radius_km`, `origin`, `target`, and `pathogen`. The meanings are listed in [contracts/README.md](../../contracts/README.md#event-types).
 - The `japan-earthquake` fixture covers the six earthquake-family types. Its first event is identical to the shared contract fixture.
 
 ## Validation and failures
 
-The model must follow a strict JSON schema (`OUTPUT_SCHEMA`), and its output is checked again locally: 1–12 events, contract types only, no extra keys, an alpha-3 country code, lat/lon/severity/time and payload details in range, magnitude and depth for quakes, a label for `other_hazard`, causes that point backwards in time, and short non-empty text. Nothing is repaired except ordering. The scenario is capped at 2000 characters and passed to the model as delimited data.
+The model must follow a strict JSON schema (`OUTPUT_SCHEMA`), and its output is checked again locally: 1–12 events, no earlier than the history, contract types only, no extra keys, an alpha-3 country code, lat/lon/severity/time and payload details in range, magnitude and depth for quakes, a label for `other_hazard`, causes that point backwards in time, and short non-empty text. Nothing is repaired except ordering. The scenario is capped at 2000 characters and passed to the model as delimited data.
 
 | `error` | Meaning |
 | --- | --- |
@@ -69,6 +91,7 @@ The model must follow a strict JSON schema (`OUTPUT_SCHEMA`), and its output is 
 | `codex_failed` | Codex exited non-zero (for example, not logged in). `detail` holds stderr |
 | `invalid_json` | Empty response or not JSON |
 | `invalid_events` | JSON failed validation. `detail` lists every problem |
+| `invalid_history` | The history isn't a batch or list of events, or its file can't be read |
 | `fixture_missing` | Unknown fixture name |
 
 The CLI prints the batch on stdout and exits 0. On failure it prints the error JSON on stderr and exits 1 (2 for usage errors).

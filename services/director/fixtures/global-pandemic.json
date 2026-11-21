@@ -1,0 +1,275 @@
+{
+  "events": [
+    {
+      "type": "disease_outbreak",
+      "sim_time_minutes": 0,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.35,
+        "lon": 103.82
+      },
+      "severity": 0.4,
+      "description": "Doctors report a cluster of severe respiratory illness caused by a new virus.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 20,
+      "origin": null,
+      "target": null,
+      "pathogen": "novel respiratory virus",
+      "label": null,
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.29,
+        "lon": 103.85
+      },
+      "severity": 0.4,
+      "description": "Health authorities expand testing and contact tracing at the airport and port.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "disease_outbreak",
+      "sim_time_minutes": 7200,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.51,
+        "lon": -0.13
+      },
+      "severity": 0.5,
+      "description": "Travel-linked cases appear in London and begin spreading locally.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 60,
+      "origin": null,
+      "target": null,
+      "pathogen": "novel respiratory virus",
+      "label": null,
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "disease_outbreak",
+      "sim_time_minutes": 8640,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.5,
+      "description": "New York confirms community spread after cases arrive through international flights.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 60,
+      "origin": null,
+      "target": null,
+      "pathogen": "novel respiratory virus",
+      "label": null,
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 11520,
+      "location": {
+        "name": "Frankfurt",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 50.11,
+        "lon": 8.68
+      },
+      "severity": 0.6,
+      "description": "Markets fall sharply as airlines cancel routes and supply chains slow.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "air travel and global trade",
+      "pathogen": null,
+      "label": null,
+      "caused_by": [
+        2,
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 14400,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.6,
+      "description": "International health officials declare a global public health emergency.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "caused_by": [
+        2,
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 20160,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.5,
+        "lon": -0.12
+      },
+      "severity": 0.6,
+      "description": "Hospitals in London postpone routine care as intensive care units fill.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "hospitals",
+      "pathogen": null,
+      "label": null,
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "civil_unrest",
+      "sim_time_minutes": 30240,
+      "location": {
+        "name": "Paris",
+        "country": "France",
+        "country_code": "FRA",
+        "lat": 48.86,
+        "lon": 2.35
+      },
+      "severity": 0.4,
+      "description": "Protests against new restrictions draw large crowds in central Paris.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 43200,
+      "location": {
+        "name": "Lagos",
+        "country": "Nigeria",
+        "country_code": "NGA",
+        "lat": 6.52,
+        "lon": 3.38
+      },
+      "severity": 0.3,
+      "description": "Shipments of tests and protective equipment arrive to support local clinics.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Germany",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 129600,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.35,
+        "lon": 103.82
+      },
+      "severity": 0.3,
+      "description": "Vaccination campaigns begin and new cases start to fall in early-hit cities.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "caused_by": [
+        1,
+        5
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

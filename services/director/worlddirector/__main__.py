@@ -19,9 +19,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p = argparse.ArgumentParser(prog="worlddirector", description="Turn a scenario into proposed WORLD//SIM events.")
     p.add_argument("scenario", nargs="?", default="", help="hypothetical scenario text")
     p.add_argument("--fixture", help="replay a checked-in response instead of calling Codex (e.g. japan-earthquake)")
+    p.add_argument("--history", help="JSON batch/snapshot of what already happened; the Director continues from it")
     p.add_argument("--simulation-id")
-    p.add_argument("--branch-id", default="main")
-    p.add_argument("--first-id", type=int, default=1, help="number for the first evt-NNNN id")
+    p.add_argument("--branch-id")
+    p.add_argument("--first-id", type=int, help="number for the first evt-NNNN id (default: after the history)")
     p.add_argument("--model", default=DEFAULT_MODEL)
     p.add_argument("--effort", default=DEFAULT_EFFORT)
     p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_S, help="seconds")
@@ -30,9 +31,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         p.error("give a scenario or --fixture NAME")
 
     try:
+        history = None
+        if args.history:
+            try:
+                with open(args.history, encoding="utf-8") as f:
+                    history = json.load(f)
+            except (OSError, json.JSONDecodeError) as exc:
+                raise DirectorError("invalid_history", f"Could not read history file: {exc}") from None
         batch = generate(
             args.scenario,
             fixture=args.fixture,
+            history=history,
             simulation_id=args.simulation_id,
             branch_id=args.branch_id,
             first_id=args.first_id,
