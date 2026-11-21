@@ -16,6 +16,7 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import math
 from typing import Any
 
 from fastapi import Body, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
@@ -57,6 +58,10 @@ def create_app(
     cors_origins: tuple[str, ...] = ("http://localhost:3000", "http://127.0.0.1:3000"),
 ) -> FastAPI:
     """`minutes_per_second` is the sim rate at 1×; speed multiplies it."""
+    if not math.isfinite(tick_seconds) or tick_seconds <= 0:
+        raise ValueError("tick_seconds must be a positive finite number")
+    if not math.isfinite(minutes_per_second) or minutes_per_second <= 0:
+        raise ValueError("minutes_per_second must be a positive finite number")
     clients: set[WebSocket] = set()
 
     async def broadcast(messages: list[Message]) -> None:

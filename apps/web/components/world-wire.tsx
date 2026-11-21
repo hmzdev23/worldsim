@@ -22,7 +22,7 @@ export function WorldWire({ revealed }: { revealed: boolean }) {
         <span className="world-wire-note">Fictional news</span>
       </div>
       {items.length === 0 ? (
-        <p className="world-wire-empty">No reports yet. Press Play to start the simulation.</p>
+        <p className="world-wire-empty">No reports yet. Play the simulation to receive its first applied event.</p>
       ) : (
         <ul className="world-wire-list">
           {items.map((item) => (

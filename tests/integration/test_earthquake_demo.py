@@ -13,9 +13,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACTS = ROOT / "contracts"
 sys.path.insert(0, str(ROOT / "services" / "newsroom"))
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+sys.path.insert(0, str(ROOT / "services" / "simulation"))
 
-import mock_stream  # noqa: E402
+from worldsim_sim import replay  # noqa: E402
 from worldwire import SIMULATED_LABEL, news_from_stream  # noqa: E402
 from worldwire.__main__ import main as worldwire_cli  # noqa: E402
 
@@ -34,7 +34,7 @@ class EarthquakeDemoTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.batch = load(CONTRACTS / "fixtures" / "japan-earthquake.json")
-        cls.messages = list(mock_stream.replay(cls.batch, speed=4))
+        cls.messages = replay(cls.batch, speed=4)
         cls.quake = next(e for e in cls.batch["events"] if e["type"] == "earthquake")
 
     def test_stream_starts_with_snapshot_and_is_ordered(self):

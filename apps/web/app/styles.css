@@ -154,14 +154,18 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   position: absolute;
   right: 12px;
   bottom: 10px;
+  max-width: calc(100% - 24px);
   padding: 2px 3px;
   color: var(--muted);
   background: #111719;
   font: 9px var(--mono);
+  line-height: 1.4;
+  text-align: right;
   text-decoration: none;
 }
 
 .map-credit:hover { text-decoration: underline; }
+.map-credit a { color: inherit; }
 
 .epicenter-marker {
   display: grid;

@@ -87,6 +87,8 @@ class ClockTests(unittest.TestCase):
         self.assertEqual(self.sim.now, 40)
         with self.assertRaises(ValueError):
             self.sim.set_speed(3)
+        with self.assertRaises(ValueError):
+            self.sim.set_speed(2.0)
 
     def test_fractional_advances_accumulate(self):
         for _ in range(10):
@@ -159,6 +161,10 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(messages[0]["kind"], "snapshot")
         feed = news_from_stream(messages)
         self.assertEqual([item["event_id"] for item in feed], [QUAKE["id"]])
+
+    def test_replay_rejects_non_advancing_steps(self):
+        with self.assertRaises(ValueError):
+            replay(FIXTURE, step_minutes=0)
 
 
 @unittest.skipIf(TestClient is None, "pip install -r services/simulation/requirements.txt")

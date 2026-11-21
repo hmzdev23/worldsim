@@ -9,6 +9,11 @@ cd services/simulation
 ../../.venv/bin/python -m unittest discover -s ../../tests/simulation  # tests
 ```
 
+For the complete map + stream demo, return to the repo root and run
+`./scripts/run-demo.sh`. It starts the server paused at minute 401 and uses
+60 simulated minutes per wall-clock second so the fixture event at minute 402
+appears immediately after playback starts.
+
 On Windows the venv interpreter is `.venv\Scripts\python`.
 
 Options: `fixture` (defaults to `contracts/fixtures/japan-earthquake.json`), `--port 8765`, `--start-minutes`, `--speed {1,2,4,16}`, `--paused`, `--minutes-per-second` (sim minutes per wall second at 1×, default 1), `--tick-seconds` (default 1).

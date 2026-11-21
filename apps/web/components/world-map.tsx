@@ -43,6 +43,13 @@ const grid: FeatureCollection<LineString> = {
 const mapStyle: StyleSpecification = {
   version: 8,
   sources: {
+    imagery: {
+      type: "raster",
+      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: "Sources: Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+    },
     grid: { type: "geojson", data: grid },
     countries: { type: "geojson", data: "/countries.geojson" },
     epicenter: {
@@ -56,6 +63,7 @@ const mapStyle: StyleSpecification = {
   },
   layers: [
     { id: "ocean", type: "background", paint: { "background-color": "#111719" } },
+    { id: "imagery", type: "raster", source: "imagery", paint: { "raster-saturation": -0.2, "raster-brightness-max": 0.84 } },
     {
       id: "grid",
       type: "line",
@@ -70,10 +78,16 @@ const mapStyle: StyleSpecification = {
         "fill-color": [
           "case",
           ["boolean", ["feature-state", "hover"], false],
-          "#505e59",
+          "#ffbd91",
           ["==", ["get", "code"], "JPN"],
-          "#77553f",
-          "#273431",
+          "#ffa96b",
+          "#eff3ed",
+        ],
+        "fill-opacity": [
+          "case",
+          ["boolean", ["feature-state", "hover"], false], 0.28,
+          ["==", ["get", "code"], "JPN"], 0.2,
+          0.055,
         ],
       },
     },
@@ -81,14 +95,18 @@ const mapStyle: StyleSpecification = {
       id: "borders",
       type: "line",
       source: "countries",
-      paint: { "line-color": "#65736b", "line-width": 0.65, "line-opacity": 0.75 },
+      paint: {
+        "line-color": ["case", ["boolean", ["feature-state", "hover"], false], "#ffd5b8", "#e4ece5"],
+        "line-width": ["case", ["boolean", ["feature-state", "hover"], false], 2.2, 0.65],
+        "line-opacity": ["case", ["boolean", ["feature-state", "hover"], false], 1, 0.55],
+      },
     },
     {
       id: "japan-outline",
       type: "line",
       source: "countries",
       filter: ["==", ["get", "code"], "JPN"],
-      paint: { "line-color": "#c88d66", "line-width": 1 },
+      paint: { "line-color": "#ffc18f", "line-width": 1.3, "line-opacity": 0.95 },
     },
     ...pulseLayers.map((id, index) => ({
       id,
@@ -258,7 +276,9 @@ export function WorldMap({
           <CornersOut size={18} />
         </button>
       </div>
-      <a className="map-credit" href="https://www.naturalearthdata.com/">Made with Natural Earth</a>
+      <div className="map-credit">
+        Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community · Boundaries <a href="https://www.naturalearthdata.com/">Natural Earth</a>
+      </div>
       {mapUnavailable && (
         <div className="map-message" role="status">
           <strong>Map unavailable</strong>
