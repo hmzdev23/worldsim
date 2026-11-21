@@ -2,6 +2,8 @@
   {
     "id": "news-evt-0001",
     "event_id": "evt-0001",
+    "event_type": "earthquake",
+    "severity": 0.9,
     "label": "SIMULATED",
     "headline": "M7.8 earthquake strikes off the coast of Miyagi, Japan",
     "dek": "Simulated shaking reported across Japan from a quake about 24 km deep. Emergency response assessment is under way.",

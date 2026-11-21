@@ -15,8 +15,8 @@ CONTRACTS = ROOT / "contracts"
 sys.path.insert(0, str(ROOT / "services" / "newsroom"))
 sys.path.insert(0, str(ROOT / "services" / "simulation"))
 
-from worldsim_sim import replay  # noqa: E402
-from worldwire import SIMULATED_LABEL, news_from_stream  # noqa: E402
+from worldsim_sim import Simulation, replay  # noqa: E402
+from worldwire import SIMULATED_LABEL, WireFeed, news_from_stream  # noqa: E402
 from worldwire.__main__ import main as worldwire_cli  # noqa: E402
 
 try:
@@ -70,6 +70,40 @@ class EarthquakeDemoTests(unittest.TestCase):
             html = page.read_text(encoding="utf-8")
         self.assertIn(f'"event_id": "{self.quake["id"]}"', html)
         self.assertIn('dispatchEvent(new CustomEvent("worldsim:focus"', html)
+
+
+class MultiEventChainTests(unittest.TestCase):
+    """NEWS-003 (#28): the real engine drives WORLD//WIRE one applied event at a time."""
+
+    def setUp(self):
+        batch = load(ROOT / "tests" / "newsroom" / "fixtures" / "impact-chain.json")
+        self.sim = Simulation.from_batch(batch, state="paused")
+        self.sim.seek(0)
+        self.timeline = self.sim.timeline
+        self.feed = WireFeed()
+        self.feed.apply(self.sim.snapshot())
+
+    def test_wire_follows_engine_event_by_event_and_seek(self):
+        self.assertNotIn("evt-0007", [e["id"] for e in self.timeline], "engine skips rejected events")
+        self.sim.play()
+        seen = []
+        last = self.timeline[-1]["sim_time_minutes"]
+        while self.sim.now < last:
+            for message in self.sim.advance(60):
+                if message["kind"] == "event":
+                    seen.append(message["event"]["id"])
+                    self.feed.apply(message)
+                    self.assertEqual(self.feed.items[0]["event_id"], message["event"]["id"])
+                    self.assertEqual(len(self.feed.items), len(seen))
+                    # Nothing from the future is on the wire yet.
+                    self.assertTrue(all(i["sim_time_minutes"] <= self.sim.now for i in self.feed.items))
+        self.assertEqual(seen, [e["id"] for e in self.timeline])
+
+        self.feed.apply(self.sim.seek(600))
+        self.assertEqual({i["event_id"] for i in self.feed.items},
+                         {e["id"] for e in self.timeline if e["sim_time_minutes"] <= 600})
+        self.feed.apply(self.sim.seek(0))
+        self.assertEqual(self.feed.items, [])
 
 
 if __name__ == "__main__":

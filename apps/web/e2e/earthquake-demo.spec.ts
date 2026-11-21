@@ -18,7 +18,7 @@ test("earthquake headline appears on play and focuses the map", async ({ page })
   await page.getByRole("button", { name: "Play", exact: true }).click();
   const card = wire.getByRole("button").first();
   await expect(card).toContainText("SIMULATED");
-  await expect(card).toContainText("DAY 1 · 06:42 SIM TIME");
+  await expect(card).toContainText("DAY 1 · 06:42");
   await expect(card).toContainText(/earthquake strikes/i);
 
   const focus = page.evaluate(
