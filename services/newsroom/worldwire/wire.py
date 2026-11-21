@@ -342,18 +342,32 @@ class WireFeed:
     `event` messages add one applied event, `snapshot` messages (connect, seek,
     replay) replace everything, and `clock` messages carry no news. Events that
     are not applied are ignored, so rejected or proposed events never appear.
+
+    A feed follows one run, identified by (`simulation_id`, `branch_id`). A
+    snapshot from a different run starts over, and event messages from any
+    other run are ignored, so two runs that reuse event IDs never mix.
     """
 
     def __init__(self) -> None:
         self._events: dict[str, Event] = {}
+        self._run: tuple[Any, Any] | None = None
+
+    @staticmethod
+    def _run_of(message: dict[str, Any]) -> tuple[Any, Any]:
+        return message.get("simulation_id"), message.get("branch_id")
 
     def apply(self, message: dict[str, Any]) -> bool:
         """Apply one message. Returns True when the visible feed may have changed."""
         kind = message.get("kind")
         if kind == "snapshot":
+            self._run = self._run_of(message)
             self._events = {e["id"]: e for e in message.get("events", []) if e.get("status") == "applied"}
             return True
         if kind == "event":
+            if self._run is None:
+                self._run = self._run_of(message)
+            elif self._run_of(message) != self._run:
+                return False
             event = message["event"]
             if event.get("status") != "applied":
                 return False
