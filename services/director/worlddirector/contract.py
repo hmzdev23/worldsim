@@ -1,36 +1,48 @@
-"""Event vocabulary and the strict output schema the model must follow.
+"""Event vocabulary (read from contracts/events.schema.json) and the strict
+output schema the model must follow.
 
-The event envelope mirrors the provisional 0.1 shape used by the newsroom
-fixture (issue #1 has not landed a reviewed contract yet). The Director only
-*proposes* events; the simulation decides which ones become "applied".
+The Director only *proposes* events; the simulation decides which ones become
+"applied". Batches follow contracts/events.schema.json v0.1.
 """
 
 from __future__ import annotations
 
-SCHEMA_VERSION = "0.1-provisional"
+import json
+from pathlib import Path
+
+CONTRACTS_DIR = Path(__file__).resolve().parents[3] / "contracts"
+_EVENTS_SCHEMA = json.loads((CONTRACTS_DIR / "events.schema.json").read_text(encoding="utf-8"))
+_EVENT_DEF = _EVENTS_SCHEMA["$defs"]["event"]["properties"]
+
+SCHEMA_VERSION: str = _EVENTS_SCHEMA["properties"]["schema_version"]["const"]
+EVENT_TYPES: tuple = tuple(_EVENT_DEF["type"]["enum"])
+CONTRACT_VISUALS: tuple = tuple(_EVENT_DEF["visual"]["enum"])
+SLUG_PATTERN: str = _EVENTS_SCHEMA["$defs"]["slug"]["pattern"]
+
 MAX_EVENTS = 6
 MAX_SCENARIO_CHARS = 2000
 MAX_SIM_MINUTES = 30 * 24 * 60  # 30 simulated days
 
-# Event type -> animation key. The model picks the type; the visual is derived
-# here so the frontend never receives an animation key it doesn't know.
-VISUALS: dict[str, str] = {
+# Event type -> map animation key. The model picks the type and the visual is
+# derived here, so the map never receives an animation key it doesn't know.
+VISUALS: dict = {
     "earthquake": "earthquake_shockwave",
     "aftershock": "earthquake_shockwave",
-    "tsunami": "tsunami_wave",
+    "tsunami_warning": "weather_disaster",
     "infrastructure_failure": "power_grid_failure",
-    "evacuation": "evacuation_flow",
     "government_response": "emergency_mobilization",
     "international_aid": "animated_transport_route",
-    "public_health": "public_health_alert",
-    "economic_impact": "market_shock",
-    "recovery": "recovery_pulse",
 }
-EVENT_TYPES = tuple(VISUALS)
+QUAKE_TYPES = ("earthquake", "aftershock")
+
+_missing = set(EVENT_TYPES) - set(VISUALS)
+_unknown = set(VISUALS.values()) - set(CONTRACT_VISUALS)
+if _missing or _unknown:  # fail loudly if the shared contract changes under us
+    raise RuntimeError(f"Director visuals out of sync with contract: missing={_missing} unknown={_unknown}")
 
 
-def _nullable_number(description: str) -> dict:
-    return {"type": ["number", "null"], "description": description}
+def _nullable(kind: str, description: str) -> dict:
+    return {"type": [kind, "null"], "description": description}
 
 
 # Strict structured-output schema: every property required, no extras.
@@ -45,26 +57,29 @@ OUTPUT_SCHEMA: dict = {
                     "type": {"type": "string", "enum": list(EVENT_TYPES)},
                     "sim_time_minutes": {
                         "type": "integer",
-                        "description": "Minutes since simulation start (day 1 begins at 0).",
+                        "description": "Minutes since simulation start (DAY 1 00:00 is 0).",
                     },
                     "location": {
                         "type": "object",
                         "properties": {
                             "name": {"type": "string"},
                             "country": {"type": "string"},
+                            "country_code": {"type": "string", "description": "ISO 3166-1 alpha-3, e.g. JPN."},
                             "lat": {"type": "number"},
                             "lon": {"type": "number"},
                         },
-                        "required": ["name", "country", "lat", "lon"],
+                        "required": ["name", "country", "country_code", "lat", "lon"],
                         "additionalProperties": False,
                     },
                     "severity": {"type": "number", "description": "0.0 (minor) to 1.0 (extreme)."},
                     "description": {"type": "string"},
-                    "magnitude": _nullable_number("Earthquake/aftershock magnitude, else null."),
-                    "depth_km": _nullable_number("Earthquake/aftershock depth in km, else null."),
-                    "origin_country": {
-                        "type": ["string", "null"],
-                        "description": "Sending country for international_aid, else null.",
+                    "magnitude": _nullable("number", "Required for earthquake/aftershock, else null."),
+                    "depth_km": _nullable("number", "Required for earthquake/aftershock, else null."),
+                    "origin": _nullable("string", "Sending country for international_aid, else null."),
+                    "caused_by": {
+                        "type": "array",
+                        "items": {"type": "integer"},
+                        "description": "0-based indexes of earlier events in this list that caused this one.",
                     },
                 },
                 "required": [
@@ -75,7 +90,8 @@ OUTPUT_SCHEMA: dict = {
                     "description",
                     "magnitude",
                     "depth_km",
-                    "origin_country",
+                    "origin",
+                    "caused_by",
                 ],
                 "additionalProperties": False,
             },

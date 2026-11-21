@@ -3,52 +3,115 @@
     {
       "type": "earthquake",
       "sim_time_minutes": 402,
-      "location": { "name": "off the coast of Miyagi", "country": "Japan", "lat": 38.3, "lon": 142.4 },
+      "location": {
+        "name": "off the coast of Miyagi",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.3,
+        "lon": 142.4
+      },
       "severity": 0.9,
       "description": "A powerful offshore earthquake shakes northeastern Japan.",
       "magnitude": 7.8,
       "depth_km": 24,
-      "origin_country": null
+      "origin": null,
+      "caused_by": []
     },
     {
-      "type": "tsunami",
-      "sim_time_minutes": 431,
-      "location": { "name": "Ishinomaki", "country": "Japan", "lat": 38.43, "lon": 141.3 },
-      "severity": 0.7,
-      "description": "Tsunami warnings trigger coastal evacuations along the Miyagi shoreline.",
+      "type": "tsunami_warning",
+      "sim_time_minutes": 405,
+      "location": {
+        "name": "Miyagi coast",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.43,
+        "lon": 141.3
+      },
+      "severity": 0.8,
+      "description": "Tsunami warnings trigger evacuations of low-lying coastal areas.",
       "magnitude": null,
       "depth_km": null,
-      "origin_country": null
+      "origin": null,
+      "caused_by": [
+        0
+      ]
     },
     {
       "type": "infrastructure_failure",
-      "sim_time_minutes": 480,
-      "location": { "name": "Sendai", "country": "Japan", "lat": 38.27, "lon": 140.87 },
+      "sim_time_minutes": 420,
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
       "severity": 0.6,
-      "description": "Regional power outages disrupt rail service and hospitals switch to backup generators.",
+      "description": "Regional power outages halt rail service and hospitals switch to backup generators.",
       "magnitude": null,
       "depth_km": null,
-      "origin_country": null
+      "origin": null,
+      "caused_by": [
+        0
+      ]
     },
     {
       "type": "government_response",
-      "sim_time_minutes": 600,
-      "location": { "name": "Tokyo", "country": "Japan", "lat": 35.68, "lon": 139.69 },
+      "sim_time_minutes": 480,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
       "severity": 0.5,
       "description": "The national government deploys Self-Defense Forces for search and relief.",
       "magnitude": null,
       "depth_km": null,
-      "origin_country": null
+      "origin": null,
+      "caused_by": [
+        0,
+        2
+      ]
+    },
+    {
+      "type": "aftershock",
+      "sim_time_minutes": 615,
+      "location": {
+        "name": "off the coast of Fukushima",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 37.6,
+        "lon": 141.9
+      },
+      "severity": 0.5,
+      "description": "A strong aftershock adds strain to damaged structures.",
+      "magnitude": 6.4,
+      "depth_km": 30,
+      "origin": null,
+      "caused_by": [
+        0
+      ]
     },
     {
       "type": "international_aid",
       "sim_time_minutes": 2040,
-      "location": { "name": "Sendai Airport", "country": "Japan", "lat": 38.14, "lon": 140.92 },
+      "location": {
+        "name": "Sendai Airport",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.14,
+        "lon": 140.92
+      },
       "severity": 0.3,
       "description": "Relief flights arrive carrying supplies and search-and-rescue teams.",
       "magnitude": null,
       "depth_km": null,
-      "origin_country": "United States"
+      "origin": "United States",
+      "caused_by": [
+        3
+      ]
     }
   ]
 }

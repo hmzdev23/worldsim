@@ -48,26 +48,35 @@ def fake_codex(tmp: str, body: str) -> str:
 class FixtureModeTest(unittest.TestCase):
     def test_fixture_batch_is_proposed_ordered_and_tagged(self):
         batch = generate(fixture="japan-earthquake")
-        self.assertEqual(batch["schema_version"], "0.1-provisional")
+        self.assertEqual(batch["schema_version"], "0.1")
         self.assertEqual(batch["simulation_id"], "demo-japan-earthquake")
         events = batch["events"]
-        self.assertEqual([e["id"] for e in events], [f"evt-{i:04d}" for i in range(1, 6)])
+        self.assertEqual([e["id"] for e in events], [f"evt-{i:04d}" for i in range(1, 7)])
         times = [e["sim_time_minutes"] for e in events]
         self.assertEqual(times, sorted(times))
         for e in events:
             self.assertEqual(e["status"], "proposed")
-            self.assertEqual(e["provenance"], "fixture")
+            self.assertEqual(e["provenance"], {"source": "fixture"})
             self.assertEqual(e["visual"], VISUALS[e["type"]])
 
     def test_fixture_is_deterministic(self):
         self.assertEqual(generate(fixture="japan-earthquake"), generate(fixture="japan-earthquake"))
 
-    def test_first_event_matches_newsroom_fixture_shape(self):
+    def test_first_event_matches_shared_contract_fixture(self):
         quake = generate(fixture="japan-earthquake")["events"][0]
-        self.assertEqual(quake["location"], {"name": "off the coast of Miyagi", "country": "Japan", "lat": 38.3, "lon": 142.4})
-        self.assertEqual(quake["payload"]["magnitude"], 7.8)
-        self.assertEqual(quake["payload"]["depth_km"], 24)
-        self.assertNotIn("origin_country", quake["payload"])
+        shared = json.loads((ROOT / "contracts" / "fixtures" / "japan-earthquake.json").read_text())["events"][0]
+        for key in ("id", "sim_time_minutes", "sequence", "type", "location", "severity", "visual", "parent_ids"):
+            self.assertEqual(quake[key], shared[key], key)
+        self.assertEqual(quake["payload"]["magnitude"], shared["payload"]["magnitude"])
+        self.assertEqual(quake["payload"]["depth_km"], shared["payload"]["depth_km"])
+
+    def test_fixture_covers_every_contract_type_with_causes(self):
+        events = generate(fixture="japan-earthquake")["events"]
+        self.assertEqual({e["type"] for e in events}, set(EVENT_TYPES))
+        ids = [e["id"] for e in events]
+        for e in events:
+            for parent in e["parent_ids"]:
+                self.assertLess(ids.index(parent), ids.index(e["id"]))
 
     def test_first_id_offsets_ids(self):
         batch = generate(fixture="japan-earthquake", first_id=40)
@@ -95,7 +104,7 @@ class ValidationTest(unittest.TestCase):
         self.assertInvalid([])
         self.assertInvalid({"events": []})
         self.assertInvalid({"events": [{}]})
-        self.assertInvalid({"events": raw_fixture()["events"] * 2})  # too many
+        self.assertInvalid({"events": raw_fixture()["events"] + raw_fixture()["events"][:1]})  # too many
         self.assertInvalid({"events": [], "extra": 1})
 
     def test_rejects_unknown_type_and_extra_keys(self):
@@ -103,7 +112,7 @@ class ValidationTest(unittest.TestCase):
         self.assertInvalid(one_event(shell="rm -rf /"))
 
     def test_rejects_out_of_range_values(self):
-        loc = {"name": "X", "country": "Y", "lat": 91, "lon": 0}
+        loc = {"name": "X", "country": "Y", "country_code": "XYZ", "lat": 91, "lon": 0}
         self.assertInvalid(one_event(location=loc))
         self.assertInvalid(one_event(location={**loc, "lat": 0, "lon": 181}))
         self.assertInvalid(one_event(location={**loc, "lat": 0, "name": " "}))
@@ -114,9 +123,50 @@ class ValidationTest(unittest.TestCase):
         self.assertInvalid(one_event(magnitude=12))
         self.assertInvalid(one_event(description="x" * 281))
         self.assertInvalid(one_event(severity=float("nan")))
+        self.assertInvalid(one_event(location={**loc, "lat": 0, "country_code": "JP"}))
+        self.assertInvalid(one_event(depth_km=801))
+
+    def test_quakes_need_magnitude_and_depth(self):
+        self.assertInvalid(one_event(magnitude=None))
+        self.assertInvalid(one_event(type="aftershock", depth_km=None))
+        build_batch(one_event(type="government_response", magnitude=None, depth_km=None), simulation_id="t")
+
+    def test_caused_by_must_point_backwards(self):
+        raw = raw_fixture()
+        raw["events"][0]["caused_by"] = [0]  # itself
+        self.assertInvalid(raw)
+        raw = raw_fixture()
+        raw["events"][1]["caused_by"] = [9]  # out of range
+        self.assertInvalid(raw)
+        raw = raw_fixture()
+        raw["events"][0]["caused_by"] = [5]  # effect before cause
+        self.assertInvalid(raw)
+
+    def test_parent_ids_follow_sorting(self):
+        raw = raw_fixture()
+        raw["events"].reverse()  # aid is now index 0, government_response index 2
+        for ev in raw["events"]:
+            ev["caused_by"] = [len(raw["events"]) - 1 - c for c in ev["caused_by"]]
+        batch = build_batch(raw, simulation_id="t")
+        self.assertEqual(batch, build_batch(raw_fixture(), simulation_id="t"))
+
+    def test_same_time_events_get_increasing_sequence(self):
+        raw = raw_fixture()
+        for ev in raw["events"][1:3]:
+            ev["sim_time_minutes"] = 402
+        events = build_batch(raw, simulation_id="t")["events"]
+        self.assertEqual([(e["sim_time_minutes"], e["sequence"]) for e in events[:3]], [(402, 0), (402, 1), (402, 2)])
+
+    def test_rejects_bad_ids(self):
+        with self.assertRaises(DirectorError):
+            build_batch(raw_fixture(), simulation_id="Not A Slug")
+        with self.assertRaises(DirectorError):
+            build_batch(raw_fixture(), simulation_id="t", first_id=0)
 
     def test_sorts_by_sim_time(self):
         raw = raw_fixture()
+        for ev in raw["events"]:
+            ev["caused_by"] = []
         raw["events"].reverse()
         batch = build_batch(raw, simulation_id="t")
         times = [e["sim_time_minutes"] for e in batch["events"]]
@@ -190,12 +240,12 @@ class CodexModeTest(unittest.TestCase):
             """
         )
         self.assertEqual(batch["simulation_id"], "sim-a-strong-earthquake-near-sendai")
-        self.assertTrue(all(e["provenance"] == "model" for e in batch["events"]))
+        self.assertTrue(all(e["provenance"] == {"source": "model", "model": "gpt-6-luna"} for e in batch["events"]))
 
     def test_falls_back_to_stdout(self):
         payload = json.dumps(raw_fixture())
         batch = self.run_with(f"import sys; sys.stdin.read(); print('log line'); print({payload!r})")
-        self.assertEqual(len(batch["events"]), 5)
+        self.assertEqual(len(batch["events"]), 6)
 
     def test_nonzero_exit(self):
         err = self.run_failing("import sys; sys.stderr.write('not logged in'); sys.exit(3)", "codex_failed")
@@ -229,7 +279,7 @@ class CliTest(unittest.TestCase):
     def test_fixture_prints_batch(self):
         proc = self.cli("--fixture", "japan-earthquake")
         self.assertEqual(proc.returncode, 0, proc.stderr)
-        self.assertEqual(len(json.loads(proc.stdout)["events"]), 5)
+        self.assertEqual(len(json.loads(proc.stdout)["events"]), 6)
 
     def test_failure_is_json_on_stderr(self):
         proc = self.cli("--fixture", "missing")
