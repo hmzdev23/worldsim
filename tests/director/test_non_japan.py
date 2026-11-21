@@ -1,10 +1,11 @@
 """DIR-004: a non-Japan scenario runs through the same pipeline as the demo.
 
-tests/director/fixtures/iceland-eruption.json is a raw Director response for a
+services/director/fixtures/iceland-eruption.json is a raw Director response for a
 fictional Reykjanes eruption (Iceland, with knock-on effects in the UK and aid
 from Norway and Denmark). It goes through the real Director validator, the
 simulation engine, and WORLD//WIRE with nothing Japan-specific involved.
-Test-only: it is not a demo fixture and does not touch the canonical one.
+It is also the deterministic non-Japan generator behind prepare_scenario
+(DIR-005); the canonical Japan demo fixture is untouched.
 """
 
 import copy
@@ -14,7 +15,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-FIXTURE = Path(__file__).resolve().parent / "fixtures" / "iceland-eruption.json"
+FIXTURE = ROOT / "services" / "director" / "fixtures" / "iceland-eruption.json"
 sys.path.insert(0, str(ROOT / "services" / "director"))
 sys.path.insert(0, str(ROOT / "services" / "newsroom"))
 sys.path.insert(0, str(ROOT / "tests" / "integration"))

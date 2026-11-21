@@ -42,10 +42,45 @@ Fixtures:
 - `japan-earthquake`: the 72-hour, 20-event team demo with `impacts` on every event. `contracts/fixtures/japan-earthquake.json` is generated from it with `--applied`, and a test keeps them identical.
 - `japan-earthquake-continued`: days 5 to 8, which needs the Japan chain as history.
 - `global-pandemic`: 10 events, 7 countries, 3 months.
+- `iceland-eruption`: 8 events over about 2.5 days in Iceland and the UK, aid from Norway and Denmark, with `impacts`. The deterministic non-Japan scenario for prompt-to-play tests.
 
 Fixtures can be longer than one model batch (12 events). Only model output is capped.
 
 The team uses the Japan fixture for development and testing. Actual AI prompting tests will run later on Hamza's computer using his signed-in Codex CLI. Codex mode uses an ephemeral, read-only sandbox and strips API-key environment variables so the signed-in ChatGPT account is used.
+
+## Prompt-to-play: `prepare_scenario` (DIR-005)
+
+The call the scenario service (SIM-004, #49) makes when the browser submits a prompt. It returns a complete batch for a **new, independent run**: the caller's `simulation_id`/`branch_id`, an empty history, IDs from `evt-0001`, every event `proposed`, parents valid, canonical order. Any failure raises `DirectorError`; it never returns a partial batch.
+
+```python
+from worlddirector import DirectorError, prepare_scenario, public_error
+
+try:
+    batch = prepare_scenario(prompt, simulation_id=run_id, branch_id="main", timeout_s=240)
+    # tests / demo without a model: add fixture="iceland-eruption"
+except DirectorError as err:
+    log.warning("director %s: %s %s", err.code, err.message, err.detail)  # raw output stays on the server
+    body = public_error(err)   # safe to send to the browser
+```
+
+- **Blocking:** a model run can take minutes. Call it off the request and clock loop (thread or executor).
+- **`timeout_s`** is clamped to 5–600 s. Model and credentials stay with the local Codex login.
+- **`fixture=`:** one of `RUN_FIXTURES` (`iceland-eruption`, `global-pandemic`, `japan-earthquake`). The service decides when to use one. The prompt is still validated, and no model is called.
+- **Errors:** `public_error(err)` returns `{error, state, retryable, status, message}`. It never contains `err.detail`.
+
+| `error` | `state` | retryable | HTTP | When |
+| --- | --- | --- | --- | --- |
+| `invalid_scenario` | `invalid_prompt` | no (edit the prompt) | 422 | empty or longer than 2000 characters |
+| `invalid_request` | `invalid_request` | no | 400 | bad `simulation_id`/`branch_id` or `timeout_s` (caller bug) |
+| `codex_timeout` | `timeout` | yes | 504 | model exceeded `timeout_s` |
+| `invalid_json` | `invalid_output` | yes | 502 | model reply was not JSON |
+| `invalid_events` | `invalid_output` | yes | 502 | reply failed validation (order, coordinates, causes, payload, impacts) |
+| `codex_failed` | `unavailable` | yes | 503 | Codex exited non-zero or could not start |
+| `codex_missing` | `unavailable` | no | 503 | Codex CLI not installed on this server |
+| `fixture_missing` | `unavailable` | no | 500 | unknown sample fixture |
+| anything else | `unavailable` | yes | 500 | unexpected |
+
+A retry is a new `prepare_scenario` call, ideally with a new run ID.
 
 ## From Python
 

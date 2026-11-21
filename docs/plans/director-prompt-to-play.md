@@ -18,3 +18,7 @@ The existing CLI and Python `generate` function already validate prompted events
 The same prompt-facing interface produces a valid, ordered non-Japan batch through deterministic tests, with the requested run ID, valid causal links, and all statuses proposed. A timeout or malformed response produces a typed error that cannot start a partial run. Document the call and hand it to Anthony. Hamza can then try a real prompt locally through his signed-in Director setup.
 
 Follow-up generation from a branch or time checkpoint can reuse this boundary after the first prompt-to-play flow is working.
+
+## Status
+
+Implemented: `services/director/worlddirector/runner.py` (`prepare_scenario`, `public_error`, `RUN_FIXTURES`), the `iceland-eruption` run fixture, and `tests/director/test_runner.py`. The call, the fixture-backed path, and the error table are in the [Director README](../../services/director/README.md#prompt-to-play-prepare_scenario-dir-005). Remaining: Hamza tries a real prompt locally through his signed-in Codex.
