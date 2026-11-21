@@ -19,134 +19,61 @@ Running the Japan earthquake demo does not require Codex or a model login.
 - **Already have WORLD//SIM open locally?** Use that folder in your coding AI and go straight to step 3.
 - **Only have GitHub open in a browser?** Open your coding AI in the folder where you keep your projects. The prompt below tells it to clone the repo for you.
 
-### 3. Expand your name and paste the whole prompt into your coding AI
+### 3. Pick your task by name
 
-| Team member | Area | First issue |
+Use the active issue beside your name. The old starter issues #2–#6 are
+finished; do not start those again. Open the issue link for the exact
+scope and acceptance checklist. Each issue is assigned to its owner.
+
+| Team member | Task | Issue |
 | --- | --- | --- |
-| Hamza | Frontend and map | [#2](https://github.com/hmzdev23/worldsim/issues/2) |
-| Mathys | World Director (proposed) | [#3](https://github.com/hmzdev23/worldsim/issues/3) |
-| Anthony | Simulation backend (proposed) | [#4](https://github.com/hmzdev23/worldsim/issues/4) |
-| Amir | Newsroom and integration (proposed) | [#5](https://github.com/hmzdev23/worldsim/issues/5) |
+| Hamza | Live impact dashboard and crisis map | [#29](https://github.com/hmzdev23/worldsim/issues/29) |
+| Mathys | Deterministic Japan event and impact fixture | [#26](https://github.com/hmzdev23/worldsim/issues/26) |
+| Anthony | Full simulation timeline and replay | [#27](https://github.com/hmzdev23/worldsim/issues/27) |
+| Amir | Event-by-event WORLD//WIRE | [#28](https://github.com/hmzdev23/worldsim/issues/28) |
 
-<details>
-<summary><strong>Hamza</strong> — Frontend and map</summary>
-
-```text
-I'm Hamza, working on issue #2 for WORLD//SIM.
-
-Repo: https://github.com/hmzdev23/worldsim
-My issue: https://github.com/hmzdev23/worldsim/issues/2
-
-Check whether this repo is already cloned. If it is, use that copy and
-fetch the latest changes from origin. If it isn't, clone it and work
-inside the worldsim folder. If GitHub denies access, tell me which
-account or permission I need to fix.
-
-Read README.md, AGENTS.md, TEAM-SYNC.md, and my GitHub issue. Read the
-latest comments in issue #13 and share what I’m starting there.
-Preserve any local work.
-If I already have a branch for this issue, continue on it. Otherwise,
-start from the latest origin/main on a new feature branch.
-
-Start the highest-priority unblocked work in my issue. Use mock data
-if a teammate's dependency is still in progress. Tell me what you
-started, which branch you're using, and any blockers. When the work
-is ready, open a PR linked to my issue.
-```
-
-</details>
-
-<details>
-<summary><strong>Mathys</strong> — World Director</summary>
+**Copy this prompt into your coding AI. Replace the bracketed name and
+issue number with your row above.** Teammates may use their existing
+coding AI; nobody needs to install Codex or provide an API key.
 
 ```text
-I'm Mathys, working on issue #3 for WORLD//SIM.
+I'm [NAME], working on WORLD//SIM issue #[NUMBER].
 
-Repo: https://github.com/hmzdev23/worldsim
-My issue: https://github.com/hmzdev23/worldsim/issues/3
+Repository: https://github.com/hmzdev23/worldsim
+My task: https://github.com/hmzdev23/worldsim/issues/[NUMBER]
 
-Check whether this repo is already cloned. If it is, use that copy and
-fetch the latest changes from origin. If it isn't, clone it and work
-inside the worldsim folder. If GitHub denies access, tell me which
-account or permission I need to fix.
+Read README.md, AGENTS.md, and TEAM-SYNC.md. Read my whole GitHub issue
+and the latest comments in team handoff issue #13. Check the repo state
+before editing and preserve existing work. Work only on my assigned
+issue; coordinate shared event and impact fields in #13.
 
-Read README.md, AGENTS.md, TEAM-SYNC.md, and my GitHub issue. Read the
-latest comments in issue #13 and share what I’m starting there.
-Preserve any local work.
-If I already have a branch for this issue, continue on it. Otherwise,
-start from the latest origin/main on a new feature branch.
+Use the current repository copy if it is already open. Otherwise clone
+the repository and work inside the worldsim folder. Fetch origin and
+start a dedicated branch from the latest main. Keep the Japan scenario
+deterministic and offline. Do not require Codex, an LLM, API credits,
+or credentials. Run the checks listed in my issue, commit the work,
+and open a PR that links my issue. Post the branch/PR and any handoff
+in issue #13.
 
-Start the highest-priority unblocked work in my issue. Use mock data
-if a teammate's dependency is still in progress. Tell me what you
-started, which branch you're using, and any blockers. When the work
-is ready, open a PR linked to my issue.
+If another task is not merged yet, build against the documented
+interface and use temporary fixture-shaped data only where needed.
+Do not duplicate another owner's fixture, newsroom, or backend work.
 ```
-
-</details>
-
-<details>
-<summary><strong>Anthony</strong> — Simulation backend</summary>
-
-```text
-I'm Anthony, working on issue #4 for WORLD//SIM.
-
-Repo: https://github.com/hmzdev23/worldsim
-My issue: https://github.com/hmzdev23/worldsim/issues/4
-
-Check whether this repo is already cloned. If it is, use that copy and
-fetch the latest changes from origin. If it isn't, clone it and work
-inside the worldsim folder. If GitHub denies access, tell me which
-account or permission I need to fix.
-
-Read README.md, AGENTS.md, TEAM-SYNC.md, and my GitHub issue. Read the
-latest comments in issue #13 and share what I’m starting there.
-Preserve any local work.
-If I already have a branch for this issue, continue on it. Otherwise,
-start from the latest origin/main on a new feature branch.
-
-Start the highest-priority unblocked work in my issue. Use mock data
-if a teammate's dependency is still in progress. Tell me what you
-started, which branch you're using, and any blockers. When the work
-is ready, open a PR linked to my issue.
-```
-
-</details>
-
-<details>
-<summary><strong>Amir</strong> — Newsroom and integration</summary>
-
-```text
-I'm Amir, working on issue #5 for WORLD//SIM.
-
-Repo: https://github.com/hmzdev23/worldsim
-My issue: https://github.com/hmzdev23/worldsim/issues/5
-
-Check whether this repo is already cloned. If it is, use that copy and
-fetch the latest changes from origin. If it isn't, clone it and work
-inside the worldsim folder. If GitHub denies access, tell me which
-account or permission I need to fix.
-
-Read README.md, AGENTS.md, TEAM-SYNC.md, and my GitHub issue. Read the
-latest comments in issue #13 and share what I’m starting there.
-Preserve any local work.
-If I already have a branch for this issue, continue on it. Otherwise,
-start from the latest origin/main on a new feature branch.
-
-Start the highest-priority unblocked work in my issue. Use mock data
-if a teammate's dependency is still in progress. Tell me what you
-started, which branch you're using, and any blockers. When the work
-is ready, open a PR linked to my issue.
-```
-
-</details>
-
-Review the [shared event contract](https://github.com/hmzdev23/worldsim/issues/1) together and track the [earthquake demo](https://github.com/hmzdev23/worldsim/issues/6) in GitHub. Use feature branches and merge through GitHub PRs.
 
 ## First demo
 
-The first deliverable is a deterministic Japan earthquake demo. A fixture event enters the simulation stream, triggers an animation on the map, and produces a news card that flies the camera to the event when clicked. The simulator will run this demo without model access.
+Japan is the first deterministic proof-of-concept scenario, not the
+product boundary. Use it to validate a reusable event pipeline: hazards
+produce consequences, the simulation applies events over time, and the
+map, impact dashboard, timeline, and WORLD//WIRE update from that same
+state. The finished product must support arbitrary user-prompted
+scenarios through shared event types and generic consumers, not
+Japan-specific logic. Japan fixture impact values are fictional
+scenario estimates, not real forecasts or historical counts.
 
-The [master brief](WORLDSIM_MASTER_BRIEF.md) records the original design and discussion. This README and the GitHub issues describe the current setup.
+The [master brief](WORLDSIM_MASTER_BRIEF.md) records the original design
+and discussion. This README and the GitHub issues describe the current
+setup.
 
 ## Run the full Japan demo
 

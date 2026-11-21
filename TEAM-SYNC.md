@@ -30,9 +30,9 @@ Need from the team, or ready for: [who can use it, and how]
 
 | Area | Task |
 | --- | --- |
-| Hamza · World map | [#2](https://github.com/hmzdev23/worldsim/issues/2) |
-| Mathys · Director | [#3](https://github.com/hmzdev23/worldsim/issues/3) |
-| Anthony · Simulation | [#4](https://github.com/hmzdev23/worldsim/issues/4) |
-| Amir · Newsroom and integration | [#5](https://github.com/hmzdev23/worldsim/issues/5) and [#6](https://github.com/hmzdev23/worldsim/issues/6) |
+| Hamza · Impact dashboard and map | [#29](https://github.com/hmzdev23/worldsim/issues/29) |
+| Mathys · Japan event and impact fixture | [#26](https://github.com/hmzdev23/worldsim/issues/26) |
+| Anthony · Full timeline and replay | [#27](https://github.com/hmzdev23/worldsim/issues/27) |
+| Amir · Event-by-event WORLD//WIRE | [#28](https://github.com/hmzdev23/worldsim/issues/28) |
 
-The [event and stream contracts](contracts/README.md) and [Japan fixture](contracts/fixtures/japan-earthquake.json) are on `main`.
+The [event and stream contracts](contracts/README.md) and [Japan fixture](contracts/fixtures/japan-earthquake.json) are on `main`. Impact values are fictional cumulative snapshots, never daily additions.
