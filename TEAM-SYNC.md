@@ -28,14 +28,14 @@ Status and branch or PR: [state and link]
 Need from the team, or ready for: [who can use it, and how]
 ```
 
-| Owner | Status / task |
+| Owner | Status |
 | --- | --- |
-| Mathys | **ACTIVE:** [#26 event and impact fixture](https://github.com/hmzdev23/worldsim/issues/26), [PR #36 open](https://github.com/hmzdev23/worldsim/pull/36) |
-| Hamza | **WAITING on #26:** [#29 final dashboard integration](https://github.com/hmzdev23/worldsim/issues/29); UI foundation merged as [PR #32](https://github.com/hmzdev23/worldsim/pull/32) |
+| Mathys | **DONE:** [#26 closed](https://github.com/hmzdev23/worldsim/issues/26), [PR #36 merged](https://github.com/hmzdev23/worldsim/pull/36) |
+| Hamza | **DONE:** [#29 closed](https://github.com/hmzdev23/worldsim/issues/29), [PRs #32 and #36 merged](https://github.com/hmzdev23/worldsim/pull/32) |
 | Anthony | **DONE:** [#27 closed](https://github.com/hmzdev23/worldsim/issues/27), [PR #31 merged](https://github.com/hmzdev23/worldsim/pull/31) |
 | Amir | **DONE:** [#28 closed](https://github.com/hmzdev23/worldsim/issues/28), [PRs #33 and #35 merged](https://github.com/hmzdev23/worldsim/pull/33) |
 
-**Do not start closed issues. Check the live issue state before coding.**
+**No assigned demo tasks remain. Check live issues for new work; do not reopen completed tasks.**
 The [event and stream contracts](contracts/README.md) and [Japan fixture](contracts/fixtures/japan-earthquake.json) are on `main`. Impact values are fictional cumulative snapshots, never daily additions.
 
 ## Issue/PR status rule

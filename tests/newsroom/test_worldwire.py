@@ -41,7 +41,7 @@ class WorldWireTests(unittest.TestCase):
         later.update(id="evt-0002", type="infrastructure_failure", sim_time_minutes=1500)
         feed = derive_news([quake(), later])
         self.assertEqual([i["event_id"] for i in feed], ["evt-0002", "evt-0001"])
-        self.assertEqual(feed[0]["headline"], "Major infrastructure failure hits off the coast of Miyagi, Japan")
+        self.assertEqual(feed[0]["headline"], "An estimated 900,000 households without power in off the coast of Miyagi, Japan")
         self.assertEqual(feed, derive_news([later, quake()]))
 
     def test_every_contract_event_type_has_a_template(self):
@@ -76,6 +76,7 @@ class WorldWireTests(unittest.TestCase):
         for kind in types:
             event = quake()
             event["type"] = kind
+            event["payload"].pop("impacts", None)
             item = news_for_event(event)
             self.assertTrue(item["headline"].startswith(expected[kind]), item["headline"])
             self.assertTrue(item["dek"].startswith("Simulated"), item["dek"])

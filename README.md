@@ -21,33 +21,35 @@ Running the Japan earthquake demo does not require Codex or a model login.
 
 ### 3. Pick your task by name
 
-Use only an **ACTIVE** row to start work. Completed rows are closed; do not
-reopen or repeat them. The status below is the current GitHub state.
+All four assigned demo tasks are complete and their issues are closed.
+Do not restart them. Check the [open GitHub issues](https://github.com/hmzdev23/worldsim/issues)
+for the next task before coding.
 
-| Team member | Status | Next task |
+| Team member | Status | Completed work |
 | --- | --- | --- |
-| Mathys | **ACTIVE** | [#26 — Japan proof-of-concept event and impact fixture](https://github.com/hmzdev23/worldsim/issues/26) · [PR #36](https://github.com/hmzdev23/worldsim/pull/36) is open |
-| Hamza | **ACTIVE AFTER #26** | [#29 — Integrate the canonical scenario into the dashboard](https://github.com/hmzdev23/worldsim/issues/29). The dashboard foundation is already merged in [PR #32](https://github.com/hmzdev23/worldsim/pull/32); don't redo it. |
-| Anthony | **DONE** | [#27](https://github.com/hmzdev23/worldsim/issues/27) closed · [PR #31](https://github.com/hmzdev23/worldsim/pull/31) merged |
-| Amir | **DONE** | [#28](https://github.com/hmzdev23/worldsim/issues/28) closed · [PR #33](https://github.com/hmzdev23/worldsim/pull/33) and [PR #35](https://github.com/hmzdev23/worldsim/pull/35) merged |
+| Mathys | **DONE** | [#26](https://github.com/hmzdev23/worldsim/issues/26) · [PR #36](https://github.com/hmzdev23/worldsim/pull/36) |
+| Hamza | **DONE** | [#29](https://github.com/hmzdev23/worldsim/issues/29) · [PRs #32 and #36](https://github.com/hmzdev23/worldsim/pull/32) |
+| Anthony | **DONE** | [#27](https://github.com/hmzdev23/worldsim/issues/27) · [PR #31](https://github.com/hmzdev23/worldsim/pull/31) |
+| Amir | **DONE** | [#28](https://github.com/hmzdev23/worldsim/issues/28) · [PRs #33 and #35](https://github.com/hmzdev23/worldsim/pull/33) |
 
-**Only Mathys should start implementation now. Hamza's remaining integration
-starts after PR #36 merges. Anthony and Amir should not start their closed
-issues.** Nobody needs to install Codex or provide an API key.
+**Before starting any task**, check the live GitHub issue state. If closed, do
+not repeat the work; find an open issue or ask Hamza to assign the next task.
+Nobody needs to install Codex or provide an API key for the deterministic demo.
 
-For an active task, give your coding agent this prompt, replacing the brackets:
+For a newly assigned issue, tell your coding agent:
 
 ```text
-I'm [NAME]. Work only on active issue #[NUMBER] in WORLD//SIM.
+I'm [NAME], working on WORLD//SIM issue #[NUMBER].
 Repo: https://github.com/hmzdev23/worldsim
-Read README.md, AGENTS.md, TEAM-SYNC.md, the whole issue, and the latest
-comments in issue #13. Check whether my issue is OPEN before editing. If it
-is closed, stop and report the merged PR instead of repeating the work.
-Preserve local work. Use the existing repo or clone it, fetch origin, and
-branch from latest main. Keep the Japan proof-of-concept deterministic and
-offline; design shared code for arbitrary scenarios. No Codex install, model,
-API credits, or credentials. Follow the issue acceptance criteria, open a PR
-linked to my issue, then post the branch/PR in issue #13.
+Check that my issue is OPEN before editing. Read README.md, AGENTS.md,
+TEAM-SYNC.md, the full issue, and recent comments in issue #13. If closed,
+stop and report its merged PR instead of repeating the work. Otherwise, work
+only on that issue, branch from latest main, and preserve local changes.
+Keep shared code reusable for arbitrary scenarios; use local fixtures for
+offline checks. No Codex install, model, API credits, or credentials. Open a
+PR linked to the issue, using `Closes #N` only if all acceptance criteria are
+complete; for partial work use `Refs #N` and document what remains. After
+merge, verify GitHub closed the issue if the work is complete.
 ```
 
 ## First demo
