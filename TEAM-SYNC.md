@@ -23,7 +23,7 @@ GitHub's issue page also works. Start with the latest comments, then open the li
 Comment on #13 when you start a branch, need something from another owner, or have work ready for someone to use. Include the issue, the branch or PR, and what the other person can do with it.
 
 ```text
-Name / issue: Anthony / #4
+Name / issue: [your name] / #[issue]
 Status and branch or PR: [state and link]
 Need from the team, or ready for: [who can use it, and how]
 ```
@@ -32,10 +32,10 @@ Need from the team, or ready for: [who can use it, and how]
 | --- | --- | --- |
 | Hamza | [#40 headline alerts](https://github.com/hmzdev23/worldsim/issues/40) | Web UI only |
 | Amir | [#41 alert-ready news](https://github.com/hmzdev23/worldsim/issues/41) | Newsroom only |
-| Anthony | [#42 end clock accurately](https://github.com/hmzdev23/worldsim/issues/42) | Simulation engine/tests only |
-| Mathys | [#43 non-Japan pipeline fixture](https://github.com/hmzdev23/worldsim/issues/43) | Director test fixtures/tests only |
+| Anthony | Done: [#42 end clock accurately](https://github.com/hmzdev23/worldsim/issues/42) (PR #45). Next task TBD | Simulation engine/tests only |
+| Mathys | Done: [#43 non-Japan pipeline fixture](https://github.com/hmzdev23/worldsim/issues/43) (PR #46) | Director test fixtures/tests only |
 
-Separate file ownership is intentional to avoid merge conflicts. All four tasks are open and may proceed in parallel from latest `main`.
+Separate file ownership is intentional to avoid merge conflicts. #40 and #41 are still open and may proceed in parallel from latest `main`; #42 and #43 are merged.
 The [event and stream contracts](contracts/README.md) and [Japan fixture](contracts/fixtures/japan-earthquake.json) are on `main`. Impact values are fictional cumulative snapshots, never daily additions.
 
 ## Issue/PR status rule

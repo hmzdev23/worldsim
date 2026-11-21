@@ -28,8 +28,8 @@ split across these open issues. Check the linked live issue before coding.
 | --- | --- | --- |
 | Hamza | [#40 — Prominent event headline alerts](https://github.com/hmzdev23/worldsim/issues/40) | Web alert component, simulation/map integration, styles, desktop E2E |
 | Amir | [#41 — Alert-ready news copy](https://github.com/hmzdev23/worldsim/issues/41) | `services/newsroom/` and newsroom tests |
-| Anthony | [#42 — Stop clock at scenario end](https://github.com/hmzdev23/worldsim/issues/42) | `services/simulation/` and simulation tests |
-| Mathys | [#43 — Non-Japan pipeline proof](https://github.com/hmzdev23/worldsim/issues/43) | New test-only fixtures and tests under `tests/director/` |
+| Anthony | Done: [#42 — Stop clock at scenario end](https://github.com/hmzdev23/worldsim/issues/42) (PR #45). Next task TBD | `services/simulation/` and simulation tests |
+| Mathys | Done: [#43 — Non-Japan pipeline proof](https://github.com/hmzdev23/worldsim/issues/43) (PR #46) | New test-only fixtures and tests under `tests/director/` |
 
 These assignments own separate paths. Do not edit another owner's files or
 shared contracts for this work. Hamza's alert consumes the existing news item
