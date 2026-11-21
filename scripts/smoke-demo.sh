@@ -11,7 +11,7 @@ PY=python3
 [ -x .venv/bin/python ] && PY=.venv/bin/python
 "$PY" -c "import jsonschema" 2>/dev/null || echo "note: jsonschema not installed; contract checks will be skipped (python3 -m venv .venv && .venv/bin/pip install jsonschema)" >&2
 
-for suite in contracts director newsroom integration; do
+for suite in contracts director simulation newsroom integration; do
   echo "== $suite"
   "$PY" -m unittest discover -s "tests/$suite" -t "tests/$suite"
 done
