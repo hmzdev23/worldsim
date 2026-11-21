@@ -66,8 +66,8 @@ test("hovering a country identifies it on the map", async ({ page }, testInfo) =
   if (!bounds) throw new Error("map canvas is missing");
 
   const target = testInfo.project.name === "mobile"
-    ? { x: 0.28, country: "Canada" }
-    : { x: 0.08, country: "United States of America" };
-  await page.mouse.move(bounds.x + bounds.width * target.x, bounds.y + bounds.height * 0.15);
+    ? { x: 0.28, y: 0.33, country: "Canada" }
+    : { x: 0.25, y: 0.43, country: "United States of America" };
+  await page.mouse.move(bounds.x + bounds.width * target.x, bounds.y + bounds.height * target.y);
   await expect(page.locator(".map-caption span")).toHaveText(target.country);
 });

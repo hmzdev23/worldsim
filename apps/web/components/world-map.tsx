@@ -2,9 +2,9 @@
 
 import { CornersOut, Minus, Plus } from "@phosphor-icons/react";
 import type { FeatureCollection, LineString } from "geojson";
-import { Map, Marker, setWorkerUrl, type StyleSpecification } from "maplibre-gl";
+import { Map as MapLibreMap, Marker, setWorkerUrl, type GeoJSONSource, type StyleSpecification } from "maplibre-gl";
 import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
-import { earthquake, type MapLocation, type ScenarioEvent } from "../lib/earthquake";
+import type { MapLocation, ScenarioEvent } from "../lib/scenario";
 
 export type WorldMapHandle = {
   focusLocation: (location: MapLocation) => void;
@@ -15,7 +15,6 @@ const worldBounds: [[number, number], [number, number]] = [
   [-175, -57],
   [179, 76],
 ];
-const epicenter = [earthquake.location.lon, earthquake.location.lat] as const;
 const pulseLayers = ["pulse-first", "pulse-second", "pulse-third"];
 
 const grid: FeatureCollection<LineString> = {
@@ -54,11 +53,7 @@ const mapStyle: StyleSpecification = {
     countries: { type: "geojson", data: "/countries.geojson" },
     epicenter: {
       type: "geojson",
-      data: {
-        type: "Feature",
-        properties: {},
-        geometry: { type: "Point", coordinates: [...epicenter] },
-      },
+      data: { type: "FeatureCollection", features: [] },
     },
   },
   layers: [
@@ -79,14 +74,11 @@ const mapStyle: StyleSpecification = {
           "case",
           ["boolean", ["feature-state", "hover"], false],
           "#ffbd91",
-          ["==", ["get", "code"], "JPN"],
-          "#ffa96b",
           "#eff3ed",
         ],
         "fill-opacity": [
           "case",
           ["boolean", ["feature-state", "hover"], false], 0.28,
-          ["==", ["get", "code"], "JPN"], 0.2,
           0.055,
         ],
       },
@@ -102,10 +94,10 @@ const mapStyle: StyleSpecification = {
       },
     },
     {
-      id: "japan-outline",
+      id: "scenario-outline",
       type: "line",
       source: "countries",
-      filter: ["==", ["get", "code"], "JPN"],
+      filter: ["==", ["get", "code"], ""],
       paint: { "line-color": "#ffc18f", "line-width": 1.3, "line-opacity": 0.95 },
     },
     ...pulseLayers.map((id, index) => ({
@@ -136,7 +128,7 @@ function transitionDuration(duration: number) {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : duration;
 }
 
-function focusMapLocation(map: Map, { lat, lon, zoom = 4.65 }: MapLocation) {
+function focusMapLocation(map: MapLibreMap, { lat, lon, zoom = 4.65 }: MapLocation) {
   map.flyTo({ center: [lon, lat], zoom, duration: transitionDuration(1500) });
 }
 
@@ -144,19 +136,22 @@ export function WorldMap({
   children,
   elapsedSeconds,
   events,
+  focusCountry,
   ref,
 }: {
   children?: ReactNode;
   elapsedSeconds: number;
   events: ScenarioEvent[];
+  focusCountry: string;
   ref: Ref<WorldMapHandle>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<Map | null>(null);
+  const mapRef = useRef<MapLibreMap | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
   const [country, setCountry] = useState("");
-  const eventMarkers = useRef<Marker[]>([]);
+  const eventMarkers = useRef(new Map<string, Marker>());
+  const quake = events.findLast((event) => event.type === "earthquake");
 
   useImperativeHandle(ref, () => ({
     focusLocation(location) {
@@ -168,10 +163,10 @@ export function WorldMap({
     const container = containerRef.current;
     if (!container) return;
 
-    let map: Map;
+    let map: MapLibreMap;
     try {
       setWorkerUrl("/maplibre-worker/maplibre-gl-worker.mjs");
-      map = new Map({
+      map = new MapLibreMap({
         container,
         style: mapStyle,
         bounds: worldBounds,
@@ -190,21 +185,7 @@ export function WorldMap({
     map.getCanvas().setAttribute("aria-label", "World map. Arrow keys pan; plus and minus zoom.");
     map.touchZoomRotate.disableRotation();
 
-    map.on("error", () => {
-      setMapUnavailable(true);
-    });
-
     map.once("load", () => {
-      const marker = document.createElement("div");
-      marker.className = "epicenter-marker";
-      const label = document.createElement("span");
-      label.className = "epicenter-label";
-      label.textContent = "Miyagi coast";
-      marker.append(label);
-      new Marker({ element: marker })
-        .setLngLat([...epicenter])
-        .addTo(map);
-
       let hoveredId: number | string | undefined;
       const clearHover = () => {
         if (hoveredId === undefined) return;
@@ -241,6 +222,8 @@ export function WorldMap({
 
     return () => {
       window.removeEventListener("worldsim:focus", focusFromNewsroom);
+      eventMarkers.current.forEach((marker) => marker.remove());
+      eventMarkers.current.clear();
       map.remove();
       mapRef.current = null;
     };
@@ -248,26 +231,55 @@ export function WorldMap({
 
   useEffect(() => {
     const map = mapRef.current;
-    if (!mapReady || !map || !map.getLayer(pulseLayers[0])) return;
-    eventMarkers.current.forEach((marker) => marker.remove());
-    eventMarkers.current = events.filter((event) => event.type !== "earthquake").map((event) => {
-      const marker = document.createElement("div");
-      marker.className = `event-marker event-marker-${event.type}`;
-      marker.title = `${event.type.replaceAll("_", " ")} · ${event.location.name}`;
-      const instance = new Marker({ element: marker }).setLngLat([event.location.lon, event.location.lat]).addTo(map);
-      eventMarkers.current.push(instance);
-      return instance;
+    if (!mapReady || !map) return;
+    map.setFilter("scenario-outline", ["==", ["get", "code"], focusCountry]);
+  }, [focusCountry, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    const currentIds = new Set(events.map((event) => event.id));
+    for (const [eventId, marker] of eventMarkers.current) {
+      if (currentIds.has(eventId)) continue;
+      marker.remove();
+      eventMarkers.current.delete(eventId);
+    }
+    for (const event of events) {
+      if (eventMarkers.current.has(event.id)) continue;
+      const element = document.createElement("div");
+      element.className = event.type === "earthquake" ? "epicenter-marker" : `event-marker event-marker-${event.type}`;
+      element.title = `${event.type.replaceAll("_", " ")} · ${event.location.name}`;
+      eventMarkers.current.set(event.id, new Marker({ element })
+        .setLngLat([event.location.lon, event.location.lat]).addTo(map));
+    }
+  }, [events, mapReady]);
+
+  useEffect(() => {
+    const source = mapRef.current?.getSource<GeoJSONSource>("epicenter");
+    if (!mapReady || !source) return;
+    source.setData({
+      type: "FeatureCollection",
+      features: quake ? [{
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: [quake.location.lon, quake.location.lat] },
+      }] : [],
     });
+  }, [mapReady, quake]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map || !quake) return;
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     pulseLayers.forEach((id, index) => {
-      const active = elapsedSeconds > 0 && events.some((event) => event.type === "earthquake") && !reducedMotion;
+      const active = elapsedSeconds > 0 && !reducedMotion;
       const phase = ((elapsedSeconds / 4) + index / pulseLayers.length) % 1;
       const radius = active ? 12 + 92 * phase : 20 + index * 20;
       const opacity = active ? (1 - phase) * 0.72 : 0.62 - index * 0.16;
       map.setPaintProperty(id, "circle-radius", radius);
       map.setPaintProperty(id, "circle-stroke-opacity", opacity);
     });
-  }, [elapsedSeconds, events, mapReady]);
+  }, [elapsedSeconds, mapReady, quake]);
 
   return (
     <section className="map-panel" aria-label="Interactive world map">
