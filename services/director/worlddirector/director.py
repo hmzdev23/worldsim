@@ -185,18 +185,18 @@ def run_codex(
     with tempfile.TemporaryDirectory(prefix="worldsim-director.") as run_dir:
         schema_path = os.path.join(run_dir, "schema.json")
         out_path = os.path.join(run_dir, "last-message.json")
-        with open(schema_path, "w") as f:
+        with open(schema_path, "w", encoding="utf-8") as f:
             json.dump(OUTPUT_SCHEMA, f)
         cmd = codex_command(codex, run_dir, schema_path, out_path, model, effort)
         try:
-            proc = runner(cmd, input=prompt, capture_output=True, text=True, timeout=timeout_s, env=env)
+            proc = runner(cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=timeout_s, env=env)
         except subprocess.TimeoutExpired:
             raise DirectorError("codex_timeout", f"Codex did not finish within {timeout_s:g}s") from None
         if proc.returncode != 0:
             raise DirectorError("codex_failed", f"Codex exited with status {proc.returncode}", proc.stderr or proc.stdout)
         text = ""
         if os.path.exists(out_path):
-            with open(out_path) as f:
+            with open(out_path, encoding="utf-8") as f:
                 text = f.read()
         if not text.strip():
             text = proc.stdout or ""
@@ -212,7 +212,7 @@ def load_fixture(name: str) -> object:
     if not path.is_file():
         available = sorted(p.stem for p in FIXTURES_DIR.glob("*.json"))
         raise DirectorError("fixture_missing", f"No fixture {name!r}. Available: {', '.join(available)}")
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _history_events(history: object) -> list:

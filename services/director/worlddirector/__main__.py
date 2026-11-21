@@ -1,4 +1,4 @@
-"""CLI: python3 -m worlddirector "scenario" | --fixture japan-earthquake
+"""CLI: python3 -m worlddirector "scenario" | --fixture NAME [--history FILE | --sim [URL]]
 
 Prints the validated batch as JSON on stdout. On failure prints
 {"error": code, "message": ...} on stderr and exits 1 (2 for bad usage).
@@ -13,6 +13,7 @@ from typing import Optional, Sequence
 
 from .director import DEFAULT_EFFORT, DEFAULT_MODEL, DEFAULT_TIMEOUT_S, generate
 from .errors import DirectorError
+from .sim_client import DEFAULT_SIM_URL, get_snapshot, post_batch
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -20,6 +21,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p.add_argument("scenario", nargs="?", default="", help="hypothetical scenario text")
     p.add_argument("--fixture", help="replay a checked-in response instead of calling Codex (e.g. japan-earthquake)")
     p.add_argument("--history", help="JSON batch/snapshot of what already happened; the Director continues from it")
+    p.add_argument(
+        "--sim",
+        nargs="?",
+        const=DEFAULT_SIM_URL,
+        metavar="URL",
+        help=f"continue the running simulation: read its /snapshot as history and POST the batch to /events (default {DEFAULT_SIM_URL})",
+    )
     p.add_argument("--simulation-id")
     p.add_argument("--branch-id")
     p.add_argument("--first-id", type=int, help="number for the first evt-NNNN id (default: after the history)")
@@ -38,6 +46,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     history = json.load(f)
             except (OSError, json.JSONDecodeError) as exc:
                 raise DirectorError("invalid_history", f"Could not read history file: {exc}") from None
+        if args.sim and history is None:
+            history = get_snapshot(args.sim)
         batch = generate(
             args.scenario,
             fixture=args.fixture,
@@ -53,6 +63,18 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         json.dump(err.to_dict(), sys.stderr, indent=2)
         sys.stderr.write("\n")
         return 1
+    if args.sim:
+        try:
+            result = post_batch(batch, args.sim)
+        except DirectorError as err:
+            json.dump(err.to_dict(), sys.stderr, indent=2)
+            sys.stderr.write("\n")
+            return 1
+        json.dump(result, sys.stdout, indent=2, ensure_ascii=False)
+        sys.stdout.write("\n")
+        applied = sum(e.get("status") == "applied" for e in result["batch"].get("events", []))
+        sys.stderr.write(f"simulation applied {applied} of {len(batch['events'])} events\n")
+        return 0
     json.dump(batch, sys.stdout, indent=2, ensure_ascii=False)
     sys.stdout.write("\n")
     return 0

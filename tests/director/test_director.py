@@ -44,6 +44,10 @@ def fake_codex(tmp: str, body: str) -> str:
     script = os.path.join(tmp, "codex.py")
     with open(script, "w") as f:
         f.write(textwrap.dedent(body))
+    if os.name == "nt":  # Windows finds codex.cmd through PATHEXT
+        with open(os.path.join(tmp, "codex.cmd"), "w") as f:
+            f.write(f'@"{sys.executable}" "{script}" %*\r\n')
+        return tmp
     path = os.path.join(tmp, "codex")
     with open(path, "w") as f:
         f.write(f"#!/bin/sh\nexec {shlex.quote(sys.executable)} {shlex.quote(script)} \"$@\"\n")

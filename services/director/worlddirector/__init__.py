@@ -3,6 +3,7 @@
 from .contract import EVENT_TYPES, OUTPUT_SCHEMA, SCHEMA_VERSION, VISUALS
 from .director import build_prompt, generate, load_fixture, run_codex
 from .errors import DirectorError
+from .sim_client import get_snapshot, post_batch
 from .validate import build_batch
 
 __all__ = [
@@ -14,6 +15,8 @@ __all__ = [
     "build_batch",
     "build_prompt",
     "generate",
+    "get_snapshot",
+    "post_batch",
     "load_fixture",
     "run_codex",
 ]
