@@ -156,6 +156,7 @@ The offline demo check runs the shared fixture through a mock simulation stream 
 python3 -m venv .venv && .venv/bin/pip install jsonschema   # optional, enables contract checks
 ./scripts/smoke-demo.sh          # contracts, newsroom, and end-to-end checks
 ./scripts/smoke-demo.sh --open   # also opens the WORLD//WIRE preview page
+./scripts/smoke-demo.sh --web    # also runs the browser check (once: cd apps/web && npm ci && npx playwright install chromium)
 ```
 
 Shared event and stream shapes are in [contracts/](contracts/README.md).

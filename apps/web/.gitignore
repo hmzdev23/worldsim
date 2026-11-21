@@ -1,3 +1,5 @@
 next-env.d.ts
 *.tsbuildinfo
 /public/maplibre-worker/
+/test-results/
+/playwright-report/
