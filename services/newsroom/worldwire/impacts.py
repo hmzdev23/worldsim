@@ -1,19 +1,20 @@
 """Read and phrase `payload.impacts` snapshots for WORLD//WIRE.
 
-Shape agreed for DIR-003 (#26) in team thread #13:
+Final DIR-003 (#26) shape, agreed in team thread #13:
 
     "impacts": {
       "basis": "fictional_estimate",      # required marker
-      "deaths", "injured", "missing", "displaced",
+      "deaths", "injuries", "missing", "displaced", "sheltered",
       "households_without_power", "households_without_water",
       "economic_loss_usd", "flooded_area_km2", "contaminated_area_km2", "debris_tonnes",
-      "aid_countries": [...], "aid_personnel", "aid_cargo_tonnes"
+      "aid_contributors": [{"country", "personnel", "cargo_tonnes", "cargo"}]
     }
 
 Values are scenario-wide estimates *as of the event that carries them*, never
 deltas, so the newsroom reports the latest snapshot as given and never adds
-snapshots together. An omitted key means "no estimate yet", not zero. Every
-sentence built here says the figures are simulated estimates.
+snapshots together. Each aid contributor entry is that country's running
+total. An omitted key means "no estimate yet", not zero. Every sentence built
+here says the figures are simulated estimates.
 """
 
 from __future__ import annotations
@@ -24,20 +25,14 @@ from typing import Any
 BASIS = "fictional_estimate"
 COUNT_FIELDS = (
     "deaths",
-    "injured",
+    "injuries",
     "missing",
     "displaced",
+    "sheltered",
     "households_without_power",
     "households_without_water",
-    "aid_personnel",
 )
-MEASURE_FIELDS = (
-    "economic_loss_usd",
-    "flooded_area_km2",
-    "contaminated_area_km2",
-    "debris_tonnes",
-    "aid_cargo_tonnes",
-)
+MEASURE_FIELDS = ("economic_loss_usd", "flooded_area_km2", "contaminated_area_km2", "debris_tonnes")
 
 Impacts = dict[str, Any]
 
@@ -69,12 +64,30 @@ def read_impacts(event: dict[str, Any]) -> Impacts:
         value = number(raw.get(key))
         if value is not None:
             impacts[key] = value
-    countries = raw.get("aid_countries")
-    if isinstance(countries, list):
-        names = [text(c) for c in countries if text(c)]
-        if names:
-            impacts["aid_countries"] = names
+    contributors = []
+    entries = raw.get("aid_contributors")
+    for entry in entries if isinstance(entries, list) else []:
+        if not isinstance(entry, dict) or not text(entry.get("country")):
+            continue
+        clean: dict[str, Any] = {"country": text(entry["country"])}
+        for key in ("personnel", "cargo_tonnes"):
+            value = number(entry.get(key))
+            if value is not None:
+                clean[key] = value
+        if text(entry.get("cargo")):
+            clean["cargo"] = text(entry["cargo"])
+        contributors.append(clean)
+    if contributors:
+        impacts["aid_contributors"] = contributors
     return impacts
+
+
+def contributor(impacts: Impacts, country: str) -> dict[str, Any] | None:
+    """The aid_contributors entry for `country` (case-insensitive), if any."""
+    for entry in impacts.get("aid_contributors", []):
+        if country and entry["country"].lower() == country.lower():
+            return entry
+    return None
 
 
 def fmt_count(value: float) -> str:
@@ -94,9 +107,19 @@ def fmt_tonnes(value: float) -> str:
     return f"{fmt_count(value)} tonne{'' if value == 1 else 's'}"
 
 
+def aid_amount(entry: dict[str, Any]) -> str:
+    """'500 personnel and 120 tonnes of aid', or '' when no quantities are given."""
+    parts = []
+    if "personnel" in entry:
+        parts.append(f"{fmt_count(entry['personnel'])} personnel")
+    if "cargo_tonnes" in entry:
+        parts.append(f"{fmt_tonnes(entry['cargo_tonnes'])} of aid")
+    return " and ".join(parts)
+
+
 # Which figures matter for which kind of story.
-CASUALTIES = (("deaths", "dead"), ("injured", "injured"), ("missing", "missing"))
-DISPLACEMENT = (("displaced", "displaced"),)
+CASUALTIES = (("deaths", "dead"), ("injuries", "injured"), ("missing", "missing"))
+DISPLACEMENT = (("displaced", "displaced"), ("sheltered", "in shelters"))
 UTILITIES = (
     ("households_without_power", "households without power"),
     ("households_without_water", "households without water"),
@@ -107,7 +130,6 @@ ENVIRONMENT = (
     ("flooded_area_km2", "flooded"),
     ("debris_tonnes", "of debris"),
 )
-AID = (("aid_personnel", "aid personnel deployed"), ("aid_cargo_tonnes", "of relief cargo"))
 
 GROUPS_BY_TYPE: dict[str, tuple[tuple[tuple[str, str], ...], ...]] = {
     "tsunami_warning": (DISPLACEMENT, CASUALTIES),
@@ -119,7 +141,7 @@ GROUPS_BY_TYPE: dict[str, tuple[tuple[tuple[str, str], ...], ...]] = {
     "contamination": (ENVIRONMENT,),
     "recovery": (UTILITIES, DISPLACEMENT),
     "civil_unrest": (DISPLACEMENT,),
-    "international_aid": (AID,),
+    "international_aid": (),
 }
 DEFAULT_GROUPS = (CASUALTIES,)
 
@@ -129,7 +151,7 @@ def _phrase(key: str, word: str, value: float) -> str:
         return f"{fmt_usd(value)} {word}"
     if key in ("flooded_area_km2", "contaminated_area_km2"):
         return f"{fmt_count(value)} km² {word}"
-    if key in ("debris_tonnes", "aid_cargo_tonnes"):
+    if key == "debris_tonnes":
         return f"{fmt_tonnes(value)} {word}"
     return f"{fmt_count(value)} {word}"
 

@@ -15,7 +15,7 @@ from worldwire import SIMULATED_LABEL, derive_news, format_sim_time, news_for_ev
 
 
 def quake():
-    return copy.deepcopy(json.loads(FIXTURE.read_text())["events"][0])
+    return copy.deepcopy(json.loads(FIXTURE.read_text(encoding="utf-8"))["events"][0])
 
 
 class WorldWireTests(unittest.TestCase):
@@ -45,7 +45,7 @@ class WorldWireTests(unittest.TestCase):
         self.assertEqual(feed, derive_news([later, quake()]))
 
     def test_every_contract_event_type_has_a_template(self):
-        schema = json.loads((ROOT / "contracts" / "events.schema.json").read_text())
+        schema = json.loads((ROOT / "contracts" / "events.schema.json").read_text(encoding="utf-8"))
         types = schema["$defs"]["event"]["properties"]["type"]["enum"]
         expected = {
             "earthquake": "M7.8 earthquake strikes",
@@ -148,7 +148,7 @@ class WorldWireTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             page = Path(tmp) / "wire.html"
             subprocess.run(cmd + ["--html", str(page)], cwd=NEWSROOM, check=True, capture_output=True)
-            html = page.read_text()
+            html = page.read_text(encoding="utf-8")
             self.assertIn("M7.8 earthquake strikes", html)
             self.assertIn("worldsim:focus", html)
             self.assertNotIn("/*__WORLDWIRE_FEED__*/", html)

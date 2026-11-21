@@ -24,8 +24,8 @@
         "impacts": {
           "basis": "fictional_estimate",
           "deaths": 40,
-          "injured": 310,
-          "missing": 120
+          "missing": 120,
+          "injuries": 310
         }
       },
       "parent_ids": [],
@@ -52,9 +52,9 @@
         "impacts": {
           "basis": "fictional_estimate",
           "deaths": 40,
-          "injured": 310,
           "missing": 120,
-          "displaced": 35000
+          "displaced": 35000,
+          "injuries": 310
         }
       },
       "parent_ids": [
@@ -83,9 +83,10 @@
         "impacts": {
           "basis": "fictional_estimate",
           "deaths": 95,
-          "injured": 820,
           "missing": 400,
-          "displaced": 210000
+          "displaced": 210000,
+          "injuries": 820,
+          "sheltered": 145000
         }
       },
       "parent_ids": [
@@ -114,11 +115,11 @@
         "impacts": {
           "basis": "fictional_estimate",
           "deaths": 95,
-          "injured": 820,
           "missing": 400,
           "displaced": 210000,
           "households_without_power": 1800000,
-          "households_without_water": 420000
+          "households_without_water": 420000,
+          "injuries": 820
         }
       },
       "parent_ids": [
@@ -147,11 +148,12 @@
         "impacts": {
           "basis": "fictional_estimate",
           "deaths": 180,
-          "injured": 1400,
           "missing": 650,
           "displaced": 230000,
           "households_without_power": 1800000,
-          "households_without_water": 420000
+          "households_without_water": 420000,
+          "injuries": 1400,
+          "sheltered": 160000
         }
       },
       "parent_ids": [
@@ -182,8 +184,8 @@
         "impacts": {
           "basis": "fictional_estimate",
           "deaths": 240,
-          "injured": 1900,
-          "missing": 610
+          "missing": 610,
+          "injuries": 1900
         }
       },
       "parent_ids": [
@@ -239,14 +241,15 @@
         "impacts": {
           "basis": "fictional_estimate",
           "deaths": 260,
-          "aid_countries": [
-            "United States"
-          ],
-          "aid_personnel": 500,
-          "aid_cargo_tonnes": 120
-        },
-        "personnel": 500,
-        "cargo": "water purification units and field hospitals (120 t)"
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 500,
+              "cargo_tonnes": 120,
+              "cargo": "water purification units and field hospitals"
+            }
+          ]
+        }
       },
       "parent_ids": [
         "evt-0005"
@@ -275,15 +278,21 @@
         "impacts": {
           "basis": "fictional_estimate",
           "deaths": 260,
-          "aid_countries": [
-            "United States",
-            "Australia"
-          ],
-          "aid_personnel": 680,
-          "aid_cargo_tonnes": 165
-        },
-        "personnel": 180,
-        "cargo": "search-and-rescue teams and generators (45 t)"
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 500,
+              "cargo_tonnes": 120,
+              "cargo": "water purification units and field hospitals"
+            },
+            {
+              "country": "Australia",
+              "personnel": 180,
+              "cargo_tonnes": 45,
+              "cargo": "search-and-rescue teams and generators"
+            }
+          ]
+        }
       },
       "parent_ids": [
         "evt-0005"
@@ -393,7 +402,8 @@
           "basis": "fictional_estimate",
           "households_without_power": 60000,
           "households_without_water": 15000,
-          "displaced": 40000
+          "displaced": 40000,
+          "sheltered": 22000
         }
       },
       "parent_ids": [

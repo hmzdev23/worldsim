@@ -37,7 +37,7 @@ def snapshot_msg(minutes, events):
 class ChainFixtureTests(unittest.TestCase):
     @unittest.skipIf(Draft202012Validator is None, "pip install jsonschema for schema checks")
     def test_fixture_matches_event_contract(self):
-        schema = json.loads((ROOT / "contracts" / "events.schema.json").read_text())
+        schema = json.loads((ROOT / "contracts" / "events.schema.json").read_text(encoding="utf-8"))
         errors = [e.message for e in Draft202012Validator(schema).iter_errors(chain())]
         self.assertEqual(errors, [])
 
@@ -106,6 +106,7 @@ class ImpactCopyTests(unittest.TestCase):
 
     def test_quantified_wording(self):
         self.assertIn("An estimated 210,000 people displaced", self.text("evt-0003"))
+        self.assertIn("145,000 in shelters", self.text("evt-0003"))
         self.assertIn("An estimated 1.8 million households without power", self.text("evt-0004"))
         self.assertIn("420,000 households without water", self.text("evt-0004"))
         self.assertIn("Losses estimated at $38 billion", self.text("evt-0011"))
@@ -126,14 +127,14 @@ class ImpactCopyTests(unittest.TestCase):
 
     def test_aid_names_contributors_and_quantities(self):
         self.assertTrue(self.stories["evt-0008"]["headline"].startswith(
-            "United States sends 500 aid personnel to Sendai Airport"))
+            "United States has now sent 500 personnel and 120 tonnes of aid to Sendai Airport"))
         self.assertIn("water purification units", self.text("evt-0008"))
         aus = self.text("evt-0009")
-        self.assertIn("Australia sends 180 aid personnel", aus)
-        self.assertIn("(45 t)", aus)
+        self.assertIn("Australia has now sent 180 personnel and 45 tonnes of aid", aus)
+        self.assertIn("search-and-rescue teams", aus)
         self.assertIn("2 countries have now sent help", aus)
-        self.assertIn("680 aid personnel deployed, 165 tonnes of relief cargo", aus, "totals are as given, not re-added")
-        self.assertNotIn("United States", aus, "each story reports its own shipment")
+        self.assertNotIn("United States", aus, "each story reports its own sender")
+        self.assertNotIn("680", aus, "contributors are never added together")
 
     def test_aid_without_quantities_or_origin(self):
         event = chain()["events"][7]
@@ -166,12 +167,12 @@ class ReadImpactsTests(unittest.TestCase):
     def test_malformed_values_are_dropped(self):
         event = {"payload": {"impacts": {
             "basis": "fictional_estimate",
-            "deaths": -3, "injured": True, "missing": "many", "displaced": float("nan"),
-            "households_without_power": 12, "unknown_field": 5,
-            "aid_countries": ["Chile", "", 7, "  Peru "],
+            "deaths": -3, "injuries": True, "missing": "many", "displaced": float("nan"),
+            "sheltered": 12, "unknown_field": 5,
+            "aid_contributors": [{"country": ""}, "x", {"country": " Chile ", "personnel": -1, "cargo_tonnes": 8}],
         }}}
         self.assertEqual(read_impacts(event), {
-            "households_without_power": 12, "aid_countries": ["Chile", "Peru"]})
+            "sheltered": 12, "aid_contributors": [{"country": "Chile", "cargo_tonnes": 8}]})
         self.assertEqual(read_impacts({"payload": {"impacts": [1, 2]}}), {})
         self.assertEqual(read_impacts({}), {})
 
