@@ -29,6 +29,15 @@ batch = generate("A M7.5 earthquake hits Lima")
 more = generate("A M7.5 earthquake hits Lima", history=snapshot)   # a batch, a snapshot, or a list of events
 ```
 
+With the simulation service running (`services/simulation`, SIM-001), `--sim` does both steps: it reads the current `GET /snapshot` as history, predicts what comes next, sends the batch to `POST /events`, and prints the simulation's answer (each event `applied` or `rejected`, with reasons).
+
+```bash
+python3 -m worlddirector "A M7.5 earthquake hits Lima" --sim                         # default http://127.0.0.1:8765
+python3 -m worlddirector --fixture japan-earthquake-day3 --sim http://127.0.0.1:8765  # offline continuation
+```
+
+The snapshot only lists events the clock has already reached, so run `--sim` once playback reaches the last applied event. Otherwise new IDs can collide with events that are scheduled but not yet played.
+
 Fixtures: `japan-earthquake` (6 events, the team demo), `japan-earthquake-day3` (continues it and needs its history), and `global-pandemic`.
 
 The team uses the Japan fixture for development and testing. Actual AI prompting tests will run later on Hamza's computer using his signed-in Codex CLI. Codex mode uses an ephemeral, read-only sandbox and strips API-key environment variables so the signed-in ChatGPT account is used.
@@ -93,5 +102,7 @@ The model must follow a strict JSON schema (`OUTPUT_SCHEMA`), and its output is 
 | `invalid_events` | JSON failed validation. `detail` lists every problem |
 | `invalid_history` | The history isn't a batch or list of events, or its file can't be read |
 | `fixture_missing` | Unknown fixture name |
+| `sim_unreachable` | `--sim` couldn't connect to the simulation |
+| `sim_error` | The simulation answered with an error (for example, a `simulation_id` mismatch). `detail` holds its response |
 
 The CLI prints the batch on stdout and exits 0. On failure it prints the error JSON on stderr and exits 1 (2 for usage errors).
