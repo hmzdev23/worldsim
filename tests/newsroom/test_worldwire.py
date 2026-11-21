@@ -57,6 +57,7 @@ class WorldWireTests(unittest.TestCase):
             "volcanic_eruption": "Volcano erupts near",
             "meteor_impact": "Meteor strikes",
             "extreme_weather": "Extreme weather batters",
+            "flooding": "Floodwaters swamp",
             "disease_outbreak": "Disease outbreak reported in",
             "military_strike": "Military strike hits",
             "nuclear_detonation": "Nuclear detonation reported near",
@@ -144,7 +145,7 @@ class WorldWireTests(unittest.TestCase):
     def test_cli_json_and_html(self):
         cmd = [sys.executable, "-m", "worldwire", str(FIXTURE)]
         out = subprocess.run(cmd, cwd=NEWSROOM, check=True, capture_output=True, text=True).stdout
-        self.assertEqual(json.loads(out)[0]["event_id"], "evt-0001")
+        self.assertEqual(json.loads(out)[-1]["event_id"], "evt-0001")  # newest first, so the quake is last
         with tempfile.TemporaryDirectory() as tmp:
             page = Path(tmp) / "wire.html"
             subprocess.run(cmd + ["--html", str(page)], cwd=NEWSROOM, check=True, capture_output=True)

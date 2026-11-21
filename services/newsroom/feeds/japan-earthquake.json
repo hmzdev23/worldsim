@@ -1,5 +1,328 @@
 [
   {
+    "id": "news-evt-0020",
+    "event_id": "evt-0020",
+    "label": "SIMULATED",
+    "headline": "Recovery under way in Sendai, Japan",
+    "dek": "Simulated rebuilding begins as services come back online.",
+    "sim_time_minutes": 4700,
+    "sequence": 0,
+    "sim_time_label": "DAY 4 · 06:20",
+    "focus": {
+      "event_id": "evt-0020",
+      "lat": 38.26,
+      "lon": 140.88,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0019",
+    "event_id": "evt-0019",
+    "label": "SIMULATED",
+    "headline": "Recovery under way in Sendai, Japan",
+    "dek": "Simulated rebuilding begins as services come back online.",
+    "sim_time_minutes": 4300,
+    "sequence": 0,
+    "sim_time_label": "DAY 3 · 23:40",
+    "focus": {
+      "event_id": "evt-0019",
+      "lat": 38.27,
+      "lon": 140.87,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0018",
+    "event_id": "evt-0018",
+    "label": "SIMULATED",
+    "headline": "Economic shock hits Kesennuma, Japan",
+    "dek": "Simulated markets slide and supply chains stall as the crisis spreads.",
+    "sim_time_minutes": 3900,
+    "sequence": 0,
+    "sim_time_label": "DAY 3 · 17:00",
+    "focus": {
+      "event_id": "evt-0018",
+      "lat": 38.9,
+      "lon": 141.57,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0017",
+    "event_id": "evt-0017",
+    "label": "SIMULATED",
+    "headline": "Taiwan sends aid to Sendai Port, Japan",
+    "dek": "Simulated relief shipments are under way to support the response.",
+    "sim_time_minutes": 3480,
+    "sequence": 0,
+    "sim_time_label": "DAY 3 · 10:00",
+    "focus": {
+      "event_id": "evt-0017",
+      "lat": 38.27,
+      "lon": 141.02,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0016",
+    "event_id": "evt-0016",
+    "label": "SIMULATED",
+    "headline": "Australia sends aid to Ishinomaki, Japan",
+    "dek": "Simulated relief shipments are under way to support the response.",
+    "sim_time_minutes": 3120,
+    "sequence": 0,
+    "sim_time_label": "DAY 3 · 04:00",
+    "focus": {
+      "event_id": "evt-0016",
+      "lat": 38.43,
+      "lon": 141.3,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0015",
+    "event_id": "evt-0015",
+    "label": "SIMULATED",
+    "headline": "Evacuations ordered in Iwaki, Japan",
+    "dek": "Simulated evacuation routes fill as residents head for safer ground.",
+    "sim_time_minutes": 2950,
+    "sequence": 0,
+    "sim_time_label": "DAY 3 · 01:10",
+    "focus": {
+      "event_id": "evt-0015",
+      "lat": 37.05,
+      "lon": 140.89,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0014",
+    "event_id": "evt-0014",
+    "label": "SIMULATED",
+    "headline": "M6.1 aftershock rattles off the coast of Fukushima, Japan",
+    "dek": "Simulated aftershock adds strain to damaged structures. Residents are urged to stay alert.",
+    "sim_time_minutes": 2600,
+    "sequence": 0,
+    "sim_time_label": "DAY 2 · 19:20",
+    "focus": {
+      "event_id": "evt-0014",
+      "lat": 37.5,
+      "lon": 141.8,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0013",
+    "event_id": "evt-0013",
+    "label": "SIMULATED",
+    "headline": "Economic shock hits Tokyo, Japan",
+    "dek": "Simulated markets slide and supply chains stall as the crisis spreads.",
+    "sim_time_minutes": 2280,
+    "sequence": 0,
+    "sim_time_label": "DAY 2 · 14:00",
+    "focus": {
+      "event_id": "evt-0013",
+      "lat": 35.68,
+      "lon": 139.77,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0012",
+    "event_id": "evt-0012",
+    "label": "SIMULATED",
+    "headline": "Contamination alert issued for Watari, Japan",
+    "dek": "Simulated hazard zone is declared. Residents are told to avoid local water and produce.",
+    "sim_time_minutes": 2040,
+    "sequence": 0,
+    "sim_time_label": "DAY 2 · 10:00",
+    "focus": {
+      "event_id": "evt-0012",
+      "lat": 38.04,
+      "lon": 140.87,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0011",
+    "event_id": "evt-0011",
+    "label": "SIMULATED",
+    "headline": "South Korea sends aid to Sendai, Japan",
+    "dek": "Simulated relief shipments are under way to support the response.",
+    "sim_time_minutes": 1740,
+    "sequence": 0,
+    "sim_time_label": "DAY 2 · 05:00",
+    "focus": {
+      "event_id": "evt-0011",
+      "lat": 38.27,
+      "lon": 140.87,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0010",
+    "event_id": "evt-0010",
+    "label": "SIMULATED",
+    "headline": "United States sends aid to Yamagata Airport, Japan",
+    "dek": "Simulated relief shipments are under way to support the response.",
+    "sim_time_minutes": 1560,
+    "sequence": 0,
+    "sim_time_label": "DAY 2 · 02:00",
+    "focus": {
+      "event_id": "evt-0010",
+      "lat": 38.41,
+      "lon": 140.37,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0009",
+    "event_id": "evt-0009",
+    "label": "SIMULATED",
+    "headline": "Japan mobilizes emergency response in Sendai",
+    "dek": "Simulated government action deploys rescue teams and emergency services.",
+    "sim_time_minutes": 1260,
+    "sequence": 0,
+    "sim_time_label": "DAY 1 · 21:00",
+    "focus": {
+      "event_id": "evt-0009",
+      "lat": 38.27,
+      "lon": 140.87,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0008",
+    "event_id": "evt-0008",
+    "label": "SIMULATED",
+    "headline": "Infrastructure failure hits Sendai, Japan",
+    "dek": "Simulated outages disrupt power, transit, or communications. Crews are assessing damage.",
+    "sim_time_minutes": 840,
+    "sequence": 0,
+    "sim_time_label": "DAY 1 · 14:00",
+    "focus": {
+      "event_id": "evt-0008",
+      "lat": 38.26,
+      "lon": 140.88,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0007",
+    "event_id": "evt-0007",
+    "label": "SIMULATED",
+    "headline": "M6.4 aftershock rattles off the coast of Fukushima, Japan",
+    "dek": "Simulated aftershock adds strain to damaged structures. Residents are urged to stay alert.",
+    "sim_time_minutes": 615,
+    "sequence": 0,
+    "sim_time_label": "DAY 1 · 10:15",
+    "focus": {
+      "event_id": "evt-0007",
+      "lat": 37.6,
+      "lon": 141.9,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0006",
+    "event_id": "evt-0006",
+    "label": "SIMULATED",
+    "headline": "Japan mobilizes emergency response in Tokyo",
+    "dek": "Simulated government action deploys rescue teams and emergency services.",
+    "sim_time_minutes": 480,
+    "sequence": 0,
+    "sim_time_label": "DAY 1 · 08:00",
+    "focus": {
+      "event_id": "evt-0006",
+      "lat": 35.68,
+      "lon": 139.69,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0005",
+    "event_id": "evt-0005",
+    "label": "SIMULATED",
+    "headline": "Floodwaters swamp Sendai coastal plain, Japan",
+    "dek": "Simulated flooding cuts off roads and homes. Rescue boats are searching for stranded residents.",
+    "sim_time_minutes": 455,
+    "sequence": 0,
+    "sim_time_label": "DAY 1 · 07:35",
+    "focus": {
+      "event_id": "evt-0005",
+      "lat": 38.2,
+      "lon": 140.98,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0004",
+    "event_id": "evt-0004",
+    "label": "SIMULATED",
+    "headline": "Infrastructure failure hits Sendai, Japan",
+    "dek": "Simulated outages disrupt power, transit, or communications. Crews are assessing damage.",
+    "sim_time_minutes": 438,
+    "sequence": 0,
+    "sim_time_label": "DAY 1 · 07:18",
+    "focus": {
+      "event_id": "evt-0004",
+      "lat": 38.27,
+      "lon": 140.87,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0003",
+    "event_id": "evt-0003",
+    "label": "SIMULATED",
+    "headline": "Evacuations ordered in Ishinomaki, Japan",
+    "dek": "Simulated evacuation routes fill as residents head for safer ground.",
+    "sim_time_minutes": 420,
+    "sequence": 0,
+    "sim_time_label": "DAY 1 · 07:00",
+    "focus": {
+      "event_id": "evt-0003",
+      "lat": 38.43,
+      "lon": 141.3,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
+    "id": "news-evt-0002",
+    "event_id": "evt-0002",
+    "label": "SIMULATED",
+    "headline": "Tsunami warning issued for Miyagi coast, Japan",
+    "dek": "Simulated coastal alert in effect. Authorities order evacuation of low-lying areas.",
+    "sim_time_minutes": 405,
+    "sequence": 0,
+    "sim_time_label": "DAY 1 · 06:45",
+    "focus": {
+      "event_id": "evt-0002",
+      "lat": 38.43,
+      "lon": 141.3,
+      "zoom": 6.0
+    },
+    "provenance": "template"
+  },
+  {
     "id": "news-evt-0001",
     "event_id": "evt-0001",
     "label": "SIMULATED",

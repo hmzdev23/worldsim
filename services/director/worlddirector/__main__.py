@@ -28,6 +28,11 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         metavar="URL",
         help=f"continue the running simulation: read its /snapshot as history and POST the batch to /events (default {DEFAULT_SIM_URL})",
     )
+    p.add_argument(
+        "--applied",
+        action="store_true",
+        help="mark every event applied, as the simulation would (used to regenerate contracts/fixtures/japan-earthquake.json)",
+    )
     p.add_argument("--simulation-id")
     p.add_argument("--branch-id")
     p.add_argument("--first-id", type=int, help="number for the first evt-NNNN id (default: after the history)")
@@ -63,6 +68,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         json.dump(err.to_dict(), sys.stderr, indent=2)
         sys.stderr.write("\n")
         return 1
+    if args.applied:
+        batch = {**batch, "events": [{**e, "status": "applied"} for e in batch["events"]]}
     if args.sim:
         try:
             result = post_batch(batch, args.sim)

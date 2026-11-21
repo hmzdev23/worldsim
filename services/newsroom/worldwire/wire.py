@@ -159,6 +159,7 @@ TEMPLATES: dict[str, Callable[[Event], tuple[str, str]]] = {
     "volcanic_eruption": _volcanic_eruption,
     "meteor_impact": _simple("Meteor strikes", "Simulated impact flattens the area around ground zero. Rescue teams are converging."),
     "extreme_weather": _simple("Extreme weather batters", "Simulated storm brings flooding and high winds. Shelters are opening."),
+    "flooding": _simple("Floodwaters swamp", "Simulated flooding cuts off roads and homes. Rescue boats are searching for stranded residents."),
     "disease_outbreak": _disease_outbreak,
     "military_strike": _military_strike,
     "nuclear_detonation": _simple("Nuclear detonation reported near", "Simulated blast triggers emergency alerts. Residents downwind are told to shelter in place."),

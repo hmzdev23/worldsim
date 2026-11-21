@@ -1,0 +1,205 @@
+{
+  "events": [
+    {
+      "type": "government_response",
+      "sim_time_minutes": 6360,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
+      "severity": 0.3,
+      "description": "The government announces an emergency reconstruction budget for the northeast.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1480,
+        "injuries": 4300,
+        "missing": 1050,
+        "displaced": 168000,
+        "sheltered": 100800,
+        "households_without_power": 180000,
+        "households_without_water": 210000,
+        "economic_loss_usd": 63000000000,
+        "flooded_area_km2": 210,
+        "contaminated_area_km2": 95,
+        "debris_tonnes": 4100000,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 180,
+            "cargo_tonnes": 60,
+            "cargo": "search-and-rescue teams and relief supplies"
+          },
+          {
+            "country": "South Korea",
+            "personnel": 120,
+            "cargo_tonnes": 30,
+            "cargo": "medical teams and supplies"
+          },
+          {
+            "country": "Australia",
+            "personnel": 75,
+            "cargo_tonnes": 45,
+            "cargo": "water purification units"
+          },
+          {
+            "country": "Taiwan",
+            "personnel": 60,
+            "cargo_tonnes": 50,
+            "cargo": "rescue team and relief goods"
+          }
+        ]
+      },
+      "caused_by": [],
+      "caused_by_events": [
+        "evt-0005",
+        "evt-0018"
+      ]
+    },
+    {
+      "type": "aftershock",
+      "sim_time_minutes": 7400,
+      "location": {
+        "name": "off the coast of Miyagi",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.1,
+        "lon": 142.0
+      },
+      "severity": 0.4,
+      "description": "A late aftershock shakes Miyagi but causes little new damage.",
+      "magnitude": 5.9,
+      "depth_km": 35,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1480,
+        "injuries": 4340,
+        "missing": 1050,
+        "displaced": 168000,
+        "sheltered": 100800,
+        "households_without_power": 180000,
+        "households_without_water": 210000,
+        "economic_loss_usd": 63000000000,
+        "flooded_area_km2": 210,
+        "contaminated_area_km2": 95,
+        "debris_tonnes": 4100000,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 180,
+            "cargo_tonnes": 60,
+            "cargo": "search-and-rescue teams and relief supplies"
+          },
+          {
+            "country": "South Korea",
+            "personnel": 120,
+            "cargo_tonnes": 30,
+            "cargo": "medical teams and supplies"
+          },
+          {
+            "country": "Australia",
+            "personnel": 75,
+            "cargo_tonnes": 45,
+            "cargo": "water purification units"
+          },
+          {
+            "country": "Taiwan",
+            "personnel": 60,
+            "cargo_tonnes": 50,
+            "cargo": "rescue team and relief goods"
+          }
+        ]
+      },
+      "caused_by": [],
+      "caused_by_events": [
+        "evt-0001"
+      ]
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 10080,
+      "location": {
+        "name": "Ishinomaki",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.43,
+        "lon": 141.3
+      },
+      "severity": 0.2,
+      "description": "Debris clearance opens the main coastal roads and temporary housing construction begins.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1510,
+        "injuries": 4340,
+        "missing": 980,
+        "displaced": 121000,
+        "sheltered": 72600,
+        "households_without_power": 40000,
+        "households_without_water": 95000,
+        "economic_loss_usd": 63000000000,
+        "flooded_area_km2": 210,
+        "contaminated_area_km2": 95,
+        "debris_tonnes": 4100000,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 180,
+            "cargo_tonnes": 60,
+            "cargo": "search-and-rescue teams and relief supplies"
+          },
+          {
+            "country": "South Korea",
+            "personnel": 120,
+            "cargo_tonnes": 30,
+            "cargo": "medical teams and supplies"
+          },
+          {
+            "country": "Australia",
+            "personnel": 75,
+            "cargo_tonnes": 45,
+            "cargo": "water purification units"
+          },
+          {
+            "country": "Taiwan",
+            "personnel": 60,
+            "cargo_tonnes": 50,
+            "cargo": "rescue team and relief goods"
+          }
+        ]
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": [
+        "evt-0005"
+      ]
+    }
+  ]
+}

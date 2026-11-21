@@ -28,7 +28,9 @@ from worlddirector import (  # noqa: E402
 
 
 def raw_fixture():
-    return copy.deepcopy(load_fixture("japan-earthquake"))
+    """A model-sized batch: the first six events of the Japan chain."""
+    raw = copy.deepcopy(load_fixture("japan-earthquake"))
+    return {"events": raw["events"][:6]}
 
 
 def one_event(**overrides):
@@ -61,7 +63,7 @@ class FixtureModeTest(unittest.TestCase):
         self.assertEqual(batch["schema_version"], "0.1")
         self.assertEqual(batch["simulation_id"], "demo-japan-earthquake")
         events = batch["events"]
-        self.assertEqual([e["id"] for e in events], [f"evt-{i:04d}" for i in range(1, 7)])
+        self.assertEqual([e["id"] for e in events], [f"evt-{i:04d}" for i in range(1, len(events) + 1)])
         times = [e["sim_time_minutes"] for e in events]
         self.assertEqual(times, sorted(times))
         for e in events:
@@ -72,25 +74,47 @@ class FixtureModeTest(unittest.TestCase):
     def test_fixture_is_deterministic(self):
         self.assertEqual(generate(fixture="japan-earthquake"), generate(fixture="japan-earthquake"))
 
-    def test_first_event_matches_shared_contract_fixture(self):
-        quake = generate(fixture="japan-earthquake")["events"][0]
-        shared = json.loads((ROOT / "contracts" / "fixtures" / "japan-earthquake.json").read_text())["events"][0]
-        for key in ("id", "sim_time_minutes", "sequence", "type", "location", "severity", "visual", "parent_ids"):
-            self.assertEqual(quake[key], shared[key], key)
-        self.assertEqual(quake["payload"]["magnitude"], shared["payload"]["magnitude"])
-        self.assertEqual(quake["payload"]["depth_km"], shared["payload"]["depth_km"])
-
-    def test_fixture_covers_every_contract_type_with_causes(self):
-        events = generate(fixture="japan-earthquake")["events"]
+    def test_shared_contract_fixture_is_generated_from_this_one(self):
+        shared = json.loads((ROOT / "contracts" / "fixtures" / "japan-earthquake.json").read_text(encoding="utf-8"))
+        mine = generate(fixture="japan-earthquake")
+        mine = {**mine, "events": [{**e, "status": "applied"} for e in mine["events"]]}
         self.assertEqual(
-            {e["type"] for e in events},
-            {"earthquake", "aftershock", "tsunami_warning", "infrastructure_failure", "government_response", "international_aid"},
+            shared, mine,
+            "regenerate: cd services/director && python3 -m worlddirector --fixture japan-earthquake "
+            "--applied > ../../contracts/fixtures/japan-earthquake.json",
         )
-        self.assertEqual(set(VISUALS), set(EVENT_TYPES))  # every contract type has an animation key
+
+    def test_japan_chain_covers_72_hours_and_the_whole_story(self):
+        events = generate(fixture="japan-earthquake")["events"]
+        self.assertGreater(events[-1]["sim_time_minutes"] - events[0]["sim_time_minutes"], 2 * 24 * 60)
+        self.assertLessEqual(events[-1]["sim_time_minutes"] - events[0]["sim_time_minutes"], 72 * 60)
+        story = ["earthquake", "tsunami_warning", "evacuation", "aftershock", "infrastructure_failure",
+                 "government_response", "international_aid", "flooding", "contamination", "economic_shock", "recovery"]
+        self.assertTrue(set(story) <= {e["type"] for e in events})
+        aid = [e for e in events if e["type"] == "international_aid"]
+        self.assertGreaterEqual(len({e["payload"]["origin"] for e in aid}), 3)
+        for e in aid:  # each sender shows up in the running aid totals from its own event on
+            listed = {c["country"]: c for c in e["payload"]["impacts"]["aid_contributors"]}
+            self.assertGreater(listed[e["payload"]["origin"]]["personnel"], 0)
+            self.assertTrue(listed[e["payload"]["origin"]]["cargo"])
         ids = [e["id"] for e in events]
-        for e in events:
+        for e in events[1:]:
+            self.assertTrue(e["parent_ids"], e["id"])  # every consequence names its causes
             for parent in e["parent_ids"]:
                 self.assertLess(ids.index(parent), ids.index(e["id"]))
+        self.assertEqual(set(VISUALS), set(EVENT_TYPES))  # every contract type has an animation key
+
+    def test_japan_impacts_are_cumulative_snapshots(self):
+        events = generate(fixture="japan-earthquake")["events"]
+        snaps = [e["payload"]["impacts"] for e in events]
+        self.assertTrue(all(s["basis"] == "fictional_estimate" for s in snaps))
+        for key in ("deaths", "injuries", "economic_loss_usd", "debris_tonnes"):
+            values = [s.get(key, 0) for s in snaps]
+            self.assertEqual(values, sorted(values), key)
+        last = snaps[-1]
+        self.assertEqual([c["country"] for c in last["aid_contributors"]], ["United States", "South Korea", "Australia", "Taiwan"])
+        self.assertTrue(all(s.get("sheltered", 0) <= s.get("displaced", 0) for s in snaps))
+        self.assertLess(last["households_without_power"], max(s["households_without_power"] for s in snaps))  # recovery
 
     def test_first_id_offsets_ids(self):
         batch = generate(fixture="japan-earthquake", first_id=40)
@@ -156,7 +180,41 @@ class ValidationTest(unittest.TestCase):
         self.assertInvalid(one_event(type="nuclear_detonation", yield_kt=-1, **none))
         self.assertInvalid(one_event(type="disease_outbreak", pathogen="", **none))
         ev = build_batch(one_event(type="nuclear_detonation", yield_kt=15, origin=" unknown ", **none), simulation_id="t")["events"][0]
-        self.assertEqual(ev["payload"], {"description": ev["payload"]["description"], "yield_kt": 15, "origin": "unknown"})
+        self.assertEqual((ev["payload"]["yield_kt"], ev["payload"]["origin"]), (15, "unknown"))
+        self.assertNotIn("magnitude", ev["payload"])
+
+    def test_impacts_are_checked_and_marked_fictional(self):
+        raw = raw_fixture()
+        ev = build_batch(raw, simulation_id="t")["events"][0]
+        self.assertEqual(ev["payload"]["impacts"]["basis"], "fictional_estimate")
+        self.assertNotIn("aid_contributors", ev["payload"]["impacts"])  # null means no estimate, so it is omitted
+        bad = raw_fixture()
+        bad["events"][0]["impacts"]["deaths"] = -1
+        self.assertInvalid(bad)
+        bad = raw_fixture()
+        bad["events"][0]["impacts"]["surprise"] = 1
+        self.assertInvalid(bad)
+        bad = raw_fixture()
+        bad["events"][5]["impacts"]["deaths"] = 1  # lower than the earlier running total
+        err = self.assertInvalid(bad)
+        self.assertIn("running total", err.detail)
+        lost = raw_fixture()
+        lost["events"][5]["impacts"]["aid_contributors"] = None  # unknown is fine
+        build_batch(lost, simulation_id="t")
+        dup = raw_fixture()
+        entry = {"country": "Chile", "personnel": 5, "cargo_tonnes": None, "cargo": None}
+        dup["events"][0]["impacts"]["aid_contributors"] = [entry, dict(entry)]
+        self.assertInvalid(dup)
+        shrink = raw_fixture()
+        shrink["events"][0]["impacts"]["aid_contributors"] = [entry]
+        shrink["events"][5]["impacts"]["aid_contributors"] = [{**entry, "personnel": 2}]
+        self.assertIn("aid_contributors[Chile].personnel", self.assertInvalid(shrink).detail)
+        gone = raw_fixture()
+        gone["events"][0]["impacts"]["aid_contributors"] = [entry]
+        gone["events"][5]["impacts"]["aid_contributors"] = [{**entry, "country": "Peru"}]
+        self.assertIn("drops ['Chile']", self.assertInvalid(gone).detail)
+        empty = one_event(impacts=None)
+        self.assertNotIn("impacts", build_batch(empty, simulation_id="t")["events"][0]["payload"])
 
     def test_caused_by_must_point_backwards(self):
         raw = raw_fixture()
@@ -272,7 +330,7 @@ class CodexModeTest(unittest.TestCase):
     def test_falls_back_to_stdout(self):
         payload = json.dumps(raw_fixture())
         batch = self.run_with(f"import sys; sys.stdin.read(); print('log line'); print({payload!r})")
-        self.assertEqual(len(batch["events"]), 6)
+        self.assertEqual(len(batch["events"]), len(raw_fixture()["events"]))
 
     def test_nonzero_exit(self):
         err = self.run_failing("import sys; sys.stderr.write('not logged in'); sys.exit(3)", "codex_failed")
@@ -306,7 +364,7 @@ class CliTest(unittest.TestCase):
     def test_fixture_prints_batch(self):
         proc = self.cli("--fixture", "japan-earthquake")
         self.assertEqual(proc.returncode, 0, proc.stderr)
-        self.assertEqual(len(json.loads(proc.stdout)["events"]), 6)
+        self.assertEqual(len(json.loads(proc.stdout)["events"]), len(load_fixture("japan-earthquake")["events"]))
 
     def test_failure_is_json_on_stderr(self):
         proc = self.cli("--fixture", "missing")

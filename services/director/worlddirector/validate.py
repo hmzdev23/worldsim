@@ -14,6 +14,10 @@ from typing import Any, Optional
 
 from .contract import (
     EVENT_TYPES,
+    CONTRIBUTOR_FIELDS,
+    IMPACT_BASIS,
+    IMPACT_FIELDS,
+    MAX_AID_COUNTRIES,
     MAX_EVENTS,
     MAX_SIM_MINUTES,
     PAYLOAD_FIELDS,
@@ -24,7 +28,12 @@ from .contract import (
 )
 from .errors import DirectorError
 
-_EVENT_KEYS = {"type", "sim_time_minutes", "location", "severity", "description", "caused_by", "caused_by_events", *PAYLOAD_FIELDS}
+_EVENT_KEYS = {
+    "type", "sim_time_minutes", "location", "severity", "description",
+    "impacts", "caused_by", "caused_by_events", *PAYLOAD_FIELDS,
+}
+_IMPACT_KEYS = {*IMPACT_FIELDS, "aid_contributors"}
+_CONTRIBUTOR_KEYS = {"country", *CONTRIBUTOR_FIELDS, "cargo"}
 _LOCATION_KEYS = {"name", "country", "country_code", "lat", "lon"}
 
 
@@ -88,6 +97,8 @@ def _check_event(i: int, ev: Any, events: list, prior: dict, now: int) -> list:
         elif not (_int(v) if kind == "integer" else _num(v)) or not lo <= v <= hi:
             errs.append(f"{where}.{key} must be null or a {kind} in {lo}..{hi}")
 
+    errs.extend(_check_impacts(where, ev["impacts"]))
+
     causes = ev["caused_by"]
     if not isinstance(causes, list) or len(causes) > MAX_EVENTS:
         errs.append(f"{where}.caused_by must be a short list of indexes")
@@ -107,6 +118,79 @@ def _check_event(i: int, ev: Any, events: list, prior: dict, now: int) -> list:
                 errs.append(f"{where}.caused_by_events has unknown event {pid!r}")
             elif _int(t) and prior[pid] > t:
                 errs.append(f"{where}.caused_by_events {pid!r} happens after the event it caused")
+    return errs
+
+
+def _check_impacts(where: str, imp: Any) -> list:
+    if imp is None:
+        return []
+    if not isinstance(imp, dict) or set(imp) != _IMPACT_KEYS:
+        return [f"{where}.impacts must have exactly {sorted(_IMPACT_KEYS)} (null when unknown)"]
+    errs = []
+    for key, (kind, hi, _) in IMPACT_FIELDS.items():
+        v = imp[key]
+        if v is not None and (not (_int(v) if kind == "integer" else _num(v)) or not 0 <= v <= hi):
+            errs.append(f"{where}.impacts.{key} must be null or a non-negative {kind}")
+    contributors = imp["aid_contributors"]
+    if contributors is not None:
+        if not isinstance(contributors, list) or len(contributors) > MAX_AID_COUNTRIES:
+            return errs + [f"{where}.impacts.aid_contributors must be null or a list of countries"]
+        names = []
+        for j, entry in enumerate(contributors):
+            here = f"{where}.impacts.aid_contributors[{j}]"
+            if not isinstance(entry, dict) or set(entry) != _CONTRIBUTOR_KEYS:
+                errs.append(f"{here} must have exactly {sorted(_CONTRIBUTOR_KEYS)}")
+                continue
+            if not _text(entry["country"], 80):
+                errs.append(f"{here}.country must be a country name")
+            names.append(str(entry["country"]).strip())
+            for key, (kind, hi) in CONTRIBUTOR_FIELDS.items():
+                val = entry[key]
+                if val is not None and (not (_int(val) if kind == "integer" else _num(val)) or not 0 <= val <= hi):
+                    errs.append(f"{here}.{key} must be null or a non-negative {kind}")
+            if entry["cargo"] is not None and not _text(entry["cargo"], 120):
+                errs.append(f"{here}.cargo must be null or a short description")
+        if len(set(names)) != len(names):
+            errs.append(f"{where}.impacts.aid_contributors lists a country twice")
+    return errs
+
+
+def _impacts_payload(imp: Optional[dict]) -> Optional[dict]:
+    """Model impacts -> contract impacts: drop unknowns, add the fictional-estimate marker."""
+    if not imp:
+        return None
+    out: dict = {k: imp[k] for k in IMPACT_FIELDS if imp.get(k) is not None}
+    if imp.get("aid_contributors"):
+        out["aid_contributors"] = [
+            {k: (v.strip() if isinstance(v, str) else v) for k, v in entry.items() if v is not None}
+            for entry in imp["aid_contributors"]
+        ]
+    return {"basis": IMPACT_BASIS, **out} if out else None
+
+
+def _cumulative_errors(snapshots: list) -> list:
+    """snapshots: [(event label, contract impacts)] in time order. Running totals must not fall."""
+    errs = []
+    best: dict = {}  # running-total name -> (highest value so far, where it was set)
+    countries: set = set()  # every aid contributor seen so far
+    for label, imp in snapshots:
+        if not imp:
+            continue
+        current = {k: imp[k] for k, (_, _, cumulative) in IMPACT_FIELDS.items() if cumulative and k in imp}
+        for entry in imp.get("aid_contributors", []):
+            for key in CONTRIBUTOR_FIELDS:
+                if key in entry:
+                    current[f"aid_contributors[{entry['country']}].{key}"] = entry[key]
+        for key, value in current.items():
+            if key in best and value < best[key][0]:
+                errs.append(f"{label}.impacts.{key} drops from {best[key][0]} ({best[key][1]}) to {value}; it is a running total")
+            else:
+                best[key] = (value, label)
+        if "aid_contributors" in imp:
+            listed = {entry["country"] for entry in imp["aid_contributors"]}
+            if countries - listed:
+                errs.append(f"{label}.impacts.aid_contributors drops {sorted(countries - listed)}; it lists every country so far")
+            countries |= listed
     return errs
 
 
@@ -139,6 +223,7 @@ def build_batch(
     model: Optional[str] = None,
     first_id: Optional[int] = None,
     history: Optional[list] = None,
+    max_events: int = MAX_EVENTS,
 ) -> dict:
     """Validate raw {"events": [...]} output and return a proposed event batch.
 
@@ -157,14 +242,21 @@ def build_batch(
     if not isinstance(raw, dict) or set(raw) != {"events"} or not isinstance(raw["events"], list):
         raise DirectorError("invalid_events", 'Output must be an object with only an "events" array')
     events = raw["events"]
-    if not 1 <= len(events) <= MAX_EVENTS:
-        raise DirectorError("invalid_events", f"Expected 1-{MAX_EVENTS} events, got {len(events)}")
+    if not 1 <= len(events) <= max_events:
+        raise DirectorError("invalid_events", f"Expected 1-{max_events} events, got {len(events)}")
 
     errs = [e for i, ev in enumerate(events) for e in _check_event(i, ev, events, prior, now)]
     if errs:
         raise DirectorError("invalid_events", "Model output failed validation", "\n".join(errs))
 
     order = sorted(range(len(events)), key=lambda i: events[i]["sim_time_minutes"])  # stable
+    past = [
+        (e["id"], e.get("payload", {}).get("impacts"))
+        for e in sorted(history or [], key=lambda e: (e["sim_time_minutes"], e.get("sequence", 0)))
+    ]
+    errs = _cumulative_errors(past[-1:] + [(f"events[{i}]", _impacts_payload(events[i]["impacts"])) for i in order])
+    if errs:
+        raise DirectorError("invalid_events", "Impact estimates are inconsistent", "\n".join(errs))
     ids = {orig: f"evt-{first_id + pos:04d}" for pos, orig in enumerate(order)}
     clash = set(ids.values()) & set(prior)
     if clash:
@@ -183,6 +275,9 @@ def build_batch(
         for key in PAYLOAD_FIELDS:
             if ev[key] is not None:
                 payload[key] = ev[key].strip() if isinstance(ev[key], str) else ev[key]
+        impacts = _impacts_payload(ev["impacts"])
+        if impacts:
+            payload["impacts"] = impacts
         loc = ev["location"]
         out.append(
             {

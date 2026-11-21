@@ -82,7 +82,7 @@ def day1_snapshot():
         "schema_version": "0.1",
         "simulation_id": batch["simulation_id"],
         "branch_id": batch["branch_id"],
-        "sim_time_minutes": 2040,
+        "sim_time_minutes": 4700,
         "kind": "snapshot",
         "playback": {"state": "paused", "speed": 1},
         "events": batch["events"],
@@ -95,18 +95,18 @@ class SimClientTest(unittest.TestCase):
         self.addCleanup(self.sim.close)
 
     def test_continue_from_snapshot_and_post(self):
-        batch = generate(fixture="japan-earthquake-day3", history=get_snapshot(self.sim.url))
+        batch = generate(fixture="japan-earthquake-continued", history=get_snapshot(self.sim.url))
         result = post_batch(batch, self.sim.url)
-        self.assertEqual([e["id"] for e in result["batch"]["events"]], ["evt-0007", "evt-0008", "evt-0009", "evt-0010"])
+        self.assertEqual([e["id"] for e in result["batch"]["events"]], ["evt-0021", "evt-0022", "evt-0023"])
         self.assertTrue(all(e["status"] == "applied" for e in result["batch"]["events"]))
 
     def test_cli_sim_flag(self):
         proc = subprocess.run(
-            [sys.executable, "-m", "worlddirector", "--fixture", "japan-earthquake-day3", "--sim", self.sim.url],
+            [sys.executable, "-m", "worlddirector", "--fixture", "japan-earthquake-continued", "--sim", self.sim.url],
             cwd=DIRECTOR, capture_output=True, text=True,
         )
         self.assertEqual(proc.returncode, 0, proc.stderr)
-        self.assertIn("simulation applied 4 of 4 events", proc.stderr)
+        self.assertIn("simulation applied 3 of 3 events", proc.stderr)
         self.assertEqual(json.loads(proc.stdout)["batch"]["simulation_id"], "demo-japan-earthquake")
         self.assertEqual(len(self.sim.posted), 1)
 
@@ -133,11 +133,11 @@ class RealEngineTest(unittest.TestCase):
         sim = Simulation(simulation_id=day1["simulation_id"], branch_id=day1["branch_id"])
         _, rejected = sim.ingest(day1)
         self.assertEqual(rejected, [])
-        while sim.now < 2040:
+        while sim.now < 4700:
             sim.advance(60)
-        _, rejected = sim.ingest(generate(fixture="japan-earthquake-day3", history=sim.snapshot()))
+        _, rejected = sim.ingest(generate(fixture="japan-earthquake-continued", history=sim.snapshot()))
         self.assertEqual(rejected, [])
-        self.assertEqual(len(sim.timeline), 10)
+        self.assertEqual(len(sim.timeline), 23)
 
     def test_pandemic_applies_in_the_engine(self):
         batch = generate(fixture="global-pandemic")

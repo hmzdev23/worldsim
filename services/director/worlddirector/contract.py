@@ -34,6 +34,7 @@ VISUALS: dict = {
     "volcanic_eruption": "ash_plume",
     "meteor_impact": "impact_blast",
     "extreme_weather": "weather_disaster",
+    "flooding": "weather_disaster",
     "disease_outbreak": "contagion_spread",
     "military_strike": "missile_strike",
     "nuclear_detonation": "nuclear_blast",
@@ -74,6 +75,30 @@ PAYLOAD_FIELDS: dict = {
     "pathogen": ("string", 1, 80, "Pathogen name for disease_outbreak."),
     "label": ("string", 1, 80, "Short hazard name. Required for other_hazard."),
 }
+
+# Impact snapshot fields: scenario-wide totals as of the event (never deltas).
+# name -> (JSON type, max, cumulative?). Cumulative values never decrease;
+# the others are current levels (people still missing, households still dark).
+IMPACT_FIELDS: dict = {
+    "deaths": ("integer", 10**10, True),
+    "injuries": ("integer", 10**10, True),
+    "missing": ("integer", 10**10, False),
+    "displaced": ("integer", 10**10, False),
+    "sheltered": ("integer", 10**10, False),
+    "households_without_power": ("integer", 10**10, False),
+    "households_without_water": ("integer", 10**10, False),
+    "economic_loss_usd": ("number", 10**15, True),
+    "flooded_area_km2": ("number", 10**8, True),
+    "contaminated_area_km2": ("number", 10**8, True),
+    "debris_tonnes": ("number", 10**12, True),
+}
+# Per-country aid running totals inside impacts.aid_contributors.
+CONTRIBUTOR_FIELDS: dict = {
+    "personnel": ("integer", 10**8),
+    "cargo_tonnes": ("number", 10**9),
+}
+IMPACT_BASIS = "fictional_estimate"
+MAX_AID_COUNTRIES = 50
 REQUIRED_PAYLOAD: dict = {
     "earthquake": ("magnitude", "depth_km"),
     "aftershock": ("magnitude", "depth_km"),
@@ -83,6 +108,41 @@ REQUIRED_PAYLOAD: dict = {
 
 def _nullable(kind: str, description: str) -> dict:
     return {"anyOf": [{"type": kind}, {"type": "null"}], "description": description}
+
+
+IMPACTS_SCHEMA: dict = {
+    "type": "object",
+    "description": (
+        "Scenario-wide totals as of this event, never per-event increments. deaths, injuries, "
+        "economic_loss_usd, flooded/contaminated area, debris and each aid contributor's totals never "
+        "decrease; missing, displaced, sheltered and households without power/water are current levels. "
+        "Null = no estimate."
+    ),
+    "properties": {
+        **{k: _nullable(kind, "") for k, (kind, _, _) in IMPACT_FIELDS.items()},
+        "aid_contributors": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "country": {"type": "string"},
+                            **{k: _nullable(kind, "") for k, (kind, _) in CONTRIBUTOR_FIELDS.items()},
+                            "cargo": _nullable("string", "What this country has sent, e.g. 'medical teams'."),
+                        },
+                        "required": ["country", *CONTRIBUTOR_FIELDS, "cargo"],
+                        "additionalProperties": False,
+                    },
+                },
+                {"type": "null"},
+            ],
+            "description": "Every country that has sent aid so far, with its running totals.",
+        },
+    },
+    "required": [*IMPACT_FIELDS, "aid_contributors"],
+    "additionalProperties": False,
+}
 
 
 # Strict structured-output schema: every property required, no extras.
@@ -114,6 +174,7 @@ OUTPUT_SCHEMA: dict = {
                     "severity": {"type": "number", "description": "0.0 (minor) to 1.0 (extreme)."},
                     "description": {"type": "string"},
                     **{k: _nullable(kind, hint + " Otherwise null.") for k, (kind, _, _, hint) in PAYLOAD_FIELDS.items()},
+                    "impacts": IMPACTS_SCHEMA,
                     "caused_by": {
                         "type": "array",
                         "items": {"type": "integer"},
@@ -132,6 +193,7 @@ OUTPUT_SCHEMA: dict = {
                     "severity",
                     "description",
                     *PAYLOAD_FIELDS,
+                    "impacts",
                     "caused_by",
                     "caused_by_events",
                 ],
