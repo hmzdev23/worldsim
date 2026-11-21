@@ -63,6 +63,7 @@ function useRunNews(run: ScenarioRun, events: EventState, isDemo: boolean) {
 export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean }) {
   const mapRef = useRef<WorldMapHandle>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const seekFloorRef = useRef<number | undefined>(undefined);
   const [connection, setConnection] = useState<"connecting" | "connected" | "reconnecting" | "unavailable">("connecting");
   const [simTime, setSimTime] = useState(run.startMinute);
   const [playback, setPlayback] = useState<Playback>({ state: "paused", speed: 1 });
@@ -113,12 +114,13 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
           return;
         } else if (data.kind === "event" && data.event.status === "applied") {
           const { event } = data;
+          if (seekFloorRef.current !== undefined && event.sim_time_minutes <= seekFloorRef.current) return;
           setEvents((previous) => {
             if (previous.applied.some((applied) => applied.id === event.id)) return previous;
             return {
               ...previous,
               applied: [...previous.applied, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence),
-              queue: [...previous.queue, event],
+              queue: [...previous.queue, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence),
             };
           });
         } else if (data.kind === "clock") {
@@ -158,6 +160,7 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
   }
 
   function seek(minute: number) {
+    seekFloorRef.current = minute;
     sendControl({ action: "seek", sim_time_minutes: minute });
   }
 
@@ -192,6 +195,7 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
           item={reportedHeadline}
           queuedCount={Math.max(0, events.queue.length - 1)}
           onAdvance={() => setEvents((previous) => ({ ...previous, queue: previous.queue.slice(1) }))}
+          onDismiss={() => setEvents((previous) => ({ ...previous, queue: previous.queue.slice(1) }))}
         />
       </WorldMap>
 
