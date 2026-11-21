@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldsim.local/contracts/stream.schema.json",
+  "title": "WORLD//SIM stream message",
+  "description": "Version 0.1 (proposed in CONTRACT-001, #1). One JSON message sent from the simulation to a client over the event stream. The first message after a client connects is always a snapshot.",
+  "oneOf": [
+    { "$ref": "#/$defs/snapshot" },
+    { "$ref": "#/$defs/event_message" },
+    { "$ref": "#/$defs/clock" }
+  ],
+  "$defs": {
+    "playback": {
+      "type": "object",
+      "required": ["state", "speed"],
+      "additionalProperties": false,
+      "properties": {
+        "state": { "enum": ["playing", "paused"] },
+        "speed": { "enum": [1, 2, 4, 16] }
+      }
+    },
+    "header": {
+      "type": "object",
+      "required": ["schema_version", "simulation_id", "branch_id", "sim_time_minutes"],
+      "properties": {
+        "schema_version": { "const": "0.1" },
+        "simulation_id": { "$ref": "events.schema.json#/$defs/slug" },
+        "branch_id": { "$ref": "events.schema.json#/$defs/slug" },
+        "sim_time_minutes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "applied_event": {
+      "allOf": [
+        { "$ref": "events.schema.json#/$defs/event" },
+        { "properties": { "status": { "const": "applied" } } }
+      ]
+    },
+    "snapshot": {
+      "description": "Full current state. Sent on connect and after a seek or replay.",
+      "allOf": [{ "$ref": "#/$defs/header" }],
+      "required": ["kind", "playback", "events"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": { "const": "snapshot" },
+        "playback": { "$ref": "#/$defs/playback" },
+        "events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/applied_event" },
+          "description": "All applied events with sim_time_minutes <= the snapshot time, in canonical order."
+        }
+      }
+    },
+    "event_message": {
+      "description": "One newly applied event. Events arrive in canonical (sim_time_minutes, sequence) order.",
+      "allOf": [{ "$ref": "#/$defs/header" }],
+      "required": ["kind", "event"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": { "const": "event" },
+        "event": { "$ref": "#/$defs/applied_event" }
+      }
+    },
+    "clock": {
+      "description": "Periodic clock tick, and after any pause or speed change.",
+      "allOf": [{ "$ref": "#/$defs/header" }],
+      "required": ["kind", "playback"],
+      "unevaluatedProperties": false,
+      "properties": {
+        "kind": { "const": "clock" },
+        "playback": { "$ref": "#/$defs/playback" }
+      }
+    }
+  }
+}
