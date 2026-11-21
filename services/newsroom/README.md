@@ -38,13 +38,13 @@ Each event type in the contract has its own headline template, and `internationa
 
 ## Impact figures
 
-When an event carries `payload.impacts`, the story reports the figures that matter for its type. Casualties go with hazards, displacement with evacuations, households without power or water with outages and recovery, losses with economic shocks, contaminated or flooded area and debris with contamination, and aid totals with aid. For example:
+When an event carries `payload.impacts`, the story reports the figures that matter for its type. Casualties go with hazards, displacement with evacuations, households without power or water with outages and recovery, losses with economic shocks, contaminated or flooded area and debris with contamination, and contributors with aid. For example:
 
 - `An estimated 210,000 people displaced as evacuations widen in Sendai, Japan`
-- `United States sends 500 aid personnel to Sendai Airport, Japan`
+- `United States has now sent 500 personnel and 120 tonnes of aid to Sendai Airport, Japan`
 - dek: `… Simulated estimates so far: 240 dead, 1,900 injured, 610 missing.`
 
-Impact values are **scenario-wide estimates as of that event**, so each story shows the latest snapshot as given and never adds snapshots together. Every figure is labeled as a simulated estimate. A figure used in the headline isn't repeated in the dek. Snapshots without `basis: "fictional_estimate"` are ignored, and malformed values (negative, non-numeric, NaN) are dropped rather than guessed. An omitted key means no estimate yet. On an `international_aid` event, the story reports that shipment from `payload.origin`, `payload.personnel`, and `payload.cargo`. It counts the senders so far from `impacts.aid_countries`, and the dek gives the running totals `aid_personnel` and `aid_cargo_tonnes`.
+Impact values are **scenario-wide estimates as of that event**, so each story shows the latest snapshot as given and never adds snapshots together. Every figure is labeled as a simulated estimate. A figure used in the headline isn't repeated in the dek. Snapshots without `basis: "fictional_estimate"` are ignored, and malformed values (negative, non-numeric, NaN) are dropped rather than guessed. An omitted key means no estimate yet. On an `international_aid` event, `payload.origin` names the sender. The story reports that country's running totals and cargo from its `impacts.aid_contributors` entry and counts how many countries have sent help. Contributors are never added together.
 
 Field names follow Mathys's DIR-003 (#26) shape agreed in [#13](https://github.com/hmzdev23/worldsim/issues/13). `tests/newsroom/fixtures/impact-chain.json` is a test-only multi-event chain until the canonical fixture lands.
 

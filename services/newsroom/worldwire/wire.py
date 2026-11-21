@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Iterable
 
-from .impacts import fmt_count, fmt_tonnes, fmt_usd, impact_sentence, number, read_impacts
+from .impacts import aid_amount, contributor, fmt_count, fmt_tonnes, fmt_usd, impact_sentence, read_impacts
 
 SIMULATED_LABEL = "SIMULATED"
 DEFAULT_FOCUS_ZOOM = 6.0
@@ -91,20 +91,22 @@ def _government_response(event: Event) -> tuple[str, str]:
 
 
 def _international_aid(event: Event) -> Copy:
-    payload = event.get("payload", {})
     origin = _payload_text(event, "origin")
-    personnel = number(payload.get("personnel"))
-    cargo = _payload_text(event, "cargo")
+    sender = origin if origin.lower() != "unknown" else ""
+    impacts = read_impacts(event)
+    entry = contributor(impacts, sender)
+    amount = aid_amount(entry) if entry else ""
     place = _place(event)
-    sender = origin if origin and origin.lower() != "unknown" else ""
-    if sender and personnel:
-        headline = f"{sender} sends {fmt_count(personnel)} aid personnel to {place}"
+    if sender and amount:
+        headline = f"{sender} has now sent {amount} to {place}"
     elif sender:
         headline = f"{sender} sends aid to {place}"
     else:
         headline = f"International aid heads to {place}"
-    dek = f"Simulated shipment carries {cargo}." if cargo else "Simulated relief shipment is under way to support the response."
-    countries = len(read_impacts(event).get("aid_countries", []))
+    dek = "Simulated relief shipment is under way to support the response."
+    if entry and "cargo" in entry:
+        dek = f"Simulated relief includes {entry['cargo']}."
+    countries = len(impacts.get("aid_contributors", []))
     if countries > 1:
         dek += f" {countries} countries have now sent help in the simulation."
     return headline, dek
