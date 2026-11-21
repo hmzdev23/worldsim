@@ -21,44 +21,44 @@ Running the Japan earthquake demo does not require Codex or a model login.
 
 ### 3. Pick your task by name
 
-Use the active issue beside your name. The old starter issues #2–#6 are
-finished; do not start those again. Open the issue link for the exact
-scope and acceptance checklist. Each issue is assigned to its owner.
+Use only an **ACTIVE** row to start work. Completed rows are closed; do not
+reopen or repeat them. The status below is the current GitHub state.
 
-| Team member | Task | Issue |
+| Team member | Status | Next task |
 | --- | --- | --- |
-| Hamza | Live impact dashboard and crisis map | [#29](https://github.com/hmzdev23/worldsim/issues/29) |
-| Mathys | Deterministic Japan event and impact fixture | [#26](https://github.com/hmzdev23/worldsim/issues/26) |
-| Anthony | Full simulation timeline and replay | [#27](https://github.com/hmzdev23/worldsim/issues/27) |
-| Amir | Event-by-event WORLD//WIRE | [#28](https://github.com/hmzdev23/worldsim/issues/28) |
+| Mathys | **ACTIVE** | [#26 — Japan proof-of-concept event and impact fixture](https://github.com/hmzdev23/worldsim/issues/26) · [PR #36](https://github.com/hmzdev23/worldsim/pull/36) is open |
+| Hamza | **ACTIVE AFTER #26** | [#29 — Integrate the canonical scenario into the dashboard](https://github.com/hmzdev23/worldsim/issues/29). The dashboard foundation is already merged in [PR #32](https://github.com/hmzdev23/worldsim/pull/32); don't redo it. |
+| Anthony | **DONE** | [#27](https://github.com/hmzdev23/worldsim/issues/27) closed · [PR #31](https://github.com/hmzdev23/worldsim/pull/31) merged |
+| Amir | **DONE** | [#28](https://github.com/hmzdev23/worldsim/issues/28) closed · [PR #33](https://github.com/hmzdev23/worldsim/pull/33) and [PR #35](https://github.com/hmzdev23/worldsim/pull/35) merged |
 
-**Copy this prompt into your coding AI. Replace the bracketed name and
-issue number with your row above.** Teammates may use their existing
-coding AI; nobody needs to install Codex or provide an API key.
+**Only Mathys should start implementation now. Hamza's remaining integration
+starts after PR #36 merges. Anthony and Amir should not start their closed
+issues.** Nobody needs to install Codex or provide an API key.
+
+For an active task, give your coding agent this prompt, replacing the brackets:
 
 ```text
-I'm [NAME], working on WORLD//SIM issue #[NUMBER].
-
-Repository: https://github.com/hmzdev23/worldsim
-My task: https://github.com/hmzdev23/worldsim/issues/[NUMBER]
-
-Read README.md, AGENTS.md, and TEAM-SYNC.md. Read my whole GitHub issue
-and the latest comments in team handoff issue #13. Check the repo state
-before editing and preserve existing work. Work only on my assigned
-issue; coordinate shared event and impact fields in #13.
-
-Use the current repository copy if it is already open. Otherwise clone
-the repository and work inside the worldsim folder. Fetch origin and
-start a dedicated branch from the latest main. Keep the Japan scenario
-deterministic and offline. Do not require Codex, an LLM, API credits,
-or credentials. Run the checks listed in my issue, commit the work,
-and open a PR that links my issue. Post the branch/PR and any handoff
-in issue #13.
-
-If another task is not merged yet, build against the documented
-interface and use temporary fixture-shaped data only where needed.
-Do not duplicate another owner's fixture, newsroom, or backend work.
+I'm [NAME]. Work only on active issue #[NUMBER] in WORLD//SIM.
+Repo: https://github.com/hmzdev23/worldsim
+Read README.md, AGENTS.md, TEAM-SYNC.md, the whole issue, and the latest
+comments in issue #13. Check whether my issue is OPEN before editing. If it
+is closed, stop and report the merged PR instead of repeating the work.
+Preserve local work. Use the existing repo or clone it, fetch origin, and
+branch from latest main. Keep the Japan proof-of-concept deterministic and
+offline; design shared code for arbitrary scenarios. No Codex install, model,
+API credits, or credentials. Follow the issue acceptance criteria, open a PR
+linked to my issue, then post the branch/PR in issue #13.
 ```
+
+## First demo
+
+Japan is the deterministic proof-of-concept, not the product boundary. The
+finished product must support arbitrary user-prompted scenarios through shared
+event types and generic consumers. Impact values in the Japan fixture are
+fictional cumulative estimates, not real forecasts or historical counts.
+
+The [master brief](WORLDSIM_MASTER_BRIEF.md) records the original design.
+This README and the GitHub issues define current ownership and status.
 
 ## First demo
 
