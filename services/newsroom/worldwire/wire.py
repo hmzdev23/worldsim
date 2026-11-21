@@ -1,6 +1,6 @@
 """Turn applied simulation events into WORLD//WIRE news items.
 
-The event shape is provisional until the shared contract lands (issue #1).
+Input events follow contracts/events.schema.json (v0.1).
 Only events whose status is "applied" are reported, so the newsroom never
 announces something the simulation has not confirmed.
 """
@@ -82,6 +82,7 @@ def news_for_event(event: Event) -> NewsItem | None:
         "headline": headline,
         "dek": dek,
         "sim_time_minutes": event["sim_time_minutes"],
+        "sequence": event.get("sequence", 0),
         "sim_time_label": format_sim_time(event["sim_time_minutes"]),
         "focus": {
             "event_id": event["id"],
@@ -94,7 +95,23 @@ def news_for_event(event: Event) -> NewsItem | None:
 
 
 def derive_news(events: Iterable[Event]) -> list[NewsItem]:
-    """Return news for applied events, newest simulation time first."""
+    """Return news for applied events, newest first by (sim_time_minutes, sequence)."""
     items = [item for item in map(news_for_event, events) if item is not None]
-    items.sort(key=lambda item: (-item["sim_time_minutes"], item["event_id"]))
+    items.sort(key=lambda item: (item["sim_time_minutes"], item["sequence"], item["event_id"]), reverse=True)
     return items
+
+
+def news_from_stream(messages: Iterable[dict[str, Any]]) -> list[NewsItem]:
+    """Fold stream messages (contracts/stream.schema.json) into the current feed.
+
+    A snapshot replaces everything seen so far (connect, seek, or replay); each
+    event message adds one applied event; clock messages carry no news.
+    """
+    events: dict[str, Event] = {}
+    for message in messages:
+        kind = message.get("kind")
+        if kind == "snapshot":
+            events = {e["id"]: e for e in message["events"]}
+        elif kind == "event":
+            events[message["event"]["id"]] = message["event"]
+    return derive_news(events.values())

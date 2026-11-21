@@ -8,10 +8,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 NEWSROOM = ROOT / "services" / "newsroom"
-FIXTURE = NEWSROOM / "fixtures" / "japan-earthquake.json"
+FIXTURE = ROOT / "contracts" / "fixtures" / "japan-earthquake.json"
 sys.path.insert(0, str(NEWSROOM))
 
-from worldwire import SIMULATED_LABEL, derive_news, format_sim_time, news_for_event  # noqa: E402
+from worldwire import SIMULATED_LABEL, derive_news, format_sim_time, news_for_event, news_from_stream  # noqa: E402
 
 
 def quake():
@@ -38,11 +38,28 @@ class WorldWireTests(unittest.TestCase):
 
     def test_output_is_deterministic_and_newest_first(self):
         later = quake()
-        later.update(id="evt-0002", type="power_grid_failure", sim_time_minutes=1500)
+        later.update(id="evt-0002", type="infrastructure_failure", sim_time_minutes=1500)
         feed = derive_news([quake(), later])
         self.assertEqual([i["event_id"] for i in feed], ["evt-0002", "evt-0001"])
-        self.assertEqual(feed[0]["headline"], "Power grid failure reported in off the coast of Miyagi, Japan")
+        self.assertEqual(feed[0]["headline"], "Infrastructure failure reported in off the coast of Miyagi, Japan")
         self.assertEqual(feed, derive_news([later, quake()]))
+
+    def test_sequence_breaks_ties_at_same_sim_time(self):
+        second = quake()
+        second.update(id="evt-0000", sequence=1)
+        self.assertEqual([i["event_id"] for i in derive_news([quake(), second])], ["evt-0000", "evt-0001"])
+
+    def test_stream_snapshot_replaces_feed(self):
+        header = {"schema_version": "0.1", "simulation_id": "demo", "branch_id": "main"}
+        later = quake()
+        later.update(id="evt-0002", sim_time_minutes=500)
+        messages = [
+            {**header, "sim_time_minutes": 402, "kind": "event", "event": quake()},
+            {**header, "sim_time_minutes": 500, "kind": "event", "event": later},
+            {**header, "sim_time_minutes": 450, "kind": "snapshot", "events": [quake()],
+             "playback": {"state": "paused", "speed": 1}},
+        ]
+        self.assertEqual([i["event_id"] for i in news_from_stream(messages)], ["evt-0001"])
 
     def test_invalid_location_is_rejected(self):
         event = quake()
