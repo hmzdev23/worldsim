@@ -1,0 +1,368 @@
+{
+  "events": [
+    {
+      "type": "volcanic_eruption",
+      "sim_time_minutes": 190,
+      "location": {
+        "name": "Reykjanes Peninsula",
+        "country": "Iceland",
+        "country_code": "ISL",
+        "lat": 63.88,
+        "lon": -22.27
+      },
+      "severity": 0.8,
+      "description": "A fissure eruption opens on the Reykjanes Peninsula, sending lava toward Grindavik and ash high into the sky.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": 4,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 40,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 12,
+        "missing": null,
+        "displaced": 0,
+        "sheltered": null,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": 150000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 230,
+      "location": {
+        "name": "Grindavik",
+        "country": "Iceland",
+        "country_code": "ISL",
+        "lat": 63.84,
+        "lon": -22.43
+      },
+      "severity": 0.6,
+      "description": "Civil protection evacuates Grindavik as lava advances toward the town's defensive walls.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 15,
+        "missing": null,
+        "displaced": 3700,
+        "sheltered": 2100,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": 180000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 420,
+      "location": {
+        "name": "Svartsengi Power Station",
+        "country": "Iceland",
+        "country_code": "ISL",
+        "lat": 63.88,
+        "lon": -22.43
+      },
+      "severity": 0.7,
+      "description": "Lava cuts the pipelines from the Svartsengi geothermal plant, leaving the peninsula without hot water and power.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "geothermal plant",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 18,
+        "missing": null,
+        "displaced": 3700,
+        "sheltered": 2400,
+        "households_without_power": 9000,
+        "households_without_water": 11000,
+        "economic_loss_usd": 420000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "contamination",
+      "sim_time_minutes": 900,
+      "location": {
+        "name": "Keflavik",
+        "country": "Iceland",
+        "country_code": "ISL",
+        "lat": 64.0,
+        "lon": -22.56
+      },
+      "severity": 0.5,
+      "description": "A volcanic gas plume drifts over Keflavik and Reykjanesbaer; residents are told to stay indoors.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 60,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1,
+        "injuries": 140,
+        "missing": null,
+        "displaced": 4100,
+        "sheltered": 2600,
+        "households_without_power": 8000,
+        "households_without_water": 11000,
+        "economic_loss_usd": 510000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 380,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 1100,
+      "location": {
+        "name": "London Heathrow",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.47,
+        "lon": -0.45
+      },
+      "severity": 0.6,
+      "description": "The ash cloud closes North Atlantic airspace; thousands of flights between Europe and North America are grounded.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1,
+        "injuries": 140,
+        "missing": null,
+        "displaced": 4100,
+        "sheltered": 2600,
+        "households_without_power": 8000,
+        "households_without_water": 11000,
+        "economic_loss_usd": 1900000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 380,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 1500,
+      "location": {
+        "name": "Reykjavik",
+        "country": "Iceland",
+        "country_code": "ISL",
+        "lat": 64.15,
+        "lon": -21.94
+      },
+      "severity": 0.3,
+      "description": "A Norwegian relief flight lands with gas masks and field shelters once a gap in the ash opens.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Norway",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1,
+        "injuries": 150,
+        "missing": null,
+        "displaced": 4100,
+        "sheltered": 2800,
+        "households_without_power": 7000,
+        "households_without_water": 10000,
+        "economic_loss_usd": 2000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 380,
+        "debris_tonnes": null,
+        "aid_contributors": [
+          {
+            "country": "Norway",
+            "personnel": 40,
+            "cargo_tonnes": 25,
+            "cargo": "gas masks and field shelters"
+          }
+        ]
+      },
+      "caused_by": [
+        2,
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 2000,
+      "location": {
+        "name": "Reykjavik",
+        "country": "Iceland",
+        "country_code": "ISL",
+        "lat": 64.15,
+        "lon": -21.94
+      },
+      "severity": 0.3,
+      "description": "Danish teams arrive with air-quality monitors and generators for the evacuated towns.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Denmark",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1,
+        "injuries": 150,
+        "missing": null,
+        "displaced": 3900,
+        "sheltered": 2700,
+        "households_without_power": 5000,
+        "households_without_water": 8000,
+        "economic_loss_usd": 2050000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 380,
+        "debris_tonnes": null,
+        "aid_contributors": [
+          {
+            "country": "Norway",
+            "personnel": 60,
+            "cargo_tonnes": 40,
+            "cargo": "gas masks and field shelters"
+          },
+          {
+            "country": "Denmark",
+            "personnel": 35,
+            "cargo_tonnes": 30,
+            "cargo": "air-quality monitors and generators"
+          }
+        ]
+      },
+      "caused_by": [
+        2,
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 3600,
+      "location": {
+        "name": "Svartsengi Power Station",
+        "country": "Iceland",
+        "country_code": "ISL",
+        "lat": 63.88,
+        "lon": -22.43
+      },
+      "severity": 0.3,
+      "description": "Crews reconnect a temporary hot-water line as the eruption weakens and airspace reopens.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1,
+        "injuries": 150,
+        "missing": null,
+        "displaced": 3500,
+        "sheltered": 2200,
+        "households_without_power": 1200,
+        "households_without_water": 2500,
+        "economic_loss_usd": 2150000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 410,
+        "debris_tonnes": null,
+        "aid_contributors": [
+          {
+            "country": "Norway",
+            "personnel": 60,
+            "cargo_tonnes": 55,
+            "cargo": "gas masks and field shelters"
+          },
+          {
+            "country": "Denmark",
+            "personnel": 35,
+            "cargo_tonnes": 42,
+            "cargo": "air-quality monitors and generators"
+          }
+        ]
+      },
+      "caused_by": [
+        2,
+        4,
+        5,
+        6
+      ],
+      "caused_by_events": []
+    }
+  ]
+}
