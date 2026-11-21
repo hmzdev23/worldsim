@@ -2,25 +2,29 @@
 
 import { Crosshair, GlobeHemisphereWest, Pause, Play, ArrowCounterClockwise } from "@phosphor-icons/react";
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import { earthquake } from "../lib/earthquake";
+import { earthquake, scenarioStartMinute, scenarioEndMinute, type ScenarioEvent } from "../lib/earthquake";
+import { ImpactDashboard } from "./impact-dashboard";
 import { WorldMap, type WorldMapHandle } from "./world-map";
 import { WorldWire } from "./world-wire";
 
 const speeds = [1, 2, 4];
-const duration = earthquake.durationSeconds;
 const parsedRate = Number(process.env.NEXT_PUBLIC_SIMULATION_MINUTES_PER_SECOND ?? "60");
 const minutesPerSecond = Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : 60;
-const startMinute = Math.max(0, earthquake.simTimeMinutes - 1);
+const startMinute = scenarioStartMinute;
+const duration = Math.max(1, (scenarioEndMinute - startMinute) / minutesPerSecond);
 
 type Playback = { state: "playing" | "paused"; speed: number };
-type AppliedEvent = { id: string; type: string; sim_time_minutes: number; sequence: number };
+type AppliedEvent = ScenarioEvent;
 type StreamMessage =
   | { kind: "snapshot"; sim_time_minutes: number; playback: Playback; events: AppliedEvent[] }
   | { kind: "event"; sim_time_minutes: number; event: AppliedEvent }
   | { kind: "clock"; sim_time_minutes: number; playback: Playback };
 
-function formatElapsed(seconds: number) {
-  return `00:${String(Math.floor(seconds)).padStart(2, "0")}`;
+function formatSimTime(minutes: number) {
+  const day = Math.floor(minutes / 1440) + 1;
+  const hour = Math.floor(minutes % 1440 / 60);
+  const minute = Math.floor(minutes % 60);
+  return `DAY ${day} · ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
 }
 
 function streamUrl() {
@@ -144,7 +148,7 @@ export function Simulation() {
       </header>
 
       <div className="workspace">
-        <WorldMap ref={mapRef} elapsedSeconds={elapsed} />
+        <WorldMap ref={mapRef} elapsedSeconds={elapsed} events={appliedEvents} />
 
         <aside className="scenario-panel" aria-labelledby="scenario-title">
           <div className="scenario-heading">
@@ -168,8 +172,10 @@ export function Simulation() {
             <span><i className="key-epicenter" aria-hidden="true" /> Epicenter</span>
             <span><i className="key-wave" aria-hidden="true" /> Shockwave</span>
           </div>
-          <WorldWire revealed={hasEarthquake} />
         </aside>
+
+        <ImpactDashboard events={appliedEvents} />
+        <WorldWire events={appliedEvents} />
 
         <section className="timeline" aria-label="Simulation playback">
           <div className="timeline-tools">
@@ -189,7 +195,7 @@ export function Simulation() {
           <div className="timeline-track">
             <div className="timeline-meta">
               <label className="section-label" htmlFor="playback-position">Simulation timeline</label>
-              <span>{formatElapsed(elapsed)} <span className="time-divider">/</span> {formatElapsed(duration)}</span>
+              <span>{formatSimTime(simTime)} <span className="time-divider">/</span> {formatSimTime(scenarioEndMinute)}</span>
             </div>
             <input
               id="playback-position"

@@ -4,7 +4,7 @@ import { CornersOut, Minus, Plus } from "@phosphor-icons/react";
 import type { FeatureCollection, LineString } from "geojson";
 import { Map, Marker, setWorkerUrl, type StyleSpecification } from "maplibre-gl";
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
-import { earthquake, type MapLocation } from "../lib/earthquake";
+import { earthquake, type MapLocation, type ScenarioEvent } from "../lib/earthquake";
 
 export type WorldMapHandle = {
   focusLocation: (location: MapLocation) => void;
@@ -142,9 +142,11 @@ function focusMapLocation(map: Map, { lat, lon, zoom = 4.65 }: MapLocation) {
 
 export function WorldMap({
   elapsedSeconds,
+  events,
   ref,
 }: {
   elapsedSeconds: number;
+  events: ScenarioEvent[];
   ref: Ref<WorldMapHandle>;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -152,6 +154,7 @@ export function WorldMap({
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
   const [country, setCountry] = useState("");
+  const eventMarkers = useRef<Marker[]>([]);
 
   useImperativeHandle(ref, () => ({
     focusLocation(location) {
@@ -244,16 +247,25 @@ export function WorldMap({
   useEffect(() => {
     const map = mapRef.current;
     if (!mapReady || !map || !map.getLayer(pulseLayers[0])) return;
+    eventMarkers.current.forEach((marker) => marker.remove());
+    eventMarkers.current = events.filter((event) => event.type !== "earthquake").map((event) => {
+      const marker = document.createElement("div");
+      marker.className = `event-marker event-marker-${event.type}`;
+      marker.title = `${event.type.replaceAll("_", " ")} · ${event.location.name}`;
+      const instance = new Marker({ element: marker }).setLngLat([event.location.lon, event.location.lat]).addTo(map);
+      eventMarkers.current.push(instance);
+      return instance;
+    });
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     pulseLayers.forEach((id, index) => {
-      const active = elapsedSeconds > 0 && elapsedSeconds < earthquake.durationSeconds && !reducedMotion;
+      const active = elapsedSeconds > 0 && events.some((event) => event.type === "earthquake") && !reducedMotion;
       const phase = ((elapsedSeconds / 4) + index / pulseLayers.length) % 1;
       const radius = active ? 12 + 92 * phase : 20 + index * 20;
       const opacity = active ? (1 - phase) * 0.72 : 0.62 - index * 0.16;
       map.setPaintProperty(id, "circle-radius", radius);
       map.setPaintProperty(id, "circle-stroke-opacity", opacity);
     });
-  }, [elapsedSeconds, mapReady]);
+  }, [elapsedSeconds, events, mapReady]);
 
   return (
     <section className="map-panel" aria-label="Interactive world map">
