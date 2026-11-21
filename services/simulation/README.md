@@ -63,6 +63,10 @@ Use this endpoint to draw a scrubber, mark upcoming events, or plan the next Dir
 - The list doesn't depend on the clock: seeking or replaying leaves it unchanged. It grows only when `POST /events` applies new events.
 - It is an HTTP response, not a stream message, so it has no `kind`. `/snapshot` and the WebSocket are unchanged.
 
+### Scenario end
+
+Playback stops at `end_minutes`. However far one tick would carry the clock (several hundred sim minutes per wall second at 4× or 16×), it stops on that minute, releases every due event once, and switches to `paused`. The last `clock` message, `/snapshot`, and `/timeline` all report the end time. While the clock is at the end, `play` changes nothing until you `seek` or `replay`. A seek past the end is kept as-is, and the clock stays there. When `POST /events` applies a later event, it moves the end so playback can continue. With no events, the end is 0.
+
 Seek and replay can move in either direction. After any mix of seeks, replays, speed changes, and ticks, a client that replaces its state on each `snapshot` and appends each `event` holds exactly the timeline events up to the clock, in order, with no duplicates or gaps. The WebSocket sends one `event` message per event, when the clock reaches it, even when one tick at high speed passes several events. `tests/simulation/test_timeline.py` checks this against the demo fixture and a multi-day test fixture (`tests/simulation/fixtures/multi-day.json`).
 
 ## Validation rules
