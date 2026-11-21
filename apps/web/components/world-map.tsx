@@ -2,9 +2,14 @@
 
 import { CornersOut, Minus, Plus } from "@phosphor-icons/react";
 import type { FeatureCollection, LineString } from "geojson";
-import { Map as MapLibreMap, Marker, setWorkerUrl, type GeoJSONSource, type StyleSpecification } from "maplibre-gl";
-import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
+import {
+  Map as MapLibreMap, Marker, setWorkerUrl,
+  type ExpressionSpecification, type GeoJSONSource, type StyleSpecification,
+} from "maplibre-gl";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
 import type { MapLocation, ScenarioEvent } from "../lib/scenario";
+import { along, deriveMapEffects, describeEffects, type AidRoute, type MapEffects } from "./map-effects";
+import effectStyles from "./map-effects.module.css";
 
 export type WorldMapHandle = {
   focusLocation: (location: MapLocation) => void;
@@ -16,6 +21,44 @@ const worldBounds: [[number, number], [number, number]] = [
   [179, 76],
 ];
 const pulseLayers = ["pulse-first", "pulse-second", "pulse-third"];
+const outbreakColor = "#d68ae8";
+const shockwaveColor = "#ff8f5c";
+const routeColor = "#83c9ae";
+const emptyCollection = { type: "FeatureCollection" as const, features: [] };
+
+// Circle radius in pixels for a radius in km, at any zoom (512px world at zoom 0,
+// about 78 km per pixel at the equator), times `scale`, never below `min` pixels.
+function kmRadius(scale: number, min = 5): ExpressionSpecification {
+  const perPixel = 40075 / 512;
+  return [
+    "interpolate", ["exponential", 2], ["zoom"],
+    0, ["max", min, ["*", ["get", "radiusKm"], scale / perPixel]],
+    8, ["max", min, ["*", ["get", "radiusKm"], (scale * 256) / perPixel]],
+  ];
+}
+
+function effectData(effects: MapEffects) {
+  const points = <T extends { id: string; lon: number; lat: number; radiusKm: number }>(items: T[]) => ({
+    type: "FeatureCollection" as const,
+    features: items.map((item) => ({
+      type: "Feature" as const,
+      properties: { id: item.id, radiusKm: item.radiusKm },
+      geometry: { type: "Point" as const, coordinates: [item.lon, item.lat] },
+    })),
+  });
+  return {
+    outbreaks: points(effects.outbreaks),
+    shockwaves: points(effects.shockwaves),
+    routes: {
+      type: "FeatureCollection" as const,
+      features: effects.routes.map((route) => ({
+        type: "Feature" as const,
+        properties: { id: route.id },
+        geometry: { type: "LineString" as const, coordinates: [[route.from.lon, route.from.lat], [route.to.lon, route.to.lat]] },
+      })),
+    },
+  };
+}
 
 const grid: FeatureCollection<LineString> = {
   type: "FeatureCollection",
@@ -55,6 +98,9 @@ const mapStyle: StyleSpecification = {
       type: "geojson",
       data: { type: "FeatureCollection", features: [] },
     },
+    "effect-outbreaks": { type: "geojson", data: emptyCollection },
+    "effect-shockwaves": { type: "geojson", data: emptyCollection },
+    "effect-routes": { type: "geojson", data: emptyCollection },
   },
   layers: [
     { id: "ocean", type: "background", paint: { "background-color": "#111719" } },
@@ -121,8 +167,53 @@ const mapStyle: StyleSpecification = {
       source: "epicenter",
       paint: { "circle-color": accent, "circle-radius": 15, "circle-opacity": 0.13 },
     },
+    // Event effects (DIR-006): reported outbreak areas, disaster shockwaves, inferred aid routes.
+    {
+      id: "effect-outbreak-area",
+      type: "circle",
+      source: "effect-outbreaks",
+      paint: {
+        "circle-color": outbreakColor, "circle-opacity": 0.16, "circle-radius": kmRadius(1),
+        "circle-stroke-color": outbreakColor, "circle-stroke-width": 1, "circle-stroke-opacity": 0.7,
+      },
+    },
+    {
+      id: "effect-outbreak-pulse",
+      type: "circle",
+      source: "effect-outbreaks",
+      paint: {
+        "circle-opacity": 0, "circle-radius": kmRadius(1),
+        "circle-stroke-color": outbreakColor, "circle-stroke-width": 1.5, "circle-stroke-opacity": 0,
+      },
+    },
+    {
+      id: "effect-shockwave-core",
+      type: "circle",
+      source: "effect-shockwaves",
+      paint: { "circle-color": shockwaveColor, "circle-opacity": 0.22, "circle-radius": 7 },
+    },
+    {
+      id: "effect-shockwave-ring",
+      type: "circle",
+      source: "effect-shockwaves",
+      paint: {
+        "circle-opacity": 0, "circle-radius": kmRadius(1, 10),
+        "circle-stroke-color": shockwaveColor, "circle-stroke-width": 1.5, "circle-stroke-opacity": 0.5,
+      },
+    },
+    {
+      id: "effect-route-line",
+      type: "line",
+      source: "effect-routes",
+      layout: { "line-cap": "round" },
+      paint: { "line-color": routeColor, "line-width": 1.6, "line-opacity": 0.85, "line-dasharray": [2, 2] },
+    },
   ],
 };
+
+function reducedMotion() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
 
 function transitionDuration(duration: number) {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : duration;
@@ -151,7 +242,10 @@ export function WorldMap({
   const [mapUnavailable, setMapUnavailable] = useState(false);
   const [country, setCountry] = useState("");
   const eventMarkers = useRef(new Map<string, Marker>());
+  const aidMarkers = useRef(new Map<string, { route: AidRoute; marker: Marker; label: Marker }>());
   const quake = events.findLast((event) => event.type === "earthquake");
+  const effects = useMemo(() => deriveMapEffects(events), [events]);
+  const effectList = useMemo(() => describeEffects(effects), [effects]);
 
   useImperativeHandle(ref, () => ({
     focusLocation(location) {
@@ -224,6 +318,8 @@ export function WorldMap({
       window.removeEventListener("worldsim:focus", focusFromNewsroom);
       eventMarkers.current.forEach((marker) => marker.remove());
       eventMarkers.current.clear();
+      aidMarkers.current.forEach(({ marker, label }) => { marker.remove(); label.remove(); });
+      aidMarkers.current.clear();
       map.remove();
       mapRef.current = null;
     };
@@ -281,6 +377,62 @@ export function WorldMap({
     });
   }, [elapsedSeconds, mapReady, quake]);
 
+  // Effects follow the applied events: a seek or run switch changes `events`,
+  // which replaces every source and drops markers for events that are gone.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    const data = effectData(effects);
+    map.getSource<GeoJSONSource>("effect-outbreaks")?.setData(data.outbreaks);
+    map.getSource<GeoJSONSource>("effect-shockwaves")?.setData(data.shockwaves);
+    map.getSource<GeoJSONSource>("effect-routes")?.setData(data.routes);
+
+    const current = new Set(effects.routes.map((route) => route.id));
+    for (const [id, entry] of aidMarkers.current) {
+      if (current.has(id)) continue;
+      entry.marker.remove();
+      entry.label.remove();
+      aidMarkers.current.delete(id);
+    }
+    for (const route of effects.routes) {
+      if (aidMarkers.current.has(route.id)) continue;
+      const element = document.createElement("div");
+      element.className = effectStyles.aidMarker;
+      element.dataset.effect = "aid-marker";
+      element.dataset.eventId = route.id;
+      element.setAttribute("aria-hidden", "true");
+      const text = document.createElement("div");
+      text.className = effectStyles.routeLabel;
+      text.dataset.effect = "route-label";
+      text.textContent = `Inferred route · ${route.origin}`;
+      text.setAttribute("aria-hidden", "true");
+      aidMarkers.current.set(route.id, {
+        route,
+        marker: new Marker({ element }).setLngLat(along(route, reducedMotion() ? 1 : 0)).addTo(map),
+        label: new Marker({ element: text, offset: [0, -14] }).setLngLat(along(route, 0.5)).addTo(map),
+      });
+    }
+  }, [effects, mapReady]);
+
+  // Animation follows the clock: pulses, rings and aid markers move only while
+  // the simulation plays, and hold still with reduced motion.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    const still = reducedMotion() || elapsedSeconds <= 0;
+    const phase = still ? 0 : (elapsedSeconds / 3) % 1;
+    map.setPaintProperty("effect-outbreak-pulse", "circle-radius", kmRadius(1 + phase * 0.8));
+    map.setPaintProperty("effect-outbreak-pulse", "circle-stroke-opacity", still ? 0 : 0.8 * (1 - phase));
+    map.setPaintProperty("effect-shockwave-ring", "circle-radius", kmRadius(still ? 1 : 0.3 + phase * 1.4, 10));
+    map.setPaintProperty("effect-shockwave-ring", "circle-stroke-opacity", still ? 0.5 : 0.85 * (1 - phase));
+    let index = 0;
+    for (const { route, marker } of aidMarkers.current.values()) {
+      marker.setLngLat(along(route, still ? 1 : ((elapsedSeconds / 5) + index * 0.37) % 1));
+      marker.getElement().dataset.moving = String(!still);
+      index += 1;
+    }
+  }, [effects, elapsedSeconds, mapReady]);
+
   return (
     <section className="map-panel" aria-label="Interactive world map">
       <div className="map-canvas" ref={containerRef} />
@@ -302,6 +454,22 @@ export function WorldMap({
           <CornersOut size={18} />
         </button>
       </div>
+      {effectList.length > 0 && (
+        <div className={effectStyles.legend} role="group" aria-label="Map effects">
+          <h3>On the map</h3>
+          <ul>
+            {effectList.map((item) => (
+              <li key={item.id} data-kind={item.kind}>{item.text}</li>
+            ))}
+          </ul>
+          {effects.routes.length > 0 && (
+            <p className={effectStyles.note}>Routes are inferred: straight lines between event locations, not real paths.</p>
+          )}
+          {effects.outbreaks.length > 0 && (
+            <p className={effectStyles.note}>Outbreak circles mark reported places only.</p>
+          )}
+        </div>
+      )}
       <div className="map-credit">
         Imagery © Esri, Maxar, Earthstar Geographics, and the GIS User Community · Boundaries <a href="https://www.naturalearthdata.com/">Natural Earth</a>
       </div>

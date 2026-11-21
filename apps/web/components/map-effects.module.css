@@ -1,0 +1,86 @@
+/* Map-only styles for event effects (DIR-006). Kept out of app/styles.css. */
+
+.legend {
+  position: absolute;
+  z-index: 0;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  gap: 4px;
+  max-width: min(290px, calc(100% - 24px));
+  max-height: calc(50% - 24px);
+  overflow: hidden;
+  padding: 7px 9px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #171a1eeb;
+  font-size: 11px;
+  /* Information only: never takes clicks from the map, controls or alerts. */
+  pointer-events: none;
+}
+
+.legend h3 {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.legend ul {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legend li {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.legend li::before {
+  content: "";
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  transform: translateY(1px);
+}
+
+.legend li[data-kind="outbreak"]::before { background: #d68ae8; }
+.legend li[data-kind="shockwave"]::before { background: #ff8f5c; }
+.legend li[data-kind="route"]::before { border: 1px dashed #83c9ae; border-radius: 2px; }
+
+.note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 10px;
+  white-space: normal;
+}
+
+.aidMarker {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #14161a;
+  border-radius: 3px;
+  background: #83c9ae;
+  box-shadow: 0 0 0 2px #83c9ae55;
+  pointer-events: none;
+}
+
+.routeLabel {
+  padding: 1px 5px;
+  border: 1px dashed #83c9ae;
+  border-radius: 4px;
+  background: #171a1ee6;
+  color: #cfe9de;
+  font-size: 10px;
+  white-space: nowrap;
+  pointer-events: none;
+}
