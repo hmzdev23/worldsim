@@ -4,6 +4,9 @@ Describe a hypothetical crisis, watch it unfold on an animated world map, and fo
 
 ## Start here
 
+Already working? Open [TEAM-SYNC.md](TEAM-SYNC.md) and the
+[live team thread](https://github.com/hmzdev23/worldsim/issues/13) before continuing.
+
 ### 1. Accept your GitHub invitation
 
 Open the [WORLD//SIM invitation](https://github.com/hmzdev23/worldsim/invitations) while signed in to the GitHub account Hamza invited. Once you accept, confirm you can open the [private repository](https://github.com/hmzdev23/worldsim).
@@ -36,7 +39,9 @@ fetch the latest changes from origin. If it isn't, clone it and work
 inside the worldsim folder. If GitHub denies access, tell me which
 account or permission I need to fix.
 
-Read README.md, AGENTS.md, and my GitHub issue. Preserve any local work.
+Read README.md, AGENTS.md, TEAM-SYNC.md, and my GitHub issue. Read the
+latest comments in issue #13 and share what I’m starting there.
+Preserve any local work.
 If I already have a branch for this issue, continue on it. Otherwise,
 start from the latest origin/main on a new feature branch.
 
@@ -62,7 +67,9 @@ fetch the latest changes from origin. If it isn't, clone it and work
 inside the worldsim folder. If GitHub denies access, tell me which
 account or permission I need to fix.
 
-Read README.md, AGENTS.md, and my GitHub issue. Preserve any local work.
+Read README.md, AGENTS.md, TEAM-SYNC.md, and my GitHub issue. Read the
+latest comments in issue #13 and share what I’m starting there.
+Preserve any local work.
 If I already have a branch for this issue, continue on it. Otherwise,
 start from the latest origin/main on a new feature branch.
 
@@ -88,7 +95,9 @@ fetch the latest changes from origin. If it isn't, clone it and work
 inside the worldsim folder. If GitHub denies access, tell me which
 account or permission I need to fix.
 
-Read README.md, AGENTS.md, and my GitHub issue. Preserve any local work.
+Read README.md, AGENTS.md, TEAM-SYNC.md, and my GitHub issue. Read the
+latest comments in issue #13 and share what I’m starting there.
+Preserve any local work.
 If I already have a branch for this issue, continue on it. Otherwise,
 start from the latest origin/main on a new feature branch.
 
@@ -114,7 +123,9 @@ fetch the latest changes from origin. If it isn't, clone it and work
 inside the worldsim folder. If GitHub denies access, tell me which
 account or permission I need to fix.
 
-Read README.md, AGENTS.md, and my GitHub issue. Preserve any local work.
+Read README.md, AGENTS.md, TEAM-SYNC.md, and my GitHub issue. Read the
+latest comments in issue #13 and share what I’m starting there.
+Preserve any local work.
 If I already have a branch for this issue, continue on it. Otherwise,
 start from the latest origin/main on a new feature branch.
 
@@ -133,6 +144,18 @@ Review the [shared event contract](https://github.com/hmzdev23/worldsim/issues/1
 The first deliverable is a deterministic Japan earthquake demo. A fixture event enters the simulation stream, triggers an animation on the map, and produces a news card that flies the camera to the event when clicked. The simulator will run this demo without model access.
 
 The [master brief](WORLDSIM_MASTER_BRIEF.md) records the original design and discussion. This README and the GitHub issues describe the current setup.
+
+## Run the earthquake demo check
+
+The offline demo check runs the shared fixture through a mock simulation stream into WORLD//WIRE and confirms that each news card focuses the map on its event. It needs no model login.
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install jsonschema   # optional, enables contract checks
+./scripts/smoke-demo.sh          # contracts, newsroom, and end-to-end checks
+./scripts/smoke-demo.sh --open   # also opens the WORLD//WIRE preview page
+```
+
+Shared event and stream shapes are in [contracts/](contracts/README.md).
 
 ## Try the World Director
 

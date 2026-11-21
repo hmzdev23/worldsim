@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WORLD//WIRE preview</title>
+<style>
+  :root { --bg:#0b0f17; --panel:#121a27; --line:#22304a; --text:#e6edf7; --muted:#8a9ab5; --alert:#ff4d4d; --focus:#ffd24d; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, sans-serif; display:grid; grid-template-columns: 1fr 340px; height:100vh; }
+  #map { position:relative; border-right:1px solid var(--line); }
+  #map svg { width:100%; height:100%; display:block; }
+  #map .note { position:absolute; left:12px; bottom:12px; color:var(--muted); font-size:12px; }
+  aside { padding:16px; overflow-y:auto; background:var(--panel); }
+  h1 { font-size:13px; letter-spacing:.2em; margin:0 0 4px; }
+  .disclaimer { color:var(--muted); font-size:12px; margin:0 0 16px; }
+  .card { display:block; width:100%; text-align:left; background:var(--bg); color:inherit; border:1px solid var(--line); border-left:3px solid var(--alert); border-radius:6px; padding:12px; margin-bottom:10px; cursor:pointer; font:inherit; }
+  .card:hover, .card:focus-visible { border-color:var(--focus); outline:none; }
+  .card[aria-pressed="true"] { border-color:var(--focus); }
+  .meta { display:flex; gap:8px; font-size:11px; letter-spacing:.08em; color:var(--muted); margin-bottom:6px; }
+  .label { color:var(--bg); background:var(--alert); padding:0 6px; border-radius:3px; font-weight:700; }
+  .headline { font-weight:700; font-size:15px; }
+  .dek { color:var(--muted); margin-top:4px; }
+  @media (max-width: 720px) { body { grid-template-columns:1fr; grid-template-rows: 45vh 1fr; } }
+</style>
+</head>
+<body>
+<div id="map">
+  <svg viewBox="-180 -90 360 180" preserveAspectRatio="xMidYMid meet" aria-label="Stand-in map">
+    <rect x="-180" y="-90" width="360" height="180" fill="#0e1522"/>
+    <g stroke="#1b2740" stroke-width="0.3" id="grid"></g>
+    <g id="markers"></g>
+  </svg>
+  <p class="note">Stand-in map. The real map (WEB-001) listens for the same <code>worldsim:focus</code> event.</p>
+</div>
+<aside>
+  <h1>WORLD//WIRE</h1>
+  <p class="disclaimer">Fictional news from a simulation. None of these events are real.</p>
+  <div id="feed"></div>
+</aside>
+<script>
+  const FEED = /*__WORLDWIRE_FEED__*/[];
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const grid = document.getElementById("grid");
+  for (let x = -180; x <= 180; x += 30) grid.append(line(x, -90, x, 90));
+  for (let y = -90; y <= 90; y += 30) grid.append(line(-180, y, 180, y));
+  function line(x1, y1, x2, y2) {
+    const l = document.createElementNS(svgNS, "line");
+    Object.entries({ x1, y1, x2, y2 }).forEach(([k, v]) => l.setAttribute(k, v));
+    return l;
+  }
+
+  const markers = document.getElementById("markers");
+  const svg = document.querySelector("#map svg");
+  function dot(focus, active) {
+    const c = document.createElementNS(svgNS, "circle");
+    c.setAttribute("cx", focus.lon);
+    c.setAttribute("cy", -focus.lat);
+    c.setAttribute("r", active ? 3 : 1.5);
+    c.setAttribute("fill", active ? "#ffd24d" : "#ff4d4d");
+    c.dataset.eventId = focus.event_id;
+    return c;
+  }
+
+  // Stand-in for the map's fly-to: zoom the SVG viewBox onto the event.
+  window.addEventListener("worldsim:focus", (e) => {
+    const f = e.detail;
+    const span = 360 / Math.pow(2, f.zoom / 2);
+    svg.setAttribute("viewBox", `${f.lon - span / 2} ${-f.lat - span / 4} ${span} ${span / 2}`);
+    markers.querySelectorAll("circle").forEach((c) => {
+      const active = c.dataset.eventId === f.event_id;
+      c.setAttribute("r", active ? span / 60 : span / 120);
+      c.setAttribute("fill", active ? "#ffd24d" : "#ff4d4d");
+    });
+  });
+
+  const feed = document.getElementById("feed");
+  for (const item of FEED) {
+    markers.append(dot(item.focus, false));
+    const card = document.createElement("button");
+    card.className = "card";
+    card.setAttribute("aria-pressed", "false");
+    card.dataset.eventId = item.event_id;
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const label = document.createElement("span");
+    label.className = "label";
+    label.textContent = item.label;
+    const time = document.createElement("span");
+    time.textContent = item.sim_time_label + " SIM TIME";
+    meta.append(label, time);
+    const h = document.createElement("div");
+    h.className = "headline";
+    h.textContent = item.headline;
+    const d = document.createElement("div");
+    d.className = "dek";
+    d.textContent = item.dek;
+    card.append(meta, h, d);
+    card.addEventListener("click", () => {
+      feed.querySelectorAll(".card").forEach((c) => c.setAttribute("aria-pressed", String(c === card)));
+      window.dispatchEvent(new CustomEvent("worldsim:focus", { detail: item.focus }));
+    });
+    feed.append(card);
+  }
+</script>
+</body>
+</html>
