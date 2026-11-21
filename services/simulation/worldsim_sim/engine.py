@@ -180,13 +180,22 @@ class Simulation:
     def advance(self, minutes: float) -> list[Message]:
         """Move the clock forward `minutes` × speed if playing.
 
+        Playback stops at the scenario end (`end_minutes`): the clock never
+        passes it, and reaching it pauses playback, so the final clock
+        message reports the end time. A clock already past the end (after a
+        seek) stays where it is. Applying a later event extends the end.
+
         Returns event messages for every event that became due, in canonical
         order, followed by one clock message.
         """
         if minutes < 0:
             raise ValueError("advance takes a non-negative number of minutes")
         if self.state == "playing":
-            self.sim_time += minutes * self.speed
+            end = self.end_minutes
+            if self.sim_time < end:
+                self.sim_time = min(self.sim_time + minutes * self.speed, float(end))
+            if self.sim_time >= end:
+                self.state = "paused"
         messages = [self._event_message(e) for e in self._release_due()]
         messages.append(self.clock())
         return messages
@@ -283,7 +292,6 @@ def replay(batch: dict[str, Any], speed: int = 1, step_minutes: int = 1) -> list
         raise ValueError("step_minutes must be a positive integer")
     sim = Simulation.from_batch(batch, speed=speed)
     messages = [sim.snapshot()]
-    last = max((e["sim_time_minutes"] for e in sim.timeline), default=0)
-    while sim.now < last:
+    while sim.state == "playing":  # advance pauses at the last event
         messages.extend(sim.advance(step_minutes))
     return messages
