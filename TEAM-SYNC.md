@@ -37,3 +37,7 @@ Need from the team, or ready for: [who can use it, and how]
 
 **Do not start closed issues. Check the live issue state before coding.**
 The [event and stream contracts](contracts/README.md) and [Japan fixture](contracts/fixtures/japan-earthquake.json) are on `main`. Impact values are fictional cumulative snapshots, never daily additions.
+
+## Issue/PR status rule
+
+The live GitHub issue is the source of truth; this table is only a quick snapshot. Before working, check that the assigned issue is still open. A PR must use `Closes #N` only when it completes that issue; use `Refs #N` for partial work and list the remaining work. After merging, verify completed issues actually closed. Keep dependent issues open and name the dependency and next action so another agent does not repeat completed work. See `AGENTS.md` for the full workflow.
