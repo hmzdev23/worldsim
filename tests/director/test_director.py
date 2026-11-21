@@ -1,6 +1,7 @@
 import copy
 import json
 import os
+import shlex
 import stat
 import subprocess
 import sys
@@ -38,9 +39,14 @@ def one_event(**overrides):
 
 def fake_codex(tmp: str, body: str) -> str:
     """Write an executable named `codex` into tmp and return the directory."""
+    # A shebang line cannot hold a path with spaces (e.g. a venv inside "Code jam 16"),
+    # so the executable is a sh wrapper that runs the Python body with sys.executable.
+    script = os.path.join(tmp, "codex.py")
+    with open(script, "w") as f:
+        f.write(textwrap.dedent(body))
     path = os.path.join(tmp, "codex")
     with open(path, "w") as f:
-        f.write(f"#!{sys.executable}\n" + textwrap.dedent(body))
+        f.write(f"#!/bin/sh\nexec {shlex.quote(sys.executable)} {shlex.quote(script)} \"$@\"\n")
     os.chmod(path, os.stat(path).st_mode | stat.S_IEXEC)
     return tmp
 
