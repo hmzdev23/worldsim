@@ -497,3 +497,31 @@ button:focus-visible, input:focus-visible, a:focus-visible {
   .speed-control { grid-column: 3; }
   .scenario-heading h2 { text-wrap: wrap; }
 }
+
+/* Live incident and impact dashboard */
+.workspace { grid-template-areas: "map scenario" "impact scenario" "wire wire" "timeline timeline"; }
+.impact-dashboard { grid-area: impact; padding: 18px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.impact-heading,.world-wire-heading { display:flex; justify-content:space-between; align-items:end; gap:12px; }
+.impact-heading h2,.world-wire-heading h2 { margin:5px 0 0; font-size:20px; }
+.estimate-tag,.world-wire-note { color:var(--accent); font:10px var(--mono); letter-spacing:.07em; }
+.impact-grid { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:8px; margin-top:14px; }
+.impact-card { min-width:0; padding:11px; border:1px solid var(--line); border-radius:var(--radius); background:var(--background); display:grid; gap:7px; }
+.impact-card>span,.impact-secondary span { color:var(--muted); font:10px var(--mono); text-transform:uppercase; }
+.impact-card strong { font:600 20px var(--mono); overflow-wrap:anywhere; }
+.impact-sparkline { width:100%; height:28px; overflow:visible; }
+.impact-sparkline polyline { fill:none; stroke:var(--accent); stroke-width:2; vector-effect:non-scaling-stroke; }
+.sparkline-empty { color:var(--muted); font-size:10px; }
+.impact-secondary { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:8px; }
+.impact-secondary>div { display:grid; gap:5px; padding:10px; border-top:1px solid var(--line); }
+.impact-secondary strong { font-size:12px; font-weight:500; line-height:1.45; }
+.world-wire { grid-area:wire; margin:0; padding:18px; border:1px solid var(--line); border-radius:var(--radius); background:var(--surface); }
+.world-wire-list { max-height:420px; overflow:auto; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); }
+.wire-card { padding:16px; gap:9px; }
+.wire-headline { font-size:18px; }
+.wire-dek { font-size:14px; line-height:1.55; }
+.event-marker { width:15px;height:15px;border:2px solid #111;border-radius:50%;background:#ffcb63;box-shadow:0 0 0 3px #ffcb6340; }
+.event-marker-international_aid,.event-marker-government_response { background:#60d7b2;box-shadow:0 0 0 3px #60d7b240; }
+.event-marker-tsunami_warning,.event-marker-evacuation { background:#67c8fa;box-shadow:0 0 0 3px #67c8fa40; }
+.event-marker-contamination { background:#bf9cff;box-shadow:0 0 0 3px #bf9cff40; }
+.event-marker-infrastructure_failure,.event-marker-economic_shock { background:#ff7272;box-shadow:0 0 0 3px #ff727240; }
+@media(max-width:680px){.workspace{grid-template-areas:"map" "scenario" "impact" "wire" "timeline"}.impact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.impact-secondary{grid-template-columns:1fr}}
