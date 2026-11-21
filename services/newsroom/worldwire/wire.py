@@ -1,6 +1,6 @@
 """Turn applied simulation events into WORLD//WIRE news items.
 
-The event shape is provisional until the shared contract lands (issue #1).
+Input events follow contracts/events.schema.json (v0.1).
 Only events whose status is "applied" are reported, so the newsroom never
 announces something the simulation has not confirmed.
 """
@@ -46,6 +46,58 @@ def _earthquake(event: Event) -> tuple[str, str]:
     return headline, dek + ". Emergency response assessment is under way."
 
 
+def _aftershock(event: Event) -> tuple[str, str]:
+    magnitude = event.get("payload", {}).get("magnitude")
+    strength = f"M{magnitude:.1f} " if isinstance(magnitude, (int, float)) else ""
+    return (
+        f"{strength}aftershock rattles {_place(event)}",
+        "Simulated aftershock adds strain to damaged structures. Residents are urged to stay alert.",
+    )
+
+
+def _severity_word(event: Event) -> str:
+    severity = event.get("severity")
+    if not isinstance(severity, (int, float)):
+        return ""
+    return "Major " if severity >= 0.7 else "Partial " if severity < 0.4 else ""
+
+
+def _tsunami_warning(event: Event) -> tuple[str, str]:
+    return (
+        f"Tsunami warning issued for {_place(event)}",
+        "Simulated coastal alert in effect. Authorities order evacuation of low-lying areas.",
+    )
+
+
+def _infrastructure_failure(event: Event) -> tuple[str, str]:
+    headline = f"{_severity_word(event)}infrastructure failure hits {_place(event)}"
+    return (
+        headline[0].upper() + headline[1:],
+        "Simulated outages disrupt power, transit, or communications. Crews are assessing damage.",
+    )
+
+
+def _government_response(event: Event) -> tuple[str, str]:
+    country = event["location"].get("country") or "Government"
+    return (
+        f"{country} mobilizes emergency response in {event['location'].get('name') or 'affected areas'}",
+        "Simulated government action deploys rescue teams and emergency services.",
+    )
+
+
+def _international_aid(event: Event) -> tuple[str, str]:
+    origin = event.get("payload", {}).get("origin")
+    headline = (
+        f"{origin} sends aid to {_place(event)}"
+        if isinstance(origin, str) and origin
+        else f"International aid heads to {_place(event)}"
+    )
+    return (
+        headline,
+        "Simulated relief shipments are under way to support the response.",
+    )
+
+
 def _generic(event: Event) -> tuple[str, str]:
     kind = str(event["type"]).replace("_", " ")
     return f"{kind.capitalize()} reported in {_place(event)}", "Details are developing in the simulation."
@@ -53,6 +105,11 @@ def _generic(event: Event) -> tuple[str, str]:
 
 TEMPLATES: dict[str, Callable[[Event], tuple[str, str]]] = {
     "earthquake": _earthquake,
+    "aftershock": _aftershock,
+    "tsunami_warning": _tsunami_warning,
+    "infrastructure_failure": _infrastructure_failure,
+    "government_response": _government_response,
+    "international_aid": _international_aid,
 }
 
 
@@ -82,6 +139,7 @@ def news_for_event(event: Event) -> NewsItem | None:
         "headline": headline,
         "dek": dek,
         "sim_time_minutes": event["sim_time_minutes"],
+        "sequence": event.get("sequence", 0),
         "sim_time_label": format_sim_time(event["sim_time_minutes"]),
         "focus": {
             "event_id": event["id"],
@@ -94,7 +152,23 @@ def news_for_event(event: Event) -> NewsItem | None:
 
 
 def derive_news(events: Iterable[Event]) -> list[NewsItem]:
-    """Return news for applied events, newest simulation time first."""
+    """Return news for applied events, newest first by (sim_time_minutes, sequence)."""
     items = [item for item in map(news_for_event, events) if item is not None]
-    items.sort(key=lambda item: (-item["sim_time_minutes"], item["event_id"]))
+    items.sort(key=lambda item: (item["sim_time_minutes"], item["sequence"], item["event_id"]), reverse=True)
     return items
+
+
+def news_from_stream(messages: Iterable[dict[str, Any]]) -> list[NewsItem]:
+    """Fold stream messages (contracts/stream.schema.json) into the current feed.
+
+    A snapshot replaces everything seen so far (connect, seek, or replay); each
+    event message adds one applied event; clock messages carry no news.
+    """
+    events: dict[str, Event] = {}
+    for message in messages:
+        kind = message.get("kind")
+        if kind == "snapshot":
+            events = {e["id"]: e for e in message["events"]}
+        elif kind == "event":
+            events[message["event"]["id"]] = message["event"]
+    return derive_news(events.values())

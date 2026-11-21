@@ -8,10 +8,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 NEWSROOM = ROOT / "services" / "newsroom"
-FIXTURE = NEWSROOM / "fixtures" / "japan-earthquake.json"
+FIXTURE = ROOT / "contracts" / "fixtures" / "japan-earthquake.json"
 sys.path.insert(0, str(NEWSROOM))
 
-from worldwire import SIMULATED_LABEL, derive_news, format_sim_time, news_for_event  # noqa: E402
+from worldwire import SIMULATED_LABEL, derive_news, format_sim_time, news_for_event, news_from_stream  # noqa: E402
 
 
 def quake():
@@ -38,11 +38,57 @@ class WorldWireTests(unittest.TestCase):
 
     def test_output_is_deterministic_and_newest_first(self):
         later = quake()
-        later.update(id="evt-0002", type="power_grid_failure", sim_time_minutes=1500)
+        later.update(id="evt-0002", type="infrastructure_failure", sim_time_minutes=1500)
         feed = derive_news([quake(), later])
         self.assertEqual([i["event_id"] for i in feed], ["evt-0002", "evt-0001"])
-        self.assertEqual(feed[0]["headline"], "Power grid failure reported in off the coast of Miyagi, Japan")
+        self.assertEqual(feed[0]["headline"], "Major infrastructure failure hits off the coast of Miyagi, Japan")
         self.assertEqual(feed, derive_news([later, quake()]))
+
+    def test_every_contract_event_type_has_a_template(self):
+        schema = json.loads((ROOT / "contracts" / "events.schema.json").read_text())
+        types = schema["$defs"]["event"]["properties"]["type"]["enum"]
+        expected = {
+            "earthquake": "M7.8 earthquake strikes",
+            "aftershock": "M7.8 aftershock rattles",
+            "tsunami_warning": "Tsunami warning issued for",
+            "infrastructure_failure": "Major infrastructure failure hits",
+            "government_response": "Japan mobilizes emergency response in",
+            "international_aid": "International aid heads to",
+        }
+        self.assertEqual(set(types), set(expected))
+        for kind in types:
+            event = quake()
+            event["type"] = kind
+            item = news_for_event(event)
+            self.assertTrue(item["headline"].startswith(expected[kind]), item["headline"])
+            self.assertTrue(item["dek"].startswith("Simulated"), item["dek"])
+
+    def test_aid_names_origin_and_severity_scales_wording(self):
+        aid = quake()
+        aid.update(type="international_aid", payload={"origin": "Canada"})
+        self.assertTrue(news_for_event(aid)["headline"].startswith("Canada sends aid to"))
+        outage = quake()
+        outage.update(type="infrastructure_failure", severity=0.2, payload={})
+        self.assertTrue(news_for_event(outage)["headline"].startswith("Partial infrastructure failure"))
+        outage["severity"] = 0.5
+        self.assertTrue(news_for_event(outage)["headline"].startswith("Infrastructure failure"))
+
+    def test_sequence_breaks_ties_at_same_sim_time(self):
+        second = quake()
+        second.update(id="evt-0000", sequence=1)
+        self.assertEqual([i["event_id"] for i in derive_news([quake(), second])], ["evt-0000", "evt-0001"])
+
+    def test_stream_snapshot_replaces_feed(self):
+        header = {"schema_version": "0.1", "simulation_id": "demo", "branch_id": "main"}
+        later = quake()
+        later.update(id="evt-0002", sim_time_minutes=500)
+        messages = [
+            {**header, "sim_time_minutes": 402, "kind": "event", "event": quake()},
+            {**header, "sim_time_minutes": 500, "kind": "event", "event": later},
+            {**header, "sim_time_minutes": 450, "kind": "snapshot", "events": [quake()],
+             "playback": {"state": "paused", "speed": 1}},
+        ]
+        self.assertEqual([i["event_id"] for i in news_from_stream(messages)], ["evt-0001"])
 
     def test_invalid_location_is_rejected(self):
         event = quake()
