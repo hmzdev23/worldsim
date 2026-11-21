@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://worldsim.local/contracts/events.schema.json",
   "title": "WORLD//SIM event batch",
-  "description": "Version 0.1 (proposed in CONTRACT-001, #1). A batch of world events. The Director proposes events, the simulation validates them and marks them applied or rejected, and the newsroom and map use applied events only.",
+  "description": "Version 0.1 (proposed in CONTRACT-001, #1; event types extended additively in CONTRACT-002). A batch of world events. The Director proposes events, the simulation validates them and marks them applied or rejected, and the newsroom and map use applied events only.",
   "type": "object",
   "required": ["schema_version", "simulation_id", "branch_id", "events"],
   "additionalProperties": false,
@@ -56,13 +56,30 @@
           "description": "Breaks ties between events at the same sim time. Canonical order is (sim_time_minutes, sequence)."
         },
         "type": {
+          "description": "Hazards start or spread a crisis; consequences follow from them. other_hazard covers anything else and requires payload.label.",
           "enum": [
             "earthquake",
             "aftershock",
             "tsunami_warning",
+            "volcanic_eruption",
+            "meteor_impact",
+            "extreme_weather",
+            "disease_outbreak",
+            "military_strike",
+            "nuclear_detonation",
+            "cyber_attack",
+            "alien_contact",
+            "other_hazard",
             "infrastructure_failure",
             "government_response",
-            "international_aid"
+            "international_aid",
+            "evacuation",
+            "contamination",
+            "economic_shock",
+            "civil_unrest",
+            "conflict_escalation",
+            "ceasefire",
+            "recovery"
           ]
         },
         "status": {
@@ -93,14 +110,39 @@
             "emergency_mobilization",
             "animated_transport_route",
             "breaking_news",
-            "weather_disaster"
+            "weather_disaster",
+            "ash_plume",
+            "impact_blast",
+            "contagion_spread",
+            "missile_strike",
+            "nuclear_blast",
+            "cyber_pulse",
+            "alien_arrival",
+            "evacuation_flow",
+            "fallout_cloud",
+            "market_shock",
+            "unrest_hotspot",
+            "recovery_pulse"
           ],
           "description": "Animation key for the map."
         },
         "payload": {
           "type": "object",
-          "description": "Type-specific details. For earthquake and aftershock events: magnitude (number) and depth_km (number).",
-          "maxProperties": 16
+          "description": "Type-specific details. These keys are optional unless a rule below requires them, and other keys are allowed. Earthquake and aftershock events require magnitude and depth_km; other_hazard requires label.",
+          "maxProperties": 16,
+          "properties": {
+            "description": { "type": "string", "maxLength": 280, "description": "One sentence about what happened." },
+            "label": { "type": "string", "minLength": 1, "maxLength": 80, "description": "Short name of the hazard, such as 'H7N9 influenza'." },
+            "magnitude": { "type": "number", "minimum": 0, "maximum": 10 },
+            "depth_km": { "type": "number", "minimum": 0, "maximum": 800 },
+            "vei": { "type": "integer", "minimum": 0, "maximum": 8, "description": "Volcanic explosivity index." },
+            "diameter_m": { "type": "number", "minimum": 0, "description": "Meteor diameter in meters." },
+            "yield_kt": { "type": "number", "minimum": 0, "description": "Nuclear yield in kilotons." },
+            "radius_km": { "type": "number", "minimum": 0, "maximum": 20000, "description": "Approximate affected radius, for map scale." },
+            "origin": { "type": "string", "maxLength": 80, "description": "Where it comes from: the aid sender, the attacking country, or 'unknown'." },
+            "target": { "type": "string", "maxLength": 80, "description": "What was hit, such as 'power grid' or 'banking'." },
+            "pathogen": { "type": "string", "maxLength": 80 }
+          }
         },
         "parent_ids": {
           "type": "array",
@@ -132,6 +174,10 @@
               }
             }
           }
+        },
+        {
+          "if": { "properties": { "type": { "const": "other_hazard" } } },
+          "then": { "properties": { "payload": { "required": ["label"] } } }
         }
       ]
     }

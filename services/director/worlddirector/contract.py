@@ -19,19 +19,37 @@ EVENT_TYPES: tuple = tuple(_EVENT_DEF["type"]["enum"])
 CONTRACT_VISUALS: tuple = tuple(_EVENT_DEF["visual"]["enum"])
 SLUG_PATTERN: str = _EVENTS_SCHEMA["$defs"]["slug"]["pattern"]
 
-MAX_EVENTS = 6
+MAX_EVENTS = 12
 MAX_SCENARIO_CHARS = 2000
 MAX_SIM_MINUTES = 30 * 24 * 60  # 30 simulated days
 
 # Event type -> map animation key. The model picks the type and the visual is
 # derived here, so the map never receives an animation key it doesn't know.
 VISUALS: dict = {
+    # hazards
     "earthquake": "earthquake_shockwave",
     "aftershock": "earthquake_shockwave",
     "tsunami_warning": "weather_disaster",
+    "volcanic_eruption": "ash_plume",
+    "meteor_impact": "impact_blast",
+    "extreme_weather": "weather_disaster",
+    "disease_outbreak": "contagion_spread",
+    "military_strike": "missile_strike",
+    "nuclear_detonation": "nuclear_blast",
+    "cyber_attack": "cyber_pulse",
+    "alien_contact": "alien_arrival",
+    "other_hazard": "breaking_news",
+    # consequences
     "infrastructure_failure": "power_grid_failure",
     "government_response": "emergency_mobilization",
     "international_aid": "animated_transport_route",
+    "evacuation": "evacuation_flow",
+    "contamination": "fallout_cloud",
+    "economic_shock": "market_shock",
+    "civil_unrest": "unrest_hotspot",
+    "conflict_escalation": "missile_strike",
+    "ceasefire": "recovery_pulse",
+    "recovery": "recovery_pulse",
 }
 QUAKE_TYPES = ("earthquake", "aftershock")
 
@@ -41,8 +59,29 @@ if _missing or _unknown:  # fail loudly if the shared contract changes under us
     raise RuntimeError(f"Director visuals out of sync with contract: missing={_missing} unknown={_unknown}")
 
 
+# Optional payload fields the model may fill: name -> (JSON type, min, max, hint).
+# None means "not applicable". Ranges mirror contracts/events.schema.json.
+PAYLOAD_FIELDS: dict = {
+    "magnitude": ("number", 0, 10, "Required for earthquake/aftershock."),
+    "depth_km": ("number", 0, 800, "Required for earthquake/aftershock."),
+    "vei": ("integer", 0, 8, "Volcanic explosivity index for volcanic_eruption."),
+    "diameter_m": ("number", 0, 100000, "Meteor diameter in meters for meteor_impact."),
+    "yield_kt": ("number", 0, 100000, "Nuclear yield in kilotons for nuclear_detonation."),
+    "radius_km": ("number", 0, 20000, "Approximate affected radius, for map scale."),
+    "origin": ("string", 1, 80, "Aid sender, attacking country, or 'unknown'."),
+    "target": ("string", 1, 80, "What was hit, e.g. 'power grid' (cyber_attack, military_strike)."),
+    "pathogen": ("string", 1, 80, "Pathogen name for disease_outbreak."),
+    "label": ("string", 1, 80, "Short hazard name. Required for other_hazard."),
+}
+REQUIRED_PAYLOAD: dict = {
+    "earthquake": ("magnitude", "depth_km"),
+    "aftershock": ("magnitude", "depth_km"),
+    "other_hazard": ("label",),
+}
+
+
 def _nullable(kind: str, description: str) -> dict:
-    return {"type": [kind, "null"], "description": description}
+    return {"anyOf": [{"type": kind}, {"type": "null"}], "description": description}
 
 
 # Strict structured-output schema: every property required, no extras.
@@ -73,9 +112,7 @@ OUTPUT_SCHEMA: dict = {
                     },
                     "severity": {"type": "number", "description": "0.0 (minor) to 1.0 (extreme)."},
                     "description": {"type": "string"},
-                    "magnitude": _nullable("number", "Required for earthquake/aftershock, else null."),
-                    "depth_km": _nullable("number", "Required for earthquake/aftershock, else null."),
-                    "origin": _nullable("string", "Sending country for international_aid, else null."),
+                    **{k: _nullable(kind, hint + " Otherwise null.") for k, (kind, _, _, hint) in PAYLOAD_FIELDS.items()},
                     "caused_by": {
                         "type": "array",
                         "items": {"type": "integer"},
@@ -88,9 +125,7 @@ OUTPUT_SCHEMA: dict = {
                     "location",
                     "severity",
                     "description",
-                    "magnitude",
-                    "depth_km",
-                    "origin",
+                    *PAYLOAD_FIELDS,
                     "caused_by",
                 ],
                 "additionalProperties": False,

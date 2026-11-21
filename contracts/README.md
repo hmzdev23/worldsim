@@ -17,6 +17,19 @@ These are the shared shapes that the Director, simulation, map, and newsroom bui
 - **Location:** `lat` and `lon` are in WGS84 degrees, and `country_code` is ISO 3166-1 alpha-3.
 - **Provenance:** `source` is `fixture`, `model`, `user`, or `numeric`. When the source is `model`, `model` names it.
 
+## Event types
+
+Types are additive: new values can be added without bumping `schema_version`, so consumers should handle an unknown `type` or `visual` gracefully (for example, a generic marker or headline).
+
+| Group | Types |
+| --- | --- |
+| Hazards | `earthquake`, `aftershock`, `tsunami_warning`, `volcanic_eruption`, `meteor_impact`, `extreme_weather`, `disease_outbreak`, `military_strike`, `nuclear_detonation`, `cyber_attack`, `alien_contact`, `other_hazard` |
+| Consequences | `infrastructure_failure`, `government_response`, `international_aid`, `evacuation`, `contamination`, `economic_shock`, `civil_unrest`, `conflict_escalation`, `ceasefire`, `recovery` |
+
+`other_hazard` is the catch-all for any scenario the list doesn't cover, and it requires `payload.label` (for example, `"solar superstorm"`).
+
+Optional `payload` keys with fixed meanings: `description` (one sentence), `label`, `magnitude` and `depth_km` (required for earthquake and aftershock), `vei`, `diameter_m`, `yield_kt`, `radius_km` (map scale), `origin` (aid sender or attacker), `target`, and `pathogen`.
+
 ## Stream
 
 The transport is WebSocket JSON, with one message per frame. After a client connects, the server first sends a `snapshot` with the full current state. It then sends `event` messages as events are applied and `clock` messages on each tick or playback change. After a replay or seek, it sends a new `snapshot`, and the client replaces its state with it. Endpoint paths and the control messages for pause, speed, and replay are left to SIM-001 (#4).

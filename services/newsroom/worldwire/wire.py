@@ -98,6 +98,52 @@ def _international_aid(event: Event) -> tuple[str, str]:
     )
 
 
+def _payload_text(event: Event, key: str) -> str:
+    value = event.get("payload", {}).get(key)
+    return value.strip() if isinstance(value, str) and value.strip() else ""
+
+
+def _simple(headline: str, dek: str) -> Callable[[Event], tuple[str, str]]:
+    """Template whose headline is `headline` followed by the place."""
+    return lambda event: (f"{headline} {_place(event)}", dek)
+
+
+def _volcanic_eruption(event: Event) -> tuple[str, str]:
+    vei = event.get("payload", {}).get("vei")
+    scale = f" (VEI {vei})" if isinstance(vei, int) else ""
+    return (
+        f"Volcano erupts near {_place(event)}{scale}",
+        "Simulated ash plume grounds flights and coats nearby towns. Residents are told to stay indoors.",
+    )
+
+
+def _disease_outbreak(event: Event) -> tuple[str, str]:
+    pathogen = _payload_text(event, "pathogen")
+    name = f"{pathogen[0].upper()}{pathogen[1:]}" if pathogen else "Disease"
+    return (
+        f"{name} outbreak reported in {_place(event)}",
+        "Simulated cases are rising. Health authorities are tracing contacts and urging precautions.",
+    )
+
+
+def _military_strike(event: Event) -> tuple[str, str]:
+    origin = _payload_text(event, "origin")
+    headline = f"{origin} launches strike on {_place(event)}" if origin and origin.lower() != "unknown" else f"Military strike hits {_place(event)}"
+    return headline, "Simulated strike damages key sites. Civil defense sirens sound across the region."
+
+
+def _cyber_attack(event: Event) -> tuple[str, str]:
+    target = _payload_text(event, "target")
+    headline = f"Cyberattack hits {target} in {_place(event)}" if target else f"Cyberattack disrupts systems in {_place(event)}"
+    return headline, "Simulated outage spreads across networks. Operators are working to restore service."
+
+
+def _other_hazard(event: Event) -> tuple[str, str]:
+    label = _payload_text(event, "label")
+    headline = f"{label[0].upper()}{label[1:]} reported in {_place(event)}" if label else f"Emergency declared in {_place(event)}"
+    return headline, "Simulated emergency is developing. Authorities are assessing the situation."
+
+
 def _generic(event: Event) -> tuple[str, str]:
     kind = str(event["type"]).replace("_", " ")
     return f"{kind.capitalize()} reported in {_place(event)}", "Details are developing in the simulation."
@@ -110,6 +156,22 @@ TEMPLATES: dict[str, Callable[[Event], tuple[str, str]]] = {
     "infrastructure_failure": _infrastructure_failure,
     "government_response": _government_response,
     "international_aid": _international_aid,
+    "volcanic_eruption": _volcanic_eruption,
+    "meteor_impact": _simple("Meteor strikes", "Simulated impact flattens the area around ground zero. Rescue teams are converging."),
+    "extreme_weather": _simple("Extreme weather batters", "Simulated storm brings flooding and high winds. Shelters are opening."),
+    "disease_outbreak": _disease_outbreak,
+    "military_strike": _military_strike,
+    "nuclear_detonation": _simple("Nuclear detonation reported near", "Simulated blast triggers emergency alerts. Residents downwind are told to shelter in place."),
+    "cyber_attack": _cyber_attack,
+    "alien_contact": _simple("Unidentified craft reported over", "Simulated sightings flood social media. Officials urge calm while they investigate."),
+    "other_hazard": _other_hazard,
+    "evacuation": _simple("Evacuations ordered in", "Simulated evacuation routes fill as residents head for safer ground."),
+    "contamination": _simple("Contamination alert issued for", "Simulated hazard zone is declared. Residents are told to avoid local water and produce."),
+    "economic_shock": _simple("Economic shock hits", "Simulated markets slide and supply chains stall as the crisis spreads."),
+    "civil_unrest": _simple("Unrest erupts in", "Simulated protests grow as frustration with the response mounts."),
+    "conflict_escalation": _simple("Conflict escalates near", "Simulated fighting widens. Neighboring countries raise their alert levels."),
+    "ceasefire": _simple("Ceasefire declared in", "Simulated truce takes hold. Aid convoys prepare to move in."),
+    "recovery": _simple("Recovery under way in", "Simulated rebuilding begins as services come back online."),
 }
 
 

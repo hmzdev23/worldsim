@@ -14,7 +14,14 @@
       "description": "A powerful offshore earthquake shakes northeastern Japan.",
       "magnitude": 7.8,
       "depth_km": 24,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
       "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
       "caused_by": []
     },
     {
@@ -31,7 +38,14 @@
       "description": "Tsunami warnings trigger evacuations of low-lying coastal areas.",
       "magnitude": null,
       "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
       "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
       "caused_by": [
         0
       ]
@@ -50,7 +64,14 @@
       "description": "Regional power outages halt rail service and hospitals switch to backup generators.",
       "magnitude": null,
       "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
       "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
       "caused_by": [
         0
       ]
@@ -69,7 +90,14 @@
       "description": "The national government deploys Self-Defense Forces for search and relief.",
       "magnitude": null,
       "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
       "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
       "caused_by": [
         0,
         2
@@ -89,7 +117,14 @@
       "description": "A strong aftershock adds strain to damaged structures.",
       "magnitude": 6.4,
       "depth_km": 30,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
       "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
       "caused_by": [
         0
       ]
@@ -108,7 +143,14 @@
       "description": "Relief flights arrive carrying supplies and search-and-rescue teams.",
       "magnitude": null,
       "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
       "origin": "United States",
+      "target": null,
+      "pathogen": null,
+      "label": null,
       "caused_by": [
         3
       ]
