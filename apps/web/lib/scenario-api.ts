@@ -1,4 +1,6 @@
-import { sameRun, type NewsItem, type RunIdentity, type ScenarioEvent, type ScenarioRun } from "./scenario";
+import {
+  sameRun, type GenerationProgress, type NewsItem, type Pacing, type RunIdentity, type ScenarioEvent, type ScenarioRun,
+} from "./scenario";
 
 const proxy = "/api/simulation";
 
@@ -9,12 +11,15 @@ type ScenarioJob = {
   title?: string;
   start_minutes?: number;
   error?: { message: string };
+  stage?: string;
+  elapsed_s?: number;
 };
 
 type Timeline = RunIdentity & {
   sim_time_minutes: number;
   end_minutes: number;
   events: ScenarioEvent[];
+  pacing?: Pacing;
 };
 
 function scenarioPath(id: string) {
@@ -28,7 +33,11 @@ async function requestJson<T>(path: string, options: RequestInit): Promise<T> {
   return response.json();
 }
 
-export async function prepareScenario(prompt: string, signal: AbortSignal): Promise<ScenarioRun> {
+export async function prepareScenario(
+  prompt: string,
+  signal: AbortSignal,
+  onProgress?: (progress: GenerationProgress) => void,
+): Promise<ScenarioRun> {
   let job = await requestJson<ScenarioJob>("/scenarios", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -39,10 +48,13 @@ export async function prepareScenario(prompt: string, signal: AbortSignal): Prom
 
   const { id, simulation_id } = job;
   const path = scenarioPath(id);
+  const report = () => onProgress?.({ stage: job.stage, elapsedSeconds: job.elapsed_s });
+  report();
   while (job.status === "generating") {
     await new Promise((resolve) => setTimeout(resolve, 700));
     signal.throwIfAborted();
     job = await requestJson<ScenarioJob>(path, { signal });
+    if (job.status === "generating") report();
   }
   if (job.status !== "ready") {
     throw new Error(job.error?.message || "The scenario could not be prepared. Try again.");
@@ -64,6 +76,7 @@ export async function prepareScenario(prompt: string, signal: AbortSignal): Prom
     startMinute,
     endMinute: timeline.end_minutes,
     firstEvent,
+    pacing: timeline.pacing,
   };
 }
 
