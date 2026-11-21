@@ -3,7 +3,7 @@
 import { CornersOut, Minus, Plus } from "@phosphor-icons/react";
 import type { FeatureCollection, LineString } from "geojson";
 import { Map, Marker, setWorkerUrl, type StyleSpecification } from "maplibre-gl";
-import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, type ReactNode, type Ref } from "react";
 import { earthquake, type MapLocation, type ScenarioEvent } from "../lib/earthquake";
 
 export type WorldMapHandle = {
@@ -141,10 +141,12 @@ function focusMapLocation(map: Map, { lat, lon, zoom = 4.65 }: MapLocation) {
 }
 
 export function WorldMap({
+  children,
   elapsedSeconds,
   events,
   ref,
 }: {
+  children?: ReactNode;
   elapsedSeconds: number;
   events: ScenarioEvent[];
   ref: Ref<WorldMapHandle>;
@@ -297,6 +299,7 @@ export function WorldMap({
           <span>Try refreshing or opening the demo in a browser with WebGL support.</span>
         </div>
       )}
+      {children}
     </section>
   );
 }
