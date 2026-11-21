@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://worldsim.local/contracts/events.schema.json",
+  "title": "WORLD//SIM event batch",
+  "description": "Version 0.1 (proposed in CONTRACT-001, #1). A batch of world events. The Director proposes events, the simulation validates them and marks them applied or rejected, and the newsroom and map use applied events only.",
+  "type": "object",
+  "required": ["schema_version", "simulation_id", "branch_id", "events"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": "0.1" },
+    "simulation_id": { "$ref": "#/$defs/slug" },
+    "branch_id": { "$ref": "#/$defs/slug" },
+    "events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/event" }
+    }
+  },
+  "$defs": {
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "event_id": {
+      "type": "string",
+      "pattern": "^evt-[A-Za-z0-9_-]{1,64}$"
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "id",
+        "sim_time_minutes",
+        "sequence",
+        "type",
+        "status",
+        "location",
+        "severity",
+        "visual",
+        "payload",
+        "parent_ids",
+        "provenance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/event_id",
+          "description": "Stable and unique within a simulation. Never reused across branches."
+        },
+        "sim_time_minutes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Simulated minutes since the simulation started (DAY 1 · 00:00). Never wall-clock time."
+        },
+        "sequence": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Breaks ties between events at the same sim time. Canonical order is (sim_time_minutes, sequence)."
+        },
+        "type": {
+          "enum": [
+            "earthquake",
+            "aftershock",
+            "tsunami_warning",
+            "infrastructure_failure",
+            "government_response",
+            "international_aid"
+          ]
+        },
+        "status": {
+          "enum": ["proposed", "applied", "rejected"],
+          "description": "The Director emits proposed events. Only the simulation sets applied or rejected."
+        },
+        "location": {
+          "type": "object",
+          "required": ["name", "country", "country_code", "lat", "lon"],
+          "additionalProperties": false,
+          "properties": {
+            "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+            "country": { "type": "string", "minLength": 1, "maxLength": 80 },
+            "country_code": {
+              "type": "string",
+              "pattern": "^[A-Z]{3}$",
+              "description": "ISO 3166-1 alpha-3 code."
+            },
+            "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+            "lon": { "type": "number", "minimum": -180, "maximum": 180 }
+          }
+        },
+        "severity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "visual": {
+          "enum": [
+            "earthquake_shockwave",
+            "power_grid_failure",
+            "emergency_mobilization",
+            "animated_transport_route",
+            "breaking_news",
+            "weather_disaster"
+          ],
+          "description": "Animation key for the map."
+        },
+        "payload": {
+          "type": "object",
+          "description": "Type-specific details. For earthquake and aftershock events: magnitude (number) and depth_km (number).",
+          "maxProperties": 16
+        },
+        "parent_ids": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/event_id" },
+          "uniqueItems": true,
+          "description": "Events that caused this one."
+        },
+        "provenance": {
+          "type": "object",
+          "required": ["source"],
+          "additionalProperties": false,
+          "properties": {
+            "source": { "enum": ["fixture", "model", "user", "numeric"] },
+            "model": { "type": "string", "maxLength": 80 }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "type": { "enum": ["earthquake", "aftershock"] } } },
+          "then": {
+            "properties": {
+              "payload": {
+                "required": ["magnitude", "depth_km"],
+                "properties": {
+                  "magnitude": { "type": "number", "minimum": 0, "maximum": 10 },
+                  "depth_km": { "type": "number", "minimum": 0, "maximum": 800 }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
