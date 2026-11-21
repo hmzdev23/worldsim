@@ -1,0 +1,255 @@
+"use client";
+
+import { CornersOut, Minus, Plus } from "@phosphor-icons/react";
+import type { FeatureCollection, LineString } from "geojson";
+import { Map, Marker, setWorkerUrl, type StyleSpecification } from "maplibre-gl";
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from "react";
+import { earthquake, type MapLocation } from "../lib/earthquake";
+
+export type WorldMapHandle = {
+  focusLocation: (location: MapLocation) => void;
+};
+
+const accent = "#ffa96b";
+const worldBounds: [[number, number], [number, number]] = [
+  [-175, -57],
+  [179, 76],
+];
+const epicenter = [earthquake.location.longitude, earthquake.location.latitude] as const;
+const pulseLayers = ["pulse-first", "pulse-second", "pulse-third"];
+
+const grid: FeatureCollection<LineString> = {
+  type: "FeatureCollection",
+  features: [
+    ...Array.from({ length: 24 }, (_, index) => {
+      const longitude = index * 15 - 180;
+      return {
+        type: "Feature" as const,
+        properties: {},
+        geometry: { type: "LineString" as const, coordinates: [[longitude, -75], [longitude, 80]] },
+      };
+    }),
+    ...Array.from({ length: 11 }, (_, index) => ({
+      type: "Feature" as const,
+      properties: {},
+      geometry: {
+        type: "LineString" as const,
+        coordinates: Array.from({ length: 25 }, (_, meridian) => [meridian * 15 - 180, index * 15 - 75]),
+      },
+    })),
+  ],
+};
+
+const mapStyle: StyleSpecification = {
+  version: 8,
+  sources: {
+    grid: { type: "geojson", data: grid },
+    countries: { type: "geojson", data: "/countries.geojson" },
+    epicenter: {
+      type: "geojson",
+      data: {
+        type: "Feature",
+        properties: {},
+        geometry: { type: "Point", coordinates: [...epicenter] },
+      },
+    },
+  },
+  layers: [
+    { id: "ocean", type: "background", paint: { "background-color": "#111719" } },
+    {
+      id: "grid",
+      type: "line",
+      source: "grid",
+      paint: { "line-color": "#83918d", "line-opacity": 0.13, "line-width": 1 },
+    },
+    {
+      id: "land",
+      type: "fill",
+      source: "countries",
+      paint: {
+        "fill-color": [
+          "case",
+          ["boolean", ["feature-state", "hover"], false],
+          "#505e59",
+          ["==", ["get", "code"], "JPN"],
+          "#77553f",
+          "#273431",
+        ],
+      },
+    },
+    {
+      id: "borders",
+      type: "line",
+      source: "countries",
+      paint: { "line-color": "#65736b", "line-width": 0.65, "line-opacity": 0.75 },
+    },
+    {
+      id: "japan-outline",
+      type: "line",
+      source: "countries",
+      filter: ["==", ["get", "code"], "JPN"],
+      paint: { "line-color": "#c88d66", "line-width": 1 },
+    },
+    ...pulseLayers.map((id, index) => ({
+      id,
+      type: "circle" as const,
+      source: "epicenter",
+      paint: {
+        "circle-color": accent,
+        "circle-opacity": 0,
+        "circle-radius": 20 + index * 20,
+        "circle-stroke-color": accent,
+        "circle-stroke-width": 1,
+        "circle-stroke-opacity": 0.62 - index * 0.16,
+        "circle-radius-transition": { duration: 0 },
+        "circle-stroke-opacity-transition": { duration: 0 },
+      },
+    })),
+    {
+      id: "epicenter-halo",
+      type: "circle",
+      source: "epicenter",
+      paint: { "circle-color": accent, "circle-radius": 15, "circle-opacity": 0.13 },
+    },
+  ],
+};
+
+function transitionDuration(duration: number) {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : duration;
+}
+
+export function WorldMap({
+  elapsedSeconds,
+  ref,
+}: {
+  elapsedSeconds: number;
+  ref: Ref<WorldMapHandle>;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<Map | null>(null);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapUnavailable, setMapUnavailable] = useState(false);
+  const [country, setCountry] = useState("");
+
+  useImperativeHandle(ref, () => ({
+    focusLocation({ longitude, latitude }) {
+      mapRef.current?.flyTo({
+        center: [longitude, latitude],
+        zoom: 4.65,
+        duration: transitionDuration(1500),
+      });
+    },
+  }), []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let map: Map;
+    try {
+      setWorkerUrl("/maplibre-worker/maplibre-gl-worker.mjs");
+      map = new Map({
+        container,
+        style: mapStyle,
+        bounds: worldBounds,
+        fitBoundsOptions: { padding: 24, duration: 0 },
+        maxZoom: 7,
+        minZoom: -1,
+        dragRotate: false,
+        pitchWithRotate: false,
+        attributionControl: false,
+      });
+    } catch {
+      setMapUnavailable(true);
+      return;
+    }
+    mapRef.current = map;
+    map.getCanvas().setAttribute("aria-label", "World map. Arrow keys pan; plus and minus zoom.");
+    map.touchZoomRotate.disableRotation();
+
+    map.on("error", () => {
+      setMapUnavailable(true);
+    });
+
+    map.once("load", () => {
+      const marker = document.createElement("div");
+      marker.className = "epicenter-marker";
+      const label = document.createElement("span");
+      label.className = "epicenter-label";
+      label.textContent = "Miyagi coast";
+      marker.append(label);
+      new Marker({ element: marker })
+        .setLngLat([...epicenter])
+        .addTo(map);
+
+      let hoveredId: number | string | undefined;
+      const clearHover = () => {
+        if (hoveredId === undefined) return;
+        map.removeFeatureState({ source: "countries", id: hoveredId }, "hover");
+        hoveredId = undefined;
+        setCountry("");
+      };
+      map.on("mousemove", "land", ({ features }) => {
+        const feature = features?.[0];
+        if (!feature || feature.id === hoveredId) return;
+        clearHover();
+        hoveredId = feature.id;
+        if (hoveredId === undefined) return;
+        map.setFeatureState({ source: "countries", id: hoveredId }, { hover: true });
+        setCountry(String(feature.properties.name));
+      });
+      map.on("mouseleave", "land", clearHover);
+      setMapReady(true);
+    });
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map || !map.getLayer(pulseLayers[0])) return;
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    pulseLayers.forEach((id, index) => {
+      const active = elapsedSeconds > 0 && elapsedSeconds < earthquake.durationSeconds && !reducedMotion;
+      const phase = ((elapsedSeconds / 4) + index / pulseLayers.length) % 1;
+      const radius = active ? 12 + 92 * phase : 20 + index * 20;
+      const opacity = active ? (1 - phase) * 0.72 : 0.62 - index * 0.16;
+      map.setPaintProperty(id, "circle-radius", radius);
+      map.setPaintProperty(id, "circle-stroke-opacity", opacity);
+    });
+  }, [elapsedSeconds, mapReady]);
+
+  return (
+    <section className="map-panel" aria-label="Interactive world map">
+      <div className="map-canvas" ref={containerRef} />
+      <div className="map-caption">
+        <h2>World map</h2>
+        <span>{country || "Drag to pan · Scroll to zoom"}</span>
+      </div>
+      <div className="map-controls" aria-label="Map controls">
+        <button type="button" title="Zoom in" aria-label="Zoom in" disabled={!mapReady}
+          onClick={() => mapRef.current?.zoomIn({ duration: transitionDuration(240) })}>
+          <Plus size={19} />
+        </button>
+        <button type="button" title="Zoom out" aria-label="Zoom out" disabled={!mapReady}
+          onClick={() => mapRef.current?.zoomOut({ duration: transitionDuration(240) })}>
+          <Minus size={19} />
+        </button>
+        <button type="button" title="Fit world view" aria-label="Fit world view" disabled={!mapReady}
+          onClick={() => mapRef.current?.fitBounds(worldBounds, { padding: 24, duration: transitionDuration(800) })}>
+          <CornersOut size={18} />
+        </button>
+      </div>
+      <a className="map-credit" href="https://www.naturalearthdata.com/">Made with Natural Earth</a>
+      {mapUnavailable && (
+        <div className="map-message" role="status">
+          <strong>Map unavailable</strong>
+          <span>Try refreshing or opening the demo in a browser with WebGL support.</span>
+        </div>
+      )}
+    </section>
+  );
+}
