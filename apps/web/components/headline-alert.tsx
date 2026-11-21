@@ -1,54 +1,18 @@
 import { Broadcast, CaretRight, Crosshair, X } from "@phosphor-icons/react";
-import fixture from "../../../contracts/fixtures/japan-earthquake.json";
-import feed from "../../../services/newsroom/feeds/japan-earthquake.json";
-import type { ScenarioEvent } from "../lib/earthquake";
-import { focusNewsItem } from "./world-wire";
-
-type FeedItem = (typeof feed)[number];
-export type HeadlineItem = Pick<FeedItem,
-  "event_id" | "event_type" | "severity" | "label" | "headline" | "dek" | "sim_time_label" | "focus"
->;
-
-export function headlineForEvent(
-  event: ScenarioEvent,
-  { simulation_id, branch_id }: { simulation_id: string; branch_id: string },
-  timeLabel: string,
-): HeadlineItem {
-  // Event IDs are only unique within a simulation. The bundled feed belongs to this fixture.
-  if (simulation_id === fixture.simulation_id && branch_id === fixture.branch_id) {
-    const item = feed.find((report) => report.event_id === event.id);
-    if (item) return item;
-  }
-
-  const place = event.location.name || event.location.country;
-  const { description, label } = event.payload;
-  const subject = typeof label === "string" && label.trim()
-    ? label
-    : event.type.replaceAll("_", " ");
-  return {
-    event_id: event.id,
-    event_type: event.type,
-    severity: event.severity,
-    label: "SIMULATED",
-    headline: `${subject.charAt(0).toUpperCase()}${subject.slice(1)} reported near ${place}`,
-    dek: typeof description === "string" && description.trim()
-      ? description
-      : "A simulated event has been applied to the world state.",
-    sim_time_label: timeLabel,
-    focus: { event_id: event.id, lat: event.location.lat, lon: event.location.lon, zoom: 5.5 },
-  };
-}
+import { motion, useReducedMotion } from "motion/react";
+import { focusNewsItem, type NewsItem } from "../lib/scenario";
 
 export function HeadlineAlert({
   item,
   queuedCount,
   onAdvance,
 }: {
-  item: HeadlineItem | undefined;
+  item: NewsItem | undefined;
   queuedCount: number;
   onAdvance: () => void;
 }) {
   const hasNext = queuedCount > 0;
+  const reducedMotion = useReducedMotion();
 
   return (
     <>
@@ -61,7 +25,13 @@ export function HeadlineAlert({
             <span><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE</span>
             <span>{item.label}</span>
           </header>
-          <div className="headline-alert-story" key={item.event_id}>
+          <motion.div
+            className="headline-alert-story"
+            key={item.event_id}
+            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16 }}
+          >
             <p className="headline-alert-meta">
               <span>{item.sim_time_label}</span>
               <span>{item.event_type.replaceAll("_", " ")}</span>
@@ -69,7 +39,7 @@ export function HeadlineAlert({
             </p>
             <h2 id="map-headline-title">{item.headline}</h2>
             <p className="headline-alert-dek">{item.dek}</p>
-          </div>
+          </motion.div>
           <footer className="headline-alert-actions">
             <button className="headline-alert-focus" type="button" onClick={() => focusNewsItem(item)}>
               <Crosshair size={17} aria-hidden="true" /> Focus map

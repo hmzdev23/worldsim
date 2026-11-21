@@ -1,250 +1,112 @@
 "use client";
 
-import { Crosshair, GlobeHemisphereWest, Pause, Play, ArrowCounterClockwise } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
-import { earthquake, scenarioStartMinute, scenarioEndMinute, type ScenarioEvent } from "../lib/earthquake";
-import { HeadlineAlert, headlineForEvent, type HeadlineItem } from "./headline-alert";
-import { ImpactDashboard } from "./impact-dashboard";
-import { WorldMap, type WorldMapHandle } from "./world-map";
-import { WorldWire } from "./world-wire";
+import { ArrowRight, GlobeHemisphereWest } from "@phosphor-icons/react";
+import { motion, MotionConfig } from "motion/react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { japanDemo } from "../lib/earthquake";
+import { prepareScenario } from "../lib/scenario-api";
+import type { ScenarioRun } from "../lib/scenario";
+import { RunConsole } from "./run-console";
 
-const speeds = [1, 2, 4];
-const parsedRate = Number(process.env.NEXT_PUBLIC_SIMULATION_MINUTES_PER_SECOND ?? "60");
-const minutesPerSecond = Number.isFinite(parsedRate) && parsedRate > 0 ? parsedRate : 60;
-const startMinute = scenarioStartMinute;
-const duration = Math.max(1, (scenarioEndMinute - startMinute) / minutesPerSecond);
-
-type Playback = { state: "playing" | "paused"; speed: number };
-type AppliedEvent = ScenarioEvent;
-type StreamMessage = { simulation_id: string; branch_id: string; sim_time_minutes: number } & (
-  | { kind: "snapshot"; playback: Playback; events: AppliedEvent[] }
-  | { kind: "event"; event: AppliedEvent }
-  | { kind: "clock"; playback: Playback }
-);
-
-function formatSimTime(minutes: number) {
-  const day = Math.floor(minutes / 1440) + 1;
-  const hour = Math.floor(minutes % 1440 / 60);
-  const minute = Math.floor(minutes % 60);
-  return `DAY ${day} · ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
-}
-
-function streamUrl() {
-  if (process.env.NEXT_PUBLIC_SIMULATION_WS_URL) return process.env.NEXT_PUBLIC_SIMULATION_WS_URL;
-  return `ws://${window.location.hostname}:8765/stream`;
-}
+type LaunchState = { status: "idle" | "generating" | "ready" } | { status: "failed"; message: string };
 
 export function Simulation() {
-  const mapRef = useRef<WorldMapHandle>(null);
-  const socketRef = useRef<WebSocket | null>(null);
-  const [connectionState, setConnectionState] = useState<"connecting" | "connected" | "reconnecting">("connecting");
-  const [simTime, setSimTime] = useState(startMinute);
-  const [{ appliedEvents, headlineQueue }, setEventState] = useState<{
-    appliedEvents: AppliedEvent[];
-    headlineQueue: HeadlineItem[];
-  }>({ appliedEvents: [], headlineQueue: [] });
-  const [playback, setPlayback] = useState<Playback>({ state: "paused", speed: 1 });
-  const connected = connectionState === "connected";
-  const speed = playback.speed;
-  const elapsed = Math.min(duration, Math.max(0, (simTime - startMinute) / minutesPerSecond));
+  return <MotionConfig reducedMotion="user"><ScenarioWorkspace /></MotionConfig>;
+}
 
-  useEffect(() => {
-    let stopped = false;
-    let retryTimer: ReturnType<typeof setTimeout> | undefined;
-    let socket: WebSocket | null = null;
+function ScenarioWorkspace() {
+  const [prompt, setPrompt] = useState("");
+  const [run, setRun] = useState<ScenarioRun>(japanDemo);
+  const [launch, setLaunch] = useState<LaunchState>({ status: "idle" });
+  const request = useRef<AbortController | null>(null);
+  const generating = launch.status === "generating";
+  const isDemo = run === japanDemo;
 
-    function connect() {
-      if (stopped) return;
-      setConnectionState((previous) => previous === "connecting" ? "connecting" : "reconnecting");
-      socket = new WebSocket(streamUrl());
-      socketRef.current = socket;
-      socket.onopen = () => {
-        if (!stopped) {
-          setConnectionState("connected");
-          socket?.send(JSON.stringify({ action: "pause" }));
-          socket?.send(JSON.stringify({ action: "seek", sim_time_minutes: startMinute }));
-        }
-      };
-      socket.onmessage = (message) => {
-        if (stopped) return;
-        let data: StreamMessage;
-        try {
-          data = JSON.parse(message.data as string) as StreamMessage;
-        } catch {
-          return;
-        }
-        if (data.kind === "snapshot") {
-          setSimTime(data.sim_time_minutes);
-          setPlayback(data.playback);
-          setEventState({ appliedEvents: data.events, headlineQueue: [] });
-        } else if (data.kind === "event") {
-          const { event } = data;
-          setEventState((previous) => {
-            if (event.status !== "applied" || previous.appliedEvents.some((applied) => applied.id === event.id)) {
-              return previous;
-            }
-            return {
-              appliedEvents: [...previous.appliedEvents, event].sort(
-                (a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence,
-              ),
-              headlineQueue: [...previous.headlineQueue, headlineForEvent(event, data, formatSimTime(event.sim_time_minutes))],
-            };
-          });
-        } else if (data.kind === "clock") {
-          setSimTime(data.sim_time_minutes);
-          setPlayback(data.playback);
-        }
-      };
-      socket.onclose = () => {
-        if (socketRef.current === socket) socketRef.current = null;
-        if (stopped) return;
-        setConnectionState("reconnecting");
-        retryTimer = setTimeout(connect, 1200);
-      };
-      socket.onerror = () => socket?.close();
+  useEffect(() => () => request.current?.abort(), []);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const text = prompt.trim();
+    if (!text || request.current) return;
+
+    const controller = new AbortController();
+    request.current = controller;
+    setLaunch({ status: "generating" });
+    try {
+      const scenario = await prepareScenario(text, controller.signal);
+      if (controller.signal.aborted) return;
+      setRun(scenario);
+      setLaunch({ status: "ready" });
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setLaunch({
+          status: "failed",
+          message: error instanceof Error ? error.message : "The scenario could not be prepared. Try again.",
+        });
+      }
+    } finally {
+      if (request.current === controller) request.current = null;
     }
-
-    connect();
-    return () => {
-      stopped = true;
-      if (retryTimer) clearTimeout(retryTimer);
-      socketRef.current = null;
-      socket?.close();
-    };
-  }, []);
-
-  const sendControl = useCallback((control: Record<string, unknown>) => {
-    const socket = socketRef.current;
-    if (!socket || socket.readyState !== WebSocket.OPEN) return;
-    socket.send(JSON.stringify(control));
-  }, []);
-
-  useEffect(() => {
-    if (connected && playback.state === "playing" && elapsed >= duration) {
-      sendControl({ action: "pause" });
-    }
-  }, [connected, elapsed, playback.state, sendControl]);
-
-  function focusEpicenter() {
-    mapRef.current?.focusLocation(earthquake.location);
   }
 
-  function seek(to: number) {
-    const minute = Math.round(startMinute + to * minutesPerSecond);
-    sendControl({ action: "seek", sim_time_minutes: minute });
+  function loadDemo() {
+    request.current?.abort();
+    request.current = null;
+    setRun(japanDemo);
+    setLaunch({ status: "idle" });
   }
 
-  function togglePlayback() {
-    if (playback.state === "playing") {
-      sendControl({ action: "pause" });
-      return;
-    }
-    if (elapsed >= duration) seek(0);
-    if (elapsed === 0 || elapsed >= duration) focusEpicenter();
-    sendControl({ action: "play" });
-  }
-
-  const playbackLabel = playback.state === "playing" ? "Pause" : elapsed >= duration ? "Replay" : "Play";
-  const hasEarthquake = appliedEvents.some((event) => event.id === earthquake.id);
-  const statusText = connected
-    ? "Fictional simulation · stream connected"
-    : connectionState === "connecting"
-      ? "Connecting to local simulation"
-      : "Run ./scripts/run-demo.sh to connect";
+  const launchMessage = launch.status === "failed" ? launch.message
+    : launch.status === "generating" ? "Preparing a scenario. The current run stays open."
+      : launch.status === "ready" ? "Scenario loaded."
+        : "Describe a hypothetical event, where it happens, and what changes.";
 
   return (
     <main className="simulation-shell">
       <header className="masthead">
         <h1 className="wordmark">
-          <span className="brand-icon"><GlobeHemisphereWest size={23} weight="duotone" /></span>
+          <span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span>
           <span>WORLD<span className="wordmark-slashes">//</span>SIM</span>
         </h1>
-        <span className="mode-label" role="status" aria-live="polite"><span aria-hidden="true" />{statusText}</span>
+        <span className="mode-label">Fictional simulation</span>
       </header>
 
-      <div className="workspace">
-        <WorldMap ref={mapRef} elapsedSeconds={elapsed} events={appliedEvents}>
-          <HeadlineAlert
-            item={headlineQueue[0]}
-            queuedCount={Math.max(0, headlineQueue.length - 1)}
-            onAdvance={() => setEventState((previous) => ({
-              ...previous,
-              headlineQueue: previous.headlineQueue.slice(1),
-            }))}
+      <form className="scenario-launch" onSubmit={submit}>
+        <label htmlFor="scenario-prompt">Scenario prompt</label>
+        <div className="scenario-input-row">
+          <textarea
+            id="scenario-prompt"
+            rows={2}
+            maxLength={2000}
+            required
+            value={prompt}
+            disabled={generating}
+            placeholder="What if a volcanic eruption closed Iceland’s main airport for two days?"
+            onChange={(event) => {
+              setPrompt(event.currentTarget.value);
+              if (launch.status !== "idle") setLaunch({ status: "idle" });
+            }}
           />
-        </WorldMap>
-
-        <aside className="scenario-panel" aria-labelledby="scenario-title">
-          <div className="scenario-heading">
-            <span className="section-label">Demo scenario</span>
-            <h2 id="scenario-title">{earthquake.title}</h2>
-            <p>{earthquake.description}</p>
-          </div>
-          <dl className="scenario-details">
-            <div><dt>Magnitude</dt><dd>{earthquake.magnitude}</dd></div>
-            <div><dt>Region</dt><dd>{earthquake.region}</dd></div>
-            <div>
-              <dt>Epicenter</dt>
-              <dd>{earthquake.location.lat.toFixed(2)}° N, {earthquake.location.lon.toFixed(2)}° E</dd>
-            </div>
-          </dl>
-          <button className="focus-button" type="button" onClick={focusEpicenter}>
-            <Crosshair size={19} /> Fly to epicenter
+          <motion.button
+            className="generate-button"
+            type="submit"
+            disabled={generating || !prompt.trim()}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.12 }}
+          >
+            {generating ? "Preparing…" : launch.status === "failed" ? "Try again" : "Generate scenario"}
+            <ArrowRight size={16} aria-hidden="true" />
+          </motion.button>
+        </div>
+        <div className="scenario-launch-footer">
+          <p className={launch.status === "failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
+          <button className="demo-button" type="button" onClick={loadDemo} disabled={isDemo && launch.status === "idle"}>
+            Japan demo
           </button>
-          <div className="map-key">
-            <h3 className="section-label">Map key</h3>
-            <span><i className="key-epicenter" aria-hidden="true" /> Epicenter</span>
-            <span><i className="key-wave" aria-hidden="true" /> Shockwave</span>
-          </div>
-        </aside>
+        </div>
+      </form>
 
-        <ImpactDashboard events={appliedEvents} />
-        <WorldWire events={appliedEvents} />
-
-        <section className="timeline" aria-label="Simulation playback">
-          <div className="timeline-tools">
-            <button className="play-button" type="button" onClick={togglePlayback} disabled={!connected}>
-              {playback.state === "playing" ? <Pause size={17} weight="fill" /> : <Play size={17} weight="fill" />}
-              {playbackLabel}
-            </button>
-            <button className="reset-button" type="button" aria-label="Reset playback" title="Reset playback"
-              disabled={!connected}
-              onClick={() => {
-                sendControl({ action: "pause" });
-                sendControl({ action: "seek", sim_time_minutes: startMinute });
-              }}>
-              <ArrowCounterClockwise size={18} />
-            </button>
-          </div>
-          <div className="timeline-track">
-            <div className="timeline-meta">
-              <label className="section-label" htmlFor="playback-position">Simulation timeline</label>
-              <span>{formatSimTime(simTime)} <span className="time-divider">/</span> {formatSimTime(scenarioEndMinute)}</span>
-            </div>
-            <input
-              id="playback-position"
-              className="position-input"
-              type="range"
-              min={0}
-              max={duration}
-              step={0.05}
-              value={Math.floor(elapsed * 20) / 20}
-              aria-valuetext={`${Math.floor(elapsed)} of ${duration} seconds`}
-              disabled={!connected}
-              onChange={(event) => seek(event.currentTarget.valueAsNumber)}
-              style={{ "--elapsed": `${(elapsed / duration) * 100}%` } as CSSProperties}
-            />
-          </div>
-          <div className="speed-control" role="group" aria-label="Playback speed">
-            {speeds.map((option) => (
-              <button key={option} type="button" aria-pressed={speed === option} disabled={!connected}
-                onClick={() => sendControl({ action: "speed", speed: option })}>
-                {option}×
-              </button>
-            ))}
-          </div>
-        </section>
-      </div>
+      <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo} />
     </main>
   );
 }

@@ -19,7 +19,7 @@ Use Motion for React (`motion/react`, formerly Framer Motion) for a short press 
 - For a new run, submit the prompt to Anthony's scenario endpoint and use its run ID and state to show progress or retry. Keep the existing Japan demo available as a sample.
 - Use the run's metadata, timeline, and stream to initialize the map and playback. Focus the first event using event coordinates. The first location, labels, markers, and end time come from the run.
 - Consume Amir's live WORLD//WIRE items for both archive and alert. Key news by run and event. Match fetched items to the current applied event set and ignore superseded requests when switching or seeking. Keep enqueueing limited to newly applied stream events, using #48 as the starting point.
-- Review the API proposal with Anthony and Amir. Rebase after #48 is merged before integrating changes to its overlay and simulation controller.
+- Use Anthony's local session routes and Amir's news envelope. Review this work stacked on #48 while the alert PR is open. Target main after #48 lands.
 
 ## Done when
 
