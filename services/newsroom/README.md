@@ -20,7 +20,7 @@ python3 -m unittest discover -s ../../tests/newsroom                 # tests
   "severity": 0.9,
   "label": "SIMULATED",
   "headline": "M7.8 earthquake strikes off the coast of Miyagi, Japan",
-  "dek": "Simulated shaking reported across Japan ...",
+  "dek": "Simulated estimates so far: 8 dead, 310 injured, 40 missing. A powerful offshore earthquake ...",
   "sim_time_minutes": 402,
   "sequence": 0,
   "sim_time_label": "DAY 1 · 06:42",
@@ -34,19 +34,42 @@ python3 -m unittest discover -s ../../tests/newsroom                 # tests
 - The feed is deterministic and sorted newest first by `(sim_time_minutes, sequence)`.
 - `WireFeed` holds the live feed: `feed.apply(message)` adds a story on an applied `event`, replaces everything on a `snapshot` (connect, seek, or replay), and ignores `clock`. `news_from_stream(messages)` folds a whole sequence. Proposed or rejected events never appear.
 
-Each event type in the contract has its own headline template, and `international_aid` uses `payload.origin` when present. A test fails if the contract adds a type without a template.
+Each event type in the contract has its own headline template, and `international_aid` uses `payload.origin` when present. A type the newsroom doesn't know yet gets a generic headline such as `Solar flare reported in …`. A test fails if the contract adds a type without a template.
+
+## Alert-ready copy (NEWS-004)
+
+Each item can be shown as a large in-game alert:
+
+- **Headline** says what happened and where, in at most 72 characters (`HEADLINE_MAX`). When `Name, Country` would be too long, only the place name is used. No figures appear in headlines, except that aid headlines name the contributor and its quantities.
+- **Dek** is at most 160 characters (`DEK_MAX`). It leads with the most useful impact figures, then the event's own `payload.description` if it still fits. When neither is available, a generic simulated line for the event type is used instead.
+- **Follow-ups read as follow-ups.** `derive_news` walks applied events in canonical order and gives each one the previous impact snapshot and a count of earlier events of the same type. Examples:
+  - a second aftershock reads `Another M6.1 aftershock rattles …`
+  - a second government response reads `Japan steps up emergency response in …`
+  - a second aid delivery from the same country reads `… has now sent …`
+  - recovery headlines follow what improved: `Power returning across …`, `Displacement eases in …`
+- A story depends only on events before it, so seeking or replaying never rewrites earlier stories. `news_for_event(event)` on its own writes the event without that context.
 
 ## Impact figures
 
-When an event carries `payload.impacts`, the story reports the figures that matter for its type. Casualties go with hazards, displacement with evacuations, households without power or water with outages and recovery, losses with economic shocks, contaminated or flooded area and debris with contamination, and contributors with aid. For example:
+When an event carries `payload.impacts`, the dek reports the figures that matter for its type:
 
-- `An estimated 210,000 people displaced as evacuations widen in Sendai, Japan`
-- `United States has now sent 500 personnel and 120 tonnes of aid to Sendai Airport, Japan`
-- dek: `… Simulated estimates so far: 240 dead, 1,900 injured, 610 missing.`
+| Event type | Figures |
+| --- | --- |
+| Hazards | Casualties |
+| Evacuations | Displacement and shelters |
+| Outages and recovery | Households without power or water |
+| Economic shocks | Losses |
+| Contamination | Contaminated or flooded area, and debris |
+| Floods | Flooded area and casualties |
 
-Impact values are **scenario-wide estimates as of that event**, so each story shows the latest snapshot as given and never adds snapshots together. Every figure is labeled as a simulated estimate. A figure used in the headline isn't repeated in the dek. Snapshots without `basis: "fictional_estimate"` are ignored, and malformed values (negative, non-numeric, NaN) are dropped rather than guessed. An omitted key means no estimate yet. On an `international_aid` event, `payload.origin` names the sender. The story reports that country's running totals and cargo from its `impacts.aid_contributors` entry and counts how many countries have sent help. Contributors are never added together.
+Of those figures, the dek shows only the ones this event changed from the previous snapshot. It shows all of them only if the event changed none. Zero values are left out, and later figures are dropped to keep the dek within its length limit. For example:
 
-Field names follow Mathys's DIR-003 (#26) shape agreed in [#13](https://github.com/hmzdev23/worldsim/issues/13). `tests/newsroom/fixtures/impact-chain.json` is a test-only multi-event chain until the canonical fixture lands.
+- `Regional power grid knocked out in Sendai, Japan`, with dek `Simulated estimates so far: 2.3 million households without power. …`
+- `United States sends 180 personnel, 60 tonnes of aid to Yamagata Airport`, with dek `Simulated relief: search-and-rescue teams and relief supplies.`
+
+Impact values are **scenario-wide estimates as of that event**, so each story shows the latest snapshot as given and never adds snapshots together. Every figure is labeled as a simulated estimate. Snapshots without `basis: "fictional_estimate"` are ignored, and malformed values (negative, non-numeric, NaN) are dropped rather than guessed. An omitted key means no estimate yet. On an `international_aid` event, `payload.origin` names the sender. The story reports that country's running totals and cargo from its `impacts.aid_contributors` entry and counts how many countries have sent help. Contributors are never added together.
+
+Field names follow Mathys's DIR-003 (#26) shape agreed in [#13](https://github.com/hmzdev23/worldsim/issues/13). `tests/newsroom/fixtures/impact-chain.json` is a test-only chain covering rejected and proposed events. The NEWS-004 alert checks run against the canonical 20-event `contracts/fixtures/japan-earthquake.json`.
 
 ## Web panel
 

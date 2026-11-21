@@ -8,17 +8,47 @@ event type, never by scenario, so any prompted crisis gets the same treatment.
 
 from __future__ import annotations
 
+from collections import Counter
+from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable
 
-from .impacts import aid_amount, contributor, fmt_count, fmt_tonnes, fmt_usd, impact_sentence, read_impacts
+from .impacts import Impacts, aid_amount, contributor, impact_sentence, read_impacts
 
 SIMULATED_LABEL = "SIMULATED"
 DEFAULT_FOCUS_ZOOM = 6.0
+# Alert-ready lengths: the headline is read at a glance over the map, the dek in one breath.
+HEADLINE_MAX = 72
+DEK_MAX = 160
 
 Event = dict[str, Any]
 NewsItem = dict[str, Any]
-# A template returns (headline, dek) or (headline, dek, impact keys already used in the copy).
-Copy = tuple[str, str] | tuple[str, str, tuple[str, ...]]
+
+
+@dataclass
+class Context:
+    """What the newsroom knows when an event is applied.
+
+    `previous` is the latest impact snapshot from an earlier applied event
+    (None when unknown), and `seen` counts earlier applied events by
+    (type, place) and (type, country). Copy for an event depends only on what
+    came before it, so seeking or replaying never rewrites an earlier story.
+    """
+
+    impacts: Impacts
+    previous: Impacts | None = None
+    seen: Counter = field(default_factory=Counter)
+
+    def repeats(self, event: Event, scope: str = "name") -> int:
+        return self.seen[(event["type"], scope, event["location"].get(scope))]
+
+    def fell(self, key: str) -> bool:
+        before = (self.previous or {}).get(key)
+        return key in self.impacts and before is not None and self.impacts[key] < before
+
+
+def _remember(seen: Counter, event: Event) -> None:
+    for scope in ("name", "country"):
+        seen[(event["type"], scope, event["location"].get(scope))] += 1
 
 
 def format_sim_time(minutes: int) -> str:
@@ -38,78 +68,13 @@ def _place(event: Event) -> str:
     return name or country or "an unnamed location"
 
 
-def _earthquake(event: Event) -> tuple[str, str]:
-    payload = event.get("payload", {})
-    magnitude = payload.get("magnitude")
-    country = event["location"].get("country", "the region")
-    strength = f"M{magnitude:.1f} " if isinstance(magnitude, (int, float)) else ""
-    headline = f"{strength}earthquake strikes {_place(event)}"
-    dek = f"Simulated shaking reported across {country}"
-    depth = payload.get("depth_km")
-    if isinstance(depth, (int, float)):
-        dek += f" from a quake about {depth:g} km deep"
-    return headline, dek + ". Emergency response assessment is under way."
-
-
-def _aftershock(event: Event) -> tuple[str, str]:
-    magnitude = event.get("payload", {}).get("magnitude")
-    strength = f"M{magnitude:.1f} " if isinstance(magnitude, (int, float)) else ""
-    return (
-        f"{strength}aftershock rattles {_place(event)}",
-        "Simulated aftershock adds strain to damaged structures. Residents are urged to stay alert.",
-    )
-
-
-def _severity_word(event: Event) -> str:
-    severity = event.get("severity")
-    if not isinstance(severity, (int, float)):
-        return ""
-    return "Major " if severity >= 0.7 else "Partial " if severity < 0.4 else ""
-
-
-def _tsunami_warning(event: Event) -> tuple[str, str]:
-    return (
-        f"Tsunami warning issued for {_place(event)}",
-        "Simulated coastal alert in effect. Authorities order evacuation of low-lying areas.",
-    )
-
-
-def _infrastructure_failure(event: Event) -> tuple[str, str]:
-    headline = f"{_severity_word(event)}infrastructure failure hits {_place(event)}"
-    return (
-        headline[0].upper() + headline[1:],
-        "Simulated outages disrupt power, transit, or communications. Crews are assessing damage.",
-    )
-
-
-def _government_response(event: Event) -> tuple[str, str]:
-    country = event["location"].get("country") or "Government"
-    return (
-        f"{country} mobilizes emergency response in {event['location'].get('name') or 'affected areas'}",
-        "Simulated government action deploys rescue teams and emergency services.",
-    )
-
-
-def _international_aid(event: Event) -> Copy:
-    origin = _payload_text(event, "origin")
-    sender = origin if origin.lower() != "unknown" else ""
-    impacts = read_impacts(event)
-    entry = contributor(impacts, sender)
-    amount = aid_amount(entry) if entry else ""
-    place = _place(event)
-    if sender and amount:
-        headline = f"{sender} has now sent {amount} to {place}"
-    elif sender:
-        headline = f"{sender} sends aid to {place}"
-    else:
-        headline = f"International aid heads to {place}"
-    dek = "Simulated relief shipment is under way to support the response."
-    if entry and "cargo" in entry:
-        dek = f"Simulated relief includes {entry['cargo']}."
-    countries = len(impacts.get("aid_contributors", []))
-    if countries > 1:
-        dek += f" {countries} countries have now sent help in the simulation."
-    return headline, dek
+def _fit(event: Event, make: Callable[[str], str]) -> str:
+    """Headline with "Name, Country", or just the name when that is too long."""
+    headline = make(_place(event))
+    short = event["location"].get("name")
+    if len(headline) > HEADLINE_MAX and short:
+        headline = make(short)
+    return headline[0].upper() + headline[1:]
 
 
 def _payload_text(event: Event, key: str) -> str:
@@ -117,137 +82,189 @@ def _payload_text(event: Event, key: str) -> str:
     return value.strip() if isinstance(value, str) and value.strip() else ""
 
 
-def _simple(headline: str, dek: str) -> Callable[[Event], Copy]:
-    """Template whose headline is `headline` followed by the place."""
-    return lambda event: (f"{headline} {_place(event)}", dek)
+def _magnitude(event: Event) -> str:
+    magnitude = event.get("payload", {}).get("magnitude")
+    return f"M{magnitude:.1f} " if isinstance(magnitude, (int, float)) and not isinstance(magnitude, bool) else ""
 
 
-def _volcanic_eruption(event: Event) -> tuple[str, str]:
-    vei = event.get("payload", {}).get("vei")
-    scale = f" (VEI {vei})" if isinstance(vei, int) else ""
-    return (
-        f"Volcano erupts near {_place(event)}{scale}",
-        "Simulated ash plume grounds flights and coats nearby towns. Residents are told to stay indoors.",
-    )
+# Headline builders: (event, context) -> headline, or (headline, lead sentence for the dek).
+Headline = Callable[[Event, Context], "str | tuple[str, str]"]
 
 
-def _disease_outbreak(event: Event) -> tuple[str, str]:
-    pathogen = _payload_text(event, "pathogen")
-    name = f"{pathogen[0].upper()}{pathogen[1:]}" if pathogen else "Disease"
-    return (
-        f"{name} outbreak reported in {_place(event)}",
-        "Simulated cases are rising. Health authorities are tracing contacts and urging precautions.",
-    )
+def _earthquake(event: Event, ctx: Context) -> str:
+    again = "Another " if ctx.repeats(event) else ""
+    return _fit(event, lambda p: f"{again}{_magnitude(event)}earthquake strikes {p}")
 
 
-def _military_strike(event: Event) -> tuple[str, str]:
-    origin = _payload_text(event, "origin")
-    headline = f"{origin} launches strike on {_place(event)}" if origin and origin.lower() != "unknown" else f"Military strike hits {_place(event)}"
-    return headline, "Simulated strike damages key sites. Civil defense sirens sound across the region."
+def _aftershock(event: Event, ctx: Context) -> str:
+    again = "Another " if ctx.repeats(event) else ""
+    return _fit(event, lambda p: f"{again}{_magnitude(event)}aftershock rattles {p}")
 
 
-def _cyber_attack(event: Event) -> tuple[str, str]:
+def _tsunami_warning(event: Event, ctx: Context) -> str:
+    verb = "New tsunami warning issued for" if ctx.repeats(event) else "Tsunami warning issued for"
+    return _fit(event, lambda p: f"{verb} {p}")
+
+
+def _evacuation(event: Event, ctx: Context) -> str:
+    verb = "More evacuations ordered in" if ctx.repeats(event) else "Evacuations ordered in"
+    return _fit(event, lambda p: f"{verb} {p}")
+
+
+def _flooding(event: Event, ctx: Context) -> str:
+    verb = "Flooding spreads across" if ctx.repeats(event) else "Floodwaters swamp"
+    return _fit(event, lambda p: f"{verb} {p}")
+
+
+def _severity_word(event: Event) -> str:
+    severity = event.get("severity")
+    if not isinstance(severity, (int, float)):
+        return ""
+    return "major " if severity >= 0.7 else "partial " if severity < 0.4 else ""
+
+
+def _infrastructure_failure(event: Event, ctx: Context) -> str:
     target = _payload_text(event, "target")
-    headline = f"Cyberattack hits {target} in {_place(event)}" if target else f"Cyberattack disrupts systems in {_place(event)}"
-    return headline, "Simulated outage spreads across networks. Operators are working to restore service."
+    if target:
+        return _fit(event, lambda p: f"{target} knocked out in {p}")
+    return _fit(event, lambda p: f"{_severity_word(event)}infrastructure failure hits {p}")
 
 
-def _other_hazard(event: Event) -> tuple[str, str]:
+def _government_response(event: Event, ctx: Context) -> str:
+    actor = event["location"].get("country") or "Government"
+    verb = "steps up" if ctx.repeats(event, "country") else "mobilizes"
+    where = event["location"].get("name") or "affected areas"
+    return _fit(event, lambda p: f"{actor} {verb} emergency response in {where}")
+
+
+def _international_aid(event: Event, ctx: Context) -> tuple[str, str]:
+    origin = _payload_text(event, "origin")
+    sender = origin if origin.lower() != "unknown" else ""
+    entry = contributor(ctx.impacts, sender)
+    amount = aid_amount(entry, joiner=", ") if entry else ""
+    if sender and amount:
+        before = contributor(ctx.previous or {}, sender)
+        verb = "has now sent" if before else "sends"
+        headline = _fit(event, lambda p: f"{sender} {verb} {amount} to {p}")
+    elif sender:
+        headline = _fit(event, lambda p: f"{sender} sends aid to {p}")
+    else:
+        headline = _fit(event, lambda p: f"International aid heads to {p}")
+    lead = f"Simulated relief: {entry['cargo']}." if entry and "cargo" in entry else ""
+    countries = len(ctx.impacts.get("aid_contributors", []))
+    if countries > 1:
+        lead += f" {countries} countries have sent help so far."
+    return headline, lead.strip()
+
+
+def _economic_shock(event: Event, ctx: Context) -> str:
+    target = _payload_text(event, "target")
+    if ctx.repeats(event):
+        return _fit(event, lambda p: f"Economic shock deepens in {p}")
+    if target:
+        return _fit(event, lambda p: f"Economic shock hits {target} in {p}")
+    return _fit(event, lambda p: f"Economic shock hits {p}")
+
+
+def _contamination(event: Event, ctx: Context) -> str:
+    verb = "Contamination spreads around" if ctx.repeats(event) else "Contamination zone declared around"
+    return _fit(event, lambda p: f"{verb} {p}")
+
+
+def _recovery(event: Event, ctx: Context) -> str:
+    if ctx.impacts.get("households_without_power") == 0 and ctx.fell("households_without_power"):
+        return _fit(event, lambda p: f"Power restored across {p}")
+    if ctx.fell("households_without_power"):
+        return _fit(event, lambda p: f"Power returning across {p}")
+    if ctx.fell("displaced"):
+        return _fit(event, lambda p: f"Displacement eases in {p}")
+    if ctx.fell("households_without_water"):
+        return _fit(event, lambda p: f"Water service returning in {p}")
+    verb = "Recovery continues in" if ctx.repeats(event) else "Recovery under way in"
+    return _fit(event, lambda p: f"{verb} {p}")
+
+
+def _volcanic_eruption(event: Event, ctx: Context) -> str:
+    vei = event.get("payload", {}).get("vei")
+    scale = f" (VEI {vei})" if isinstance(vei, int) and not isinstance(vei, bool) else ""
+    return _fit(event, lambda p: f"Volcano erupts near {p}{scale}")
+
+
+def _disease_outbreak(event: Event, ctx: Context) -> str:
+    pathogen = _payload_text(event, "pathogen") or "disease"
+    return _fit(event, lambda p: f"{pathogen} outbreak reported in {p}")
+
+
+def _military_strike(event: Event, ctx: Context) -> str:
+    origin = _payload_text(event, "origin")
+    if origin and origin.lower() != "unknown":
+        return _fit(event, lambda p: f"{origin} launches strike on {p}")
+    return _fit(event, lambda p: f"Military strike hits {p}")
+
+
+def _cyber_attack(event: Event, ctx: Context) -> str:
+    target = _payload_text(event, "target")
+    if target:
+        return _fit(event, lambda p: f"Cyberattack hits {target} in {p}")
+    return _fit(event, lambda p: f"Cyberattack disrupts systems in {p}")
+
+
+def _other_hazard(event: Event, ctx: Context) -> str:
     label = _payload_text(event, "label")
-    headline = f"{label[0].upper()}{label[1:]} reported in {_place(event)}" if label else f"Emergency declared in {_place(event)}"
-    return headline, "Simulated emergency is developing. Authorities are assessing the situation."
+    if label:
+        return _fit(event, lambda p: f"{label} reported in {p}")
+    return _fit(event, lambda p: f"Emergency declared in {p}")
 
 
-def _evacuation(event: Event) -> Copy:
-    displaced = read_impacts(event).get("displaced")
-    if displaced is None:
-        return f"Evacuations ordered in {_place(event)}", "Simulated evacuation routes fill as residents head for safer ground."
-    return (
-        f"An estimated {fmt_count(displaced)} people displaced as evacuations widen in {_place(event)}",
-        "Simulated evacuation routes fill as residents head for safer ground.",
-        ("displaced",),
-    )
+def _simple(verb: str) -> Headline:
+    """Headline that is `verb` followed by the place."""
+    return lambda event, ctx: _fit(event, lambda p: f"{verb} {p}")
 
 
-def _outage(event: Event) -> Copy:
-    impacts = read_impacts(event)
-    power = impacts.get("households_without_power")
-    if power is None:
-        return _infrastructure_failure(event)
-    return (
-        f"An estimated {fmt_count(power)} households without power in {_place(event)}",
-        "Simulated outages disrupt power, transit, or communications. Crews are assessing damage.",
-        ("households_without_power",),
-    )
-
-
-def _economic_shock(event: Event) -> Copy:
-    loss = read_impacts(event).get("economic_loss_usd")
-    dek = "Simulated markets slide and supply chains stall as the crisis spreads."
-    if loss is None:
-        return f"Economic shock hits {_place(event)}", dek
-    return f"Losses estimated at {fmt_usd(loss)} as economic shock hits {_place(event)}", dek, ("economic_loss_usd",)
-
-
-def _contamination(event: Event) -> Copy:
-    impacts = read_impacts(event)
-    place = _place(event)
-    dek = "Simulated hazard zone is declared. Residents are told to avoid local water and produce."
-    if "contaminated_area_km2" in impacts:
-        area = fmt_count(impacts["contaminated_area_km2"])
-        return f"An estimated {area} km² contaminated around {place}", dek, ("contaminated_area_km2",)
-    if "flooded_area_km2" in impacts:
-        area = fmt_count(impacts["flooded_area_km2"])
-        return f"An estimated {area} km² flooded around {place}", dek, ("flooded_area_km2",)
-    if "debris_tonnes" in impacts:
-        return f"An estimated {fmt_tonnes(impacts['debris_tonnes'])} of debris litters {place}", dek, ("debris_tonnes",)
-    return f"Contamination alert issued for {place}", dek
-
-
-def _recovery(event: Event) -> Copy:
-    power = read_impacts(event).get("households_without_power")
-    dek = "Simulated rebuilding begins as services come back online."
-    if power is None:
-        return f"Recovery under way in {_place(event)}", dek
-    if power == 0:
-        return f"Power restored across {_place(event)} as recovery takes hold", dek, ("households_without_power",)
-    return (
-        f"Recovery under way in {_place(event)}, with an estimated {fmt_count(power)} households still without power",
-        dek,
-        ("households_without_power",),
-    )
-
-
-def _generic(event: Event) -> tuple[str, str]:
+def _generic(event: Event, ctx: Context) -> str:
     kind = str(event["type"]).replace("_", " ")
-    return f"{kind.capitalize()} reported in {_place(event)}", "Details are developing in the simulation."
+    return _fit(event, lambda p: f"{kind} reported in {p}")
 
 
-TEMPLATES: dict[str, Callable[[Event], Copy]] = {
-    "earthquake": _earthquake,
-    "aftershock": _aftershock,
-    "tsunami_warning": _tsunami_warning,
-    "infrastructure_failure": _outage,
-    "government_response": _government_response,
-    "international_aid": _international_aid,
-    "volcanic_eruption": _volcanic_eruption,
-    "meteor_impact": _simple("Meteor strikes", "Simulated impact flattens the area around ground zero. Rescue teams are converging."),
-    "extreme_weather": _simple("Extreme weather batters", "Simulated storm brings flooding and high winds. Shelters are opening."),
-    "flooding": _simple("Floodwaters swamp", "Simulated flooding cuts off roads and homes. Rescue boats are searching for stranded residents."),
-    "disease_outbreak": _disease_outbreak,
-    "military_strike": _military_strike,
-    "nuclear_detonation": _simple("Nuclear detonation reported near", "Simulated blast triggers emergency alerts. Residents downwind are told to shelter in place."),
-    "cyber_attack": _cyber_attack,
-    "alien_contact": _simple("Unidentified craft reported over", "Simulated sightings flood social media. Officials urge calm while they investigate."),
-    "other_hazard": _other_hazard,
-    "evacuation": _evacuation,
-    "contamination": _contamination,
-    "economic_shock": _economic_shock,
-    "civil_unrest": _simple("Unrest erupts in", "Simulated protests grow as frustration with the response mounts."),
-    "conflict_escalation": _simple("Conflict escalates near", "Simulated fighting widens. Neighboring countries raise their alert levels."),
-    "ceasefire": _simple("Ceasefire declared in", "Simulated truce takes hold. Aid convoys prepare to move in."),
-    "recovery": _recovery,
+# (headline builder, fallback dek used when the event carries no figures or description)
+TEMPLATES: dict[str, tuple[Headline, str]] = {
+    "earthquake": (_earthquake, "Simulated shaking is reported. Emergency response assessment is under way."),
+    "aftershock": (_aftershock, "Simulated aftershock adds strain to damaged structures. Residents are urged to stay alert."),
+    "tsunami_warning": (_tsunami_warning, "Simulated coastal alert in effect. Authorities order evacuation of low-lying areas."),
+    "infrastructure_failure": (_infrastructure_failure, "Simulated outages disrupt power, transit, or communications. Crews are assessing damage."),
+    "government_response": (_government_response, "Simulated government action deploys rescue teams and emergency services."),
+    "international_aid": (_international_aid, "Simulated relief shipment is under way to support the response."),
+    "volcanic_eruption": (_volcanic_eruption, "Simulated ash plume grounds flights and coats nearby towns. Residents are told to stay indoors."),
+    "meteor_impact": (_simple("Meteor strikes"), "Simulated impact flattens the area around ground zero. Rescue teams are converging."),
+    "extreme_weather": (_simple("Extreme weather batters"), "Simulated storm brings flooding and high winds. Shelters are opening."),
+    "flooding": (_flooding, "Simulated flooding cuts off roads and homes. Rescue boats are searching for stranded residents."),
+    "disease_outbreak": (_disease_outbreak, "Simulated cases are rising. Health authorities are tracing contacts and urging precautions."),
+    "military_strike": (_military_strike, "Simulated strike damages key sites. Civil defense sirens sound across the region."),
+    "nuclear_detonation": (_simple("Nuclear detonation reported near"), "Simulated blast triggers emergency alerts. Residents downwind are told to shelter in place."),
+    "cyber_attack": (_cyber_attack, "Simulated outage spreads across networks. Operators are working to restore service."),
+    "alien_contact": (_simple("Unidentified craft reported over"), "Simulated sightings flood social media. Officials urge calm while they investigate."),
+    "other_hazard": (_other_hazard, "Simulated emergency is developing. Authorities are assessing the situation."),
+    "evacuation": (_evacuation, "Simulated evacuation routes fill as residents head for safer ground."),
+    "contamination": (_contamination, "Simulated hazard zone is declared. Residents are told to avoid local water and produce."),
+    "economic_shock": (_economic_shock, "Simulated markets slide and supply chains stall as the crisis spreads."),
+    "civil_unrest": (_simple("Unrest erupts in"), "Simulated protests grow as frustration with the response mounts."),
+    "conflict_escalation": (_simple("Conflict escalates near"), "Simulated fighting widens. Neighboring countries raise their alert levels."),
+    "ceasefire": (_simple("Ceasefire declared in"), "Simulated truce takes hold. Aid convoys prepare to move in."),
+    "recovery": (_recovery, "Simulated rebuilding begins as services come back online."),
 }
+GENERIC_DEK = "Simulated event is developing. Details will follow as the simulation runs."
+
+
+def _dek(event: Event, ctx: Context, lead: str, fallback: str) -> str:
+    """Most useful figures first, then the event's own detail if it still fits."""
+    figures = impact_sentence(event["type"], ctx.impacts, previous=ctx.previous, max_length=DEK_MAX)
+    detail = lead or _payload_text(event, "description")
+    if detail and not detail.endswith((".", "!", "?")):
+        detail += "."
+    parts = [part for part in (figures, detail) if part]
+    while parts and len(" ".join(parts)) > DEK_MAX:
+        parts.pop()
+    return " ".join(parts) or fallback
 
 
 def _validate(event: Event) -> None:
@@ -262,17 +279,20 @@ def _validate(event: Event) -> None:
         raise ValueError(f"event {event['id']} location is out of range")
 
 
-def news_for_event(event: Event) -> NewsItem | None:
-    """Build one news item, or return None if the event has not been applied."""
+def news_for_event(event: Event, context: Context | None = None) -> NewsItem | None:
+    """Build one news item, or return None if the event has not been applied.
+
+    Without a `context` the event is written on its own. `derive_news` passes
+    one so that follow-up events read as follow-ups and figures that changed
+    lead the dek.
+    """
     _validate(event)
     if event["status"] != "applied":
         return None
-    copy = TEMPLATES.get(event["type"], _generic)(event)
-    headline, dek = copy[0], copy[1]
-    used = copy[2] if len(copy) > 2 else ()
-    figures = impact_sentence(event["type"], read_impacts(event), skip=used)
-    if figures:
-        dek = f"{dek} {figures}"
+    ctx = context or Context(read_impacts(event))
+    build, fallback = TEMPLATES.get(event["type"], (_generic, GENERIC_DEK))
+    copy = build(event, ctx)
+    headline, lead = copy if isinstance(copy, tuple) else (copy, "")
     loc = event["location"]
     return {
         "id": f"news-{event['id']}",
@@ -281,7 +301,7 @@ def news_for_event(event: Event) -> NewsItem | None:
         "severity": event.get("severity"),
         "label": SIMULATED_LABEL,
         "headline": headline,
-        "dek": dek,
+        "dek": _dek(event, ctx, lead, fallback),
         "sim_time_minutes": event["sim_time_minutes"],
         "sequence": event.get("sequence", 0),
         "sim_time_label": format_sim_time(event["sim_time_minutes"]),
@@ -297,8 +317,22 @@ def news_for_event(event: Event) -> NewsItem | None:
 
 def derive_news(events: Iterable[Event]) -> list[NewsItem]:
     """Return news for applied events, newest first by (sim_time_minutes, sequence)."""
-    items = [item for item in map(news_for_event, events) if item is not None]
-    items.sort(key=lambda item: (item["sim_time_minutes"], item["sequence"], item["event_id"]), reverse=True)
+    applied = sorted(
+        (e for e in events if e.get("status") == "applied"),
+        key=lambda e: (e["sim_time_minutes"], e.get("sequence", 0), e["id"]),
+    )
+    items: list[NewsItem] = []
+    seen: Counter = Counter()
+    previous: Impacts | None = {}
+    for event in applied:
+        impacts = read_impacts(event)
+        item = news_for_event(event, Context(impacts, previous, seen.copy()))
+        if item is not None:
+            items.append(item)
+        _remember(seen, event)
+        if impacts:
+            previous = impacts
+    items.reverse()
     return items
 
 

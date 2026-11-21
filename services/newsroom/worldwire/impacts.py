@@ -13,7 +13,8 @@ Final DIR-003 (#26) shape, agreed in team thread #13:
 Values are scenario-wide estimates *as of the event that carries them*, never
 deltas, so the newsroom reports the latest snapshot as given and never adds
 snapshots together. Each aid contributor entry is that country's running
-total. An omitted key means "no estimate yet", not zero. Every sentence built
+total. An omitted key means "no estimate yet"; a zero is not newsworthy and
+is left out of copy. Every sentence built
 here says the figures are simulated estimates.
 """
 
@@ -107,14 +108,14 @@ def fmt_tonnes(value: float) -> str:
     return f"{fmt_count(value)} tonne{'' if value == 1 else 's'}"
 
 
-def aid_amount(entry: dict[str, Any]) -> str:
+def aid_amount(entry: dict[str, Any], joiner: str = " and ") -> str:
     """'500 personnel and 120 tonnes of aid', or '' when no quantities are given."""
     parts = []
     if "personnel" in entry:
         parts.append(f"{fmt_count(entry['personnel'])} personnel")
     if "cargo_tonnes" in entry:
         parts.append(f"{fmt_tonnes(entry['cargo_tonnes'])} of aid")
-    return " and ".join(parts)
+    return joiner.join(parts)
 
 
 # Which figures matter for which kind of story.
@@ -134,6 +135,7 @@ ENVIRONMENT = (
 GROUPS_BY_TYPE: dict[str, tuple[tuple[tuple[str, str], ...], ...]] = {
     "tsunami_warning": (DISPLACEMENT, CASUALTIES),
     "evacuation": (DISPLACEMENT,),
+    "flooding": ((("flooded_area_km2", "flooded"),), CASUALTIES),
     "infrastructure_failure": (UTILITIES,),
     "cyber_attack": (UTILITIES,),
     "government_response": (CASUALTIES, DISPLACEMENT),
@@ -144,6 +146,7 @@ GROUPS_BY_TYPE: dict[str, tuple[tuple[tuple[str, str], ...], ...]] = {
     "international_aid": (),
 }
 DEFAULT_GROUPS = (CASUALTIES,)
+LEAD = "Simulated estimates so far: "
 
 
 def _phrase(key: str, word: str, value: float) -> str:
@@ -156,14 +159,42 @@ def _phrase(key: str, word: str, value: float) -> str:
     return f"{fmt_count(value)} {word}"
 
 
-def impact_sentence(event_type: str, impacts: Impacts, skip: tuple[str, ...] = ()) -> str:
-    """One labeled sentence of the figures relevant to this event type, or ''."""
-    phrases = [
-        _phrase(key, word, impacts[key])
+def impact_phrases(
+    event_type: str,
+    impacts: Impacts,
+    previous: Impacts | None = None,
+    skip: tuple[str, ...] = (),
+) -> list[str]:
+    """Figures relevant to this event type, most useful first.
+
+    Zero values are left out. When `previous` (the scenario's last earlier
+    snapshot) is given, only the figures this event changed are returned,
+    unless it changed none of them.
+    """
+    keys = [
+        (key, word)
         for group in GROUPS_BY_TYPE.get(event_type, DEFAULT_GROUPS)
         for key, word in group
-        if key in impacts and key not in skip
+        if impacts.get(key) and key not in skip
     ]
-    if not phrases:
-        return ""
-    return "Simulated estimates so far: " + ", ".join(phrases) + "."
+    if previous is not None:
+        moved = [(key, word) for key, word in keys if previous.get(key) != impacts[key]]
+        keys = moved or keys
+    return [_phrase(key, word, impacts[key]) for key, word in keys]
+
+
+def impact_sentence(
+    event_type: str,
+    impacts: Impacts,
+    skip: tuple[str, ...] = (),
+    previous: Impacts | None = None,
+    max_length: int | None = None,
+) -> str:
+    """One labeled sentence of figures, or ''. Drops trailing figures to fit `max_length`."""
+    phrases = impact_phrases(event_type, impacts, previous, skip)
+    while phrases:
+        sentence = LEAD + ", ".join(phrases) + "."
+        if max_length is None or len(sentence) <= max_length or len(phrases) == 1:
+            return sentence
+        phrases.pop()
+    return ""
