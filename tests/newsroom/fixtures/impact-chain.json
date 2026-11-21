@@ -22,8 +22,9 @@
         "magnitude": 7.8,
         "depth_km": 24,
         "impacts": {
+          "basis": "fictional_estimate",
           "deaths": 40,
-          "injuries": 310,
+          "injured": 310,
           "missing": 120
         }
       },
@@ -49,8 +50,9 @@
       "visual": "weather_disaster",
       "payload": {
         "impacts": {
+          "basis": "fictional_estimate",
           "deaths": 40,
-          "injuries": 310,
+          "injured": 310,
           "missing": 120,
           "displaced": 35000
         }
@@ -79,11 +81,11 @@
       "visual": "emergency_mobilization",
       "payload": {
         "impacts": {
+          "basis": "fictional_estimate",
           "deaths": 95,
-          "injuries": 820,
+          "injured": 820,
           "missing": 400,
-          "displaced": 210000,
-          "sheltered": 145000
+          "displaced": 210000
         }
       },
       "parent_ids": [
@@ -110,11 +112,11 @@
       "visual": "power_grid_failure",
       "payload": {
         "impacts": {
+          "basis": "fictional_estimate",
           "deaths": 95,
-          "injuries": 820,
+          "injured": 820,
           "missing": 400,
           "displaced": 210000,
-          "sheltered": 145000,
           "households_without_power": 1800000,
           "households_without_water": 420000
         }
@@ -143,11 +145,11 @@
       "visual": "emergency_mobilization",
       "payload": {
         "impacts": {
+          "basis": "fictional_estimate",
           "deaths": 180,
-          "injuries": 1400,
+          "injured": 1400,
           "missing": 650,
           "displaced": 230000,
-          "sheltered": 160000,
           "households_without_power": 1800000,
           "households_without_water": 420000
         }
@@ -178,8 +180,9 @@
         "magnitude": 6.1,
         "depth_km": 28,
         "impacts": {
+          "basis": "fictional_estimate",
           "deaths": 240,
-          "injuries": 1900,
+          "injured": 1900,
           "missing": 610
         }
       },
@@ -234,16 +237,16 @@
       "payload": {
         "origin": "United States",
         "impacts": {
+          "basis": "fictional_estimate",
           "deaths": 260,
-          "aid_contributors": [
-            {
-              "country": "United States",
-              "personnel": 500,
-              "cargo_tonnes": 120,
-              "cargo": "water purification units and field hospitals"
-            }
-          ]
-        }
+          "aid_countries": [
+            "United States"
+          ],
+          "aid_personnel": 500,
+          "aid_cargo_tonnes": 120
+        },
+        "personnel": 500,
+        "cargo": "water purification units and field hospitals (120 t)"
       },
       "parent_ids": [
         "evt-0005"
@@ -270,22 +273,17 @@
       "payload": {
         "origin": "Australia",
         "impacts": {
+          "basis": "fictional_estimate",
           "deaths": 260,
-          "aid_contributors": [
-            {
-              "country": "United States",
-              "personnel": 500,
-              "cargo_tonnes": 120,
-              "cargo": "water purification units and field hospitals"
-            },
-            {
-              "country": "Australia",
-              "personnel": 180,
-              "cargo_tonnes": 45,
-              "cargo": "search-and-rescue teams and generators"
-            }
-          ]
-        }
+          "aid_countries": [
+            "United States",
+            "Australia"
+          ],
+          "aid_personnel": 680,
+          "aid_cargo_tonnes": 165
+        },
+        "personnel": 180,
+        "cargo": "search-and-rescue teams and generators (45 t)"
       },
       "parent_ids": [
         "evt-0005"
@@ -311,6 +309,8 @@
       "visual": "weather_disaster",
       "payload": {
         "impacts": {
+          "basis": "fictional_estimate",
+          "contaminated_area_km2": 12,
           "flooded_area_km2": 310,
           "debris_tonnes": 2500000
         }
@@ -339,6 +339,7 @@
       "visual": "breaking_news",
       "payload": {
         "impacts": {
+          "basis": "fictional_estimate",
           "economic_loss_usd": 38000000000
         }
       },
@@ -389,10 +390,10 @@
       "visual": "emergency_mobilization",
       "payload": {
         "impacts": {
+          "basis": "fictional_estimate",
           "households_without_power": 60000,
           "households_without_water": 15000,
-          "displaced": 40000,
-          "sheltered": 22000
+          "displaced": 40000
         }
       },
       "parent_ids": [

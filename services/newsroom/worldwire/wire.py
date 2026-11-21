@@ -10,15 +10,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Iterable
 
-from .impacts import (
-    aid_amount,
-    contributor,
-    fmt_count,
-    fmt_tonnes,
-    fmt_usd,
-    impact_sentence,
-    read_impacts,
-)
+from .impacts import fmt_count, fmt_tonnes, fmt_usd, impact_sentence, number, read_impacts
 
 SIMULATED_LABEL = "SIMULATED"
 DEFAULT_FOCUS_ZOOM = 6.0
@@ -99,21 +91,20 @@ def _government_response(event: Event) -> tuple[str, str]:
 
 
 def _international_aid(event: Event) -> Copy:
+    payload = event.get("payload", {})
     origin = _payload_text(event, "origin")
-    impacts = read_impacts(event)
-    entry = contributor(impacts, origin)
-    amount = aid_amount(entry) if entry else ""
+    personnel = number(payload.get("personnel"))
+    cargo = _payload_text(event, "cargo")
     place = _place(event)
-    if origin and amount:
-        headline = f"{origin} sends {amount} to {place}"
-    elif origin:
-        headline = f"{origin} sends aid to {place}"
+    sender = origin if origin and origin.lower() != "unknown" else ""
+    if sender and personnel:
+        headline = f"{sender} sends {fmt_count(personnel)} aid personnel to {place}"
+    elif sender:
+        headline = f"{sender} sends aid to {place}"
     else:
         headline = f"International aid heads to {place}"
-    dek = "Simulated relief shipment is under way to support the response."
-    if entry and "cargo" in entry:
-        dek = f"Simulated shipment carries {entry['cargo']}."
-    countries = len(impacts.get("aid_contributors", []))
+    dek = f"Simulated shipment carries {cargo}." if cargo else "Simulated relief shipment is under way to support the response."
+    countries = len(read_impacts(event).get("aid_countries", []))
     if countries > 1:
         dek += f" {countries} countries have now sent help in the simulation."
     return headline, dek
@@ -198,20 +189,17 @@ def _economic_shock(event: Event) -> Copy:
 
 def _contamination(event: Event) -> Copy:
     impacts = read_impacts(event)
+    place = _place(event)
     dek = "Simulated hazard zone is declared. Residents are told to avoid local water and produce."
+    if "contaminated_area_km2" in impacts:
+        area = fmt_count(impacts["contaminated_area_km2"])
+        return f"An estimated {area} km² contaminated around {place}", dek, ("contaminated_area_km2",)
     if "flooded_area_km2" in impacts:
-        return (
-            f"An estimated {fmt_count(impacts['flooded_area_km2'])} km² flooded or contaminated around {_place(event)}",
-            dek,
-            ("flooded_area_km2",),
-        )
+        area = fmt_count(impacts["flooded_area_km2"])
+        return f"An estimated {area} km² flooded around {place}", dek, ("flooded_area_km2",)
     if "debris_tonnes" in impacts:
-        return (
-            f"An estimated {fmt_tonnes(impacts['debris_tonnes'])} of debris litters {_place(event)}",
-            dek,
-            ("debris_tonnes",),
-        )
-    return f"Contamination alert issued for {_place(event)}", dek
+        return f"An estimated {fmt_tonnes(impacts['debris_tonnes'])} of debris litters {place}", dek, ("debris_tonnes",)
+    return f"Contamination alert issued for {place}", dek
 
 
 def _recovery(event: Event) -> Copy:

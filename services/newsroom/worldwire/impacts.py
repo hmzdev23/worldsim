@@ -1,10 +1,19 @@
 """Read and phrase `payload.impacts` snapshots for WORLD//WIRE.
 
-Impact values are fictional, cumulative estimates *as of the event that
-carries them* (never deltas). The newsroom therefore reports the latest value
-it is given and never adds snapshots together. Every sentence built here says
-it is a simulated estimate. Field names follow the proposal in issue #13 and
-will track whatever DIR-003 (#26) publishes.
+Shape agreed for DIR-003 (#26) in team thread #13:
+
+    "impacts": {
+      "basis": "fictional_estimate",      # required marker
+      "deaths", "injured", "missing", "displaced",
+      "households_without_power", "households_without_water",
+      "economic_loss_usd", "flooded_area_km2", "contaminated_area_km2", "debris_tonnes",
+      "aid_countries": [...], "aid_personnel", "aid_cargo_tonnes"
+    }
+
+Values are scenario-wide estimates *as of the event that carries them*, never
+deltas, so the newsroom reports the latest snapshot as given and never adds
+snapshots together. An omitted key means "no estimate yet", not zero. Every
+sentence built here says the figures are simulated estimates.
 """
 
 from __future__ import annotations
@@ -12,21 +21,29 @@ from __future__ import annotations
 import math
 from typing import Any
 
+BASIS = "fictional_estimate"
 COUNT_FIELDS = (
     "deaths",
-    "injuries",
+    "injured",
     "missing",
     "displaced",
-    "sheltered",
     "households_without_power",
     "households_without_water",
+    "aid_personnel",
 )
-MEASURE_FIELDS = ("economic_loss_usd", "flooded_area_km2", "debris_tonnes")
+MEASURE_FIELDS = (
+    "economic_loss_usd",
+    "flooded_area_km2",
+    "contaminated_area_km2",
+    "debris_tonnes",
+    "aid_cargo_tonnes",
+)
 
 Impacts = dict[str, Any]
 
 
-def _number(value: Any) -> float | None:
+def number(value: Any) -> float | None:
+    """A finite, non-negative number, or None."""
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         return None
     if not math.isfinite(value) or value < 0:
@@ -34,34 +51,29 @@ def _number(value: Any) -> float | None:
     return value
 
 
+def text(value: Any) -> str:
+    return value.strip() if isinstance(value, str) else ""
+
+
 def read_impacts(event: dict[str, Any]) -> Impacts:
-    """Return the event's valid impact fields. Malformed fields are dropped, not guessed."""
+    """Return the event's valid impact fields.
+
+    Snapshots without the `basis: "fictional_estimate"` marker are ignored, and
+    malformed fields are dropped rather than guessed.
+    """
     raw = event.get("payload", {}).get("impacts")
-    if not isinstance(raw, dict):
+    if not isinstance(raw, dict) or raw.get("basis") != BASIS:
         return {}
     impacts: Impacts = {}
     for key in COUNT_FIELDS + MEASURE_FIELDS:
-        value = _number(raw.get(key))
+        value = number(raw.get(key))
         if value is not None:
             impacts[key] = value
-    contributors = []
-    for entry in raw.get("aid_contributors") or []:
-        if not isinstance(entry, dict):
-            continue
-        country = entry.get("country")
-        if not isinstance(country, str) or not country.strip():
-            continue
-        clean = {"country": country.strip()}
-        for key in ("personnel", "cargo_tonnes"):
-            value = _number(entry.get(key))
-            if value is not None:
-                clean[key] = value
-        cargo = entry.get("cargo")
-        if isinstance(cargo, str) and cargo.strip():
-            clean["cargo"] = cargo.strip()
-        contributors.append(clean)
-    if contributors:
-        impacts["aid_contributors"] = contributors
+    countries = raw.get("aid_countries")
+    if isinstance(countries, list):
+        names = [text(c) for c in countries if text(c)]
+        if names:
+            impacts["aid_countries"] = names
     return impacts
 
 
@@ -82,34 +94,20 @@ def fmt_tonnes(value: float) -> str:
     return f"{fmt_count(value)} tonne{'' if value == 1 else 's'}"
 
 
-def contributor(impacts: Impacts, country: str | None) -> dict[str, Any] | None:
-    if not country:
-        return None
-    for entry in impacts.get("aid_contributors", []):
-        if entry["country"].lower() == country.lower():
-            return entry
-    return None
-
-
-def aid_amount(entry: dict[str, Any]) -> str:
-    """'500 personnel and 120 tonnes of aid', or '' when no quantities are given."""
-    parts = []
-    if "personnel" in entry:
-        parts.append(f"{fmt_count(entry['personnel'])} personnel")
-    if "cargo_tonnes" in entry:
-        parts.append(f"{fmt_tonnes(entry['cargo_tonnes'])} of aid")
-    return " and ".join(parts)
-
-
 # Which figures matter for which kind of story.
-CASUALTIES = (("deaths", "dead"), ("injuries", "injured"), ("missing", "missing"))
-DISPLACEMENT = (("displaced", "displaced"), ("sheltered", "in shelters"))
+CASUALTIES = (("deaths", "dead"), ("injured", "injured"), ("missing", "missing"))
+DISPLACEMENT = (("displaced", "displaced"),)
 UTILITIES = (
     ("households_without_power", "households without power"),
     ("households_without_water", "households without water"),
 )
 ECONOMY = (("economic_loss_usd", "in economic losses"),)
-ENVIRONMENT = (("flooded_area_km2", "flooded"), ("debris_tonnes", "of debris"))
+ENVIRONMENT = (
+    ("contaminated_area_km2", "contaminated"),
+    ("flooded_area_km2", "flooded"),
+    ("debris_tonnes", "of debris"),
+)
+AID = (("aid_personnel", "aid personnel deployed"), ("aid_cargo_tonnes", "of relief cargo"))
 
 GROUPS_BY_TYPE: dict[str, tuple[tuple[tuple[str, str], ...], ...]] = {
     "tsunami_warning": (DISPLACEMENT, CASUALTIES),
@@ -121,7 +119,7 @@ GROUPS_BY_TYPE: dict[str, tuple[tuple[tuple[str, str], ...], ...]] = {
     "contamination": (ENVIRONMENT,),
     "recovery": (UTILITIES, DISPLACEMENT),
     "civil_unrest": (DISPLACEMENT,),
-    "international_aid": (),
+    "international_aid": (AID,),
 }
 DEFAULT_GROUPS = (CASUALTIES,)
 
@@ -129,9 +127,9 @@ DEFAULT_GROUPS = (CASUALTIES,)
 def _phrase(key: str, word: str, value: float) -> str:
     if key == "economic_loss_usd":
         return f"{fmt_usd(value)} {word}"
-    if key == "flooded_area_km2":
+    if key in ("flooded_area_km2", "contaminated_area_km2"):
         return f"{fmt_count(value)} km² {word}"
-    if key == "debris_tonnes":
+    if key in ("debris_tonnes", "aid_cargo_tonnes"):
         return f"{fmt_tonnes(value)} {word}"
     return f"{fmt_count(value)} {word}"
 
