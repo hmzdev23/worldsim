@@ -6,7 +6,8 @@ class DirectorError(Exception):
 
     code is one of: invalid_scenario, codex_missing, codex_timeout,
     codex_failed, invalid_json, invalid_events, invalid_history, fixture_missing,
-    sim_unreachable, sim_error.
+    sim_unreachable, sim_error, invalid_request (bad run ID or timeout).
+    runner.public_error() maps each code to a UI-safe state.
     """
 
     def __init__(self, code: str, message: str, detail: str = "") -> None:
