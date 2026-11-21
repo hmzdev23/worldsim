@@ -1,7 +1,7 @@
 "use client";
 
 import { Crosshair, GlobeHemisphereWest, Pause, Play, ArrowCounterClockwise } from "@phosphor-icons/react";
-import { useCallback, useEffect, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { earthquake } from "../lib/earthquake";
 import { WorldMap, type WorldMapHandle } from "./world-map";
 import { WorldWire } from "./world-wire";
@@ -126,7 +126,7 @@ export function Simulation() {
   }
 
   const playbackLabel = playback.state === "playing" ? "Pause" : elapsed >= duration ? "Replay" : "Play";
-  const hasEarthquake = appliedEvents.some((event) => event.id === earthquake.id);
+  const appliedEventIds = useMemo(() => appliedEvents.map((event) => event.id), [appliedEvents]);
   const statusText = connected
     ? "Fictional simulation · stream connected"
     : connectionState === "connecting"
@@ -168,7 +168,7 @@ export function Simulation() {
             <span><i className="key-epicenter" aria-hidden="true" /> Epicenter</span>
             <span><i className="key-wave" aria-hidden="true" /> Shockwave</span>
           </div>
-          <WorldWire revealed={hasEarthquake} />
+          <WorldWire appliedEventIds={appliedEventIds} />
         </aside>
 
         <section className="timeline" aria-label="Simulation playback">

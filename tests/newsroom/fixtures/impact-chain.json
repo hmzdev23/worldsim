@@ -1,0 +1,406 @@
+{
+  "schema_version": "0.1",
+  "simulation_id": "newsroom-impact-chain",
+  "branch_id": "main",
+  "events": [
+    {
+      "id": "evt-0001",
+      "sim_time_minutes": 402,
+      "sequence": 0,
+      "type": "earthquake",
+      "status": "applied",
+      "location": {
+        "name": "off the coast of Miyagi",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.3,
+        "lon": 142.4
+      },
+      "severity": 0.9,
+      "visual": "earthquake_shockwave",
+      "payload": {
+        "magnitude": 7.8,
+        "depth_km": 24,
+        "impacts": {
+          "deaths": 40,
+          "injuries": 310,
+          "missing": 120
+        }
+      },
+      "parent_ids": [],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0002",
+      "sim_time_minutes": 410,
+      "sequence": 0,
+      "type": "tsunami_warning",
+      "status": "applied",
+      "location": {
+        "name": "Pacific coast of Tohoku",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.9,
+        "lon": 141.9
+      },
+      "severity": 0.8,
+      "visual": "weather_disaster",
+      "payload": {
+        "impacts": {
+          "deaths": 40,
+          "injuries": 310,
+          "missing": 120,
+          "displaced": 35000
+        }
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0003",
+      "sim_time_minutes": 480,
+      "sequence": 0,
+      "type": "evacuation",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
+      "severity": 0.6,
+      "visual": "emergency_mobilization",
+      "payload": {
+        "impacts": {
+          "deaths": 95,
+          "injuries": 820,
+          "missing": 400,
+          "displaced": 210000,
+          "sheltered": 145000
+        }
+      },
+      "parent_ids": [
+        "evt-0002"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0004",
+      "sim_time_minutes": 520,
+      "sequence": 0,
+      "type": "infrastructure_failure",
+      "status": "applied",
+      "location": {
+        "name": "Miyagi Prefecture",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.45,
+        "lon": 140.95
+      },
+      "severity": 0.75,
+      "visual": "power_grid_failure",
+      "payload": {
+        "impacts": {
+          "deaths": 95,
+          "injuries": 820,
+          "missing": 400,
+          "displaced": 210000,
+          "sheltered": 145000,
+          "households_without_power": 1800000,
+          "households_without_water": 420000
+        }
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0005",
+      "sim_time_minutes": 600,
+      "sequence": 0,
+      "type": "government_response",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
+      "severity": 0.5,
+      "visual": "emergency_mobilization",
+      "payload": {
+        "impacts": {
+          "deaths": 180,
+          "injuries": 1400,
+          "missing": 650,
+          "displaced": 230000,
+          "sheltered": 160000,
+          "households_without_power": 1800000,
+          "households_without_water": 420000
+        }
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0006",
+      "sim_time_minutes": 1500,
+      "sequence": 0,
+      "type": "aftershock",
+      "status": "applied",
+      "location": {
+        "name": "off the coast of Fukushima",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 37.5,
+        "lon": 141.8
+      },
+      "severity": 0.5,
+      "visual": "earthquake_shockwave",
+      "payload": {
+        "magnitude": 6.1,
+        "depth_km": 28,
+        "impacts": {
+          "deaths": 240,
+          "injuries": 1900,
+          "missing": 610
+        }
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0007",
+      "sim_time_minutes": 1500,
+      "sequence": 1,
+      "type": "aftershock",
+      "status": "rejected",
+      "location": {
+        "name": "off the coast of Iwate",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 39.6,
+        "lon": 142.1
+      },
+      "severity": 0.3,
+      "visual": "earthquake_shockwave",
+      "payload": {
+        "magnitude": 5.4,
+        "depth_km": 30
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0008",
+      "sim_time_minutes": 2900,
+      "sequence": 0,
+      "type": "international_aid",
+      "status": "applied",
+      "location": {
+        "name": "Sendai Airport",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.14,
+        "lon": 140.92
+      },
+      "severity": 0.3,
+      "visual": "animated_transport_route",
+      "payload": {
+        "origin": "United States",
+        "impacts": {
+          "deaths": 260,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 500,
+              "cargo_tonnes": 120,
+              "cargo": "water purification units and field hospitals"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0005"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0009",
+      "sim_time_minutes": 3100,
+      "sequence": 0,
+      "type": "international_aid",
+      "status": "applied",
+      "location": {
+        "name": "Sendai Airport",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.14,
+        "lon": 140.92
+      },
+      "severity": 0.3,
+      "visual": "animated_transport_route",
+      "payload": {
+        "origin": "Australia",
+        "impacts": {
+          "deaths": 260,
+          "aid_contributors": [
+            {
+              "country": "United States",
+              "personnel": 500,
+              "cargo_tonnes": 120,
+              "cargo": "water purification units and field hospitals"
+            },
+            {
+              "country": "Australia",
+              "personnel": 180,
+              "cargo_tonnes": 45,
+              "cargo": "search-and-rescue teams and generators"
+            }
+          ]
+        }
+      },
+      "parent_ids": [
+        "evt-0005"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0010",
+      "sim_time_minutes": 3500,
+      "sequence": 0,
+      "type": "contamination",
+      "status": "applied",
+      "location": {
+        "name": "Ishinomaki coast",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.43,
+        "lon": 141.3
+      },
+      "severity": 0.4,
+      "visual": "weather_disaster",
+      "payload": {
+        "impacts": {
+          "flooded_area_km2": 310,
+          "debris_tonnes": 2500000
+        }
+      },
+      "parent_ids": [
+        "evt-0002"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0011",
+      "sim_time_minutes": 3960,
+      "sequence": 0,
+      "type": "economic_shock",
+      "status": "applied",
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.77
+      },
+      "severity": 0.4,
+      "visual": "breaking_news",
+      "payload": {
+        "impacts": {
+          "economic_loss_usd": 38000000000
+        }
+      },
+      "parent_ids": [
+        "evt-0004"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0012",
+      "sim_time_minutes": 4000,
+      "sequence": 0,
+      "type": "civil_unrest",
+      "status": "proposed",
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.77
+      },
+      "severity": 0.2,
+      "visual": "breaking_news",
+      "payload": {},
+      "parent_ids": [
+        "evt-0011"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0013",
+      "sim_time_minutes": 10080,
+      "sequence": 0,
+      "type": "recovery",
+      "status": "applied",
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
+      "severity": 0.2,
+      "visual": "emergency_mobilization",
+      "payload": {
+        "impacts": {
+          "households_without_power": 60000,
+          "households_without_water": 15000,
+          "displaced": 40000,
+          "sheltered": 22000
+        }
+      },
+      "parent_ids": [
+        "evt-0004"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    }
+  ]
+}

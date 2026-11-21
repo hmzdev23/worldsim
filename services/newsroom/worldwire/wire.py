@@ -2,18 +2,31 @@
 
 Input events follow contracts/events.schema.json (v0.1).
 Only events whose status is "applied" are reported, so the newsroom never
-announces something the simulation has not confirmed.
+announces something the simulation has not confirmed. Templates are keyed by
+event type, never by scenario, so any prompted crisis gets the same treatment.
 """
 
 from __future__ import annotations
 
 from typing import Any, Callable, Iterable
 
+from .impacts import (
+    aid_amount,
+    contributor,
+    fmt_count,
+    fmt_tonnes,
+    fmt_usd,
+    impact_sentence,
+    read_impacts,
+)
+
 SIMULATED_LABEL = "SIMULATED"
 DEFAULT_FOCUS_ZOOM = 6.0
 
 Event = dict[str, Any]
 NewsItem = dict[str, Any]
+# A template returns (headline, dek) or (headline, dek, impact keys already used in the copy).
+Copy = tuple[str, str] | tuple[str, str, tuple[str, ...]]
 
 
 def format_sim_time(minutes: int) -> str:
@@ -85,17 +98,25 @@ def _government_response(event: Event) -> tuple[str, str]:
     )
 
 
-def _international_aid(event: Event) -> tuple[str, str]:
-    origin = event.get("payload", {}).get("origin")
-    headline = (
-        f"{origin} sends aid to {_place(event)}"
-        if isinstance(origin, str) and origin
-        else f"International aid heads to {_place(event)}"
-    )
-    return (
-        headline,
-        "Simulated relief shipments are under way to support the response.",
-    )
+def _international_aid(event: Event) -> Copy:
+    origin = _payload_text(event, "origin")
+    impacts = read_impacts(event)
+    entry = contributor(impacts, origin)
+    amount = aid_amount(entry) if entry else ""
+    place = _place(event)
+    if origin and amount:
+        headline = f"{origin} sends {amount} to {place}"
+    elif origin:
+        headline = f"{origin} sends aid to {place}"
+    else:
+        headline = f"International aid heads to {place}"
+    dek = "Simulated relief shipment is under way to support the response."
+    if entry and "cargo" in entry:
+        dek = f"Simulated shipment carries {entry['cargo']}."
+    countries = len(impacts.get("aid_contributors", []))
+    if countries > 1:
+        dek += f" {countries} countries have now sent help in the simulation."
+    return headline, dek
 
 
 def _payload_text(event: Event, key: str) -> str:
@@ -103,7 +124,7 @@ def _payload_text(event: Event, key: str) -> str:
     return value.strip() if isinstance(value, str) and value.strip() else ""
 
 
-def _simple(headline: str, dek: str) -> Callable[[Event], tuple[str, str]]:
+def _simple(headline: str, dek: str) -> Callable[[Event], Copy]:
     """Template whose headline is `headline` followed by the place."""
     return lambda event: (f"{headline} {_place(event)}", dek)
 
@@ -144,16 +165,79 @@ def _other_hazard(event: Event) -> tuple[str, str]:
     return headline, "Simulated emergency is developing. Authorities are assessing the situation."
 
 
+def _evacuation(event: Event) -> Copy:
+    displaced = read_impacts(event).get("displaced")
+    if displaced is None:
+        return f"Evacuations ordered in {_place(event)}", "Simulated evacuation routes fill as residents head for safer ground."
+    return (
+        f"An estimated {fmt_count(displaced)} people displaced as evacuations widen in {_place(event)}",
+        "Simulated evacuation routes fill as residents head for safer ground.",
+        ("displaced",),
+    )
+
+
+def _outage(event: Event) -> Copy:
+    impacts = read_impacts(event)
+    power = impacts.get("households_without_power")
+    if power is None:
+        return _infrastructure_failure(event)
+    return (
+        f"An estimated {fmt_count(power)} households without power in {_place(event)}",
+        "Simulated outages disrupt power, transit, or communications. Crews are assessing damage.",
+        ("households_without_power",),
+    )
+
+
+def _economic_shock(event: Event) -> Copy:
+    loss = read_impacts(event).get("economic_loss_usd")
+    dek = "Simulated markets slide and supply chains stall as the crisis spreads."
+    if loss is None:
+        return f"Economic shock hits {_place(event)}", dek
+    return f"Losses estimated at {fmt_usd(loss)} as economic shock hits {_place(event)}", dek, ("economic_loss_usd",)
+
+
+def _contamination(event: Event) -> Copy:
+    impacts = read_impacts(event)
+    dek = "Simulated hazard zone is declared. Residents are told to avoid local water and produce."
+    if "flooded_area_km2" in impacts:
+        return (
+            f"An estimated {fmt_count(impacts['flooded_area_km2'])} km² flooded or contaminated around {_place(event)}",
+            dek,
+            ("flooded_area_km2",),
+        )
+    if "debris_tonnes" in impacts:
+        return (
+            f"An estimated {fmt_tonnes(impacts['debris_tonnes'])} of debris litters {_place(event)}",
+            dek,
+            ("debris_tonnes",),
+        )
+    return f"Contamination alert issued for {_place(event)}", dek
+
+
+def _recovery(event: Event) -> Copy:
+    power = read_impacts(event).get("households_without_power")
+    dek = "Simulated rebuilding begins as services come back online."
+    if power is None:
+        return f"Recovery under way in {_place(event)}", dek
+    if power == 0:
+        return f"Power restored across {_place(event)} as recovery takes hold", dek, ("households_without_power",)
+    return (
+        f"Recovery under way in {_place(event)}, with an estimated {fmt_count(power)} households still without power",
+        dek,
+        ("households_without_power",),
+    )
+
+
 def _generic(event: Event) -> tuple[str, str]:
     kind = str(event["type"]).replace("_", " ")
     return f"{kind.capitalize()} reported in {_place(event)}", "Details are developing in the simulation."
 
 
-TEMPLATES: dict[str, Callable[[Event], tuple[str, str]]] = {
+TEMPLATES: dict[str, Callable[[Event], Copy]] = {
     "earthquake": _earthquake,
     "aftershock": _aftershock,
     "tsunami_warning": _tsunami_warning,
-    "infrastructure_failure": _infrastructure_failure,
+    "infrastructure_failure": _outage,
     "government_response": _government_response,
     "international_aid": _international_aid,
     "volcanic_eruption": _volcanic_eruption,
@@ -165,13 +249,13 @@ TEMPLATES: dict[str, Callable[[Event], tuple[str, str]]] = {
     "cyber_attack": _cyber_attack,
     "alien_contact": _simple("Unidentified craft reported over", "Simulated sightings flood social media. Officials urge calm while they investigate."),
     "other_hazard": _other_hazard,
-    "evacuation": _simple("Evacuations ordered in", "Simulated evacuation routes fill as residents head for safer ground."),
-    "contamination": _simple("Contamination alert issued for", "Simulated hazard zone is declared. Residents are told to avoid local water and produce."),
-    "economic_shock": _simple("Economic shock hits", "Simulated markets slide and supply chains stall as the crisis spreads."),
+    "evacuation": _evacuation,
+    "contamination": _contamination,
+    "economic_shock": _economic_shock,
     "civil_unrest": _simple("Unrest erupts in", "Simulated protests grow as frustration with the response mounts."),
     "conflict_escalation": _simple("Conflict escalates near", "Simulated fighting widens. Neighboring countries raise their alert levels."),
     "ceasefire": _simple("Ceasefire declared in", "Simulated truce takes hold. Aid convoys prepare to move in."),
-    "recovery": _simple("Recovery under way in", "Simulated rebuilding begins as services come back online."),
+    "recovery": _recovery,
 }
 
 
@@ -192,11 +276,18 @@ def news_for_event(event: Event) -> NewsItem | None:
     _validate(event)
     if event["status"] != "applied":
         return None
-    headline, dek = TEMPLATES.get(event["type"], _generic)(event)
+    copy = TEMPLATES.get(event["type"], _generic)(event)
+    headline, dek = copy[0], copy[1]
+    used = copy[2] if len(copy) > 2 else ()
+    figures = impact_sentence(event["type"], read_impacts(event), skip=used)
+    if figures:
+        dek = f"{dek} {figures}"
     loc = event["location"]
     return {
         "id": f"news-{event['id']}",
         "event_id": event["id"],
+        "event_type": event["type"],
+        "severity": event.get("severity"),
         "label": SIMULATED_LABEL,
         "headline": headline,
         "dek": dek,
@@ -220,17 +311,39 @@ def derive_news(events: Iterable[Event]) -> list[NewsItem]:
     return items
 
 
-def news_from_stream(messages: Iterable[dict[str, Any]]) -> list[NewsItem]:
-    """Fold stream messages (contracts/stream.schema.json) into the current feed.
+class WireFeed:
+    """Live WORLD//WIRE state driven by stream messages (contracts/stream.schema.json).
 
-    A snapshot replaces everything seen so far (connect, seek, or replay); each
-    event message adds one applied event; clock messages carry no news.
+    `event` messages add one applied event, `snapshot` messages (connect, seek,
+    replay) replace everything, and `clock` messages carry no news. Events that
+    are not applied are ignored, so rejected or proposed events never appear.
     """
-    events: dict[str, Event] = {}
-    for message in messages:
+
+    def __init__(self) -> None:
+        self._events: dict[str, Event] = {}
+
+    def apply(self, message: dict[str, Any]) -> bool:
+        """Apply one message. Returns True when the visible feed may have changed."""
         kind = message.get("kind")
         if kind == "snapshot":
-            events = {e["id"]: e for e in message["events"]}
-        elif kind == "event":
-            events[message["event"]["id"]] = message["event"]
-    return derive_news(events.values())
+            self._events = {e["id"]: e for e in message.get("events", []) if e.get("status") == "applied"}
+            return True
+        if kind == "event":
+            event = message["event"]
+            if event.get("status") != "applied":
+                return False
+            self._events[event["id"]] = event
+            return True
+        return False
+
+    @property
+    def items(self) -> list[NewsItem]:
+        return derive_news(self._events.values())
+
+
+def news_from_stream(messages: Iterable[dict[str, Any]]) -> list[NewsItem]:
+    """Fold a sequence of stream messages into the resulting feed."""
+    feed = WireFeed()
+    for message in messages:
+        feed.apply(message)
+    return feed.items
