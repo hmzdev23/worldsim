@@ -3,6 +3,7 @@
 Endpoints:
   GET  /health     liveness
   GET  /snapshot   current snapshot message (same shape as the stream's)
+  GET  /timeline   every applied event, including ones the clock has not reached
   POST /events     ingest a Director batch; returns it with statuses set
   POST /control    playback control (same body as a WebSocket control message)
   WS   /stream     snapshot on connect, then event and clock messages
@@ -103,6 +104,10 @@ def create_app(
     @app.get("/snapshot")
     async def snapshot() -> Message:
         return sim.snapshot()
+
+    @app.get("/timeline")
+    async def timeline() -> dict[str, Any]:
+        return sim.timeline_view()
 
     @app.post("/events")
     async def events(batch: dict[str, Any] = Body(...)) -> dict[str, Any]:

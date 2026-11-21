@@ -25,7 +25,8 @@ Options: `fixture` (defaults to `contracts/fixtures/japan-earthquake.json`), `--
 | `WS /stream` | Sends a `snapshot` on connect, then `event` messages as events become due and a `clock` message each tick. Accepts control messages. |
 | `POST /control` | Same control body as the WebSocket. Returns the resulting `clock` or `snapshot` message and broadcasts it. |
 | `POST /events` | Ingests a Director batch (`events.schema.json`). Returns `{batch, rejections: [{id, reasons}]}`, with each event's `status` set. |
-| `GET /snapshot` | The current snapshot message. |
+| `GET /snapshot` | The current snapshot message: applied events the clock has reached. |
+| `GET /timeline` | Every applied event in the scenario, including ones the clock hasn't reached yet. Read-only. See below. |
 | `GET /health` | Liveness check. |
 
 ### Control messages
@@ -39,6 +40,30 @@ Options: `fixture` (defaults to `contracts/fixtures/japan-earthquake.json`), `--
 ```
 
 `play`, `pause`, and `speed` broadcast a `clock`. `seek` and `replay` (a seek to 0) broadcast a new `snapshot`, which replaces client state. The stream contract has no error kind, so an invalid control on the WebSocket is logged and ignored. `POST /control` answers it with a 422.
+
+### `GET /timeline`
+
+Use this endpoint to draw a scrubber, mark upcoming events, or plan the next Director batch without colliding with scheduled IDs. It never changes state.
+
+```json
+{
+  "schema_version": "0.1",
+  "simulation_id": "demo-japan-earthquake",
+  "branch_id": "main",
+  "sim_time_minutes": 401,
+  "playback": { "state": "paused", "speed": 1 },
+  "end_minutes": 402,
+  "events": [ { "id": "evt-0001", "sim_time_minutes": 402, "sequence": 0, "status": "applied", "...": "..." } ]
+}
+```
+
+- `events` lists every applied event in canonical `(sim_time_minutes, sequence)` order. Each one has the same shape as a snapshot event. Rejected events never appear.
+- `sim_time_minutes` and `playback` report the clock. Events with `sim_time_minutes` at or before the clock are exactly the ones in the current `/snapshot`, and the rest are still to come.
+- `end_minutes` is the time of the last applied event, or `0` when there are none.
+- The list doesn't depend on the clock: seeking or replaying leaves it unchanged. It grows only when `POST /events` applies new events.
+- It is an HTTP response, not a stream message, so it has no `kind`. `/snapshot` and the WebSocket are unchanged.
+
+Seek and replay can move in either direction. After any mix of seeks, replays, speed changes, and ticks, a client that replaces its state on each `snapshot` and appends each `event` holds exactly the timeline events up to the clock, in order, with no duplicates or gaps. The WebSocket sends one `event` message per event, when the clock reaches it, even when one tick at high speed passes several events. `tests/simulation/test_timeline.py` checks this against the demo fixture and a multi-day test fixture (`tests/simulation/fixtures/multi-day.json`).
 
 ## Validation rules
 

@@ -37,6 +37,14 @@ def _event_validator():
         from jsonschema import Draft202012Validator
         from referencing import Registry, Resource
     except ImportError:  # pragma: no cover - jsonschema is in requirements.txt
+        import warnings
+
+        warnings.warn(
+            "jsonschema is not installed: the simulation will skip event schema validation "
+            "(pip install -r services/simulation/requirements.txt)",
+            RuntimeWarning,
+            stacklevel=2,
+        )
         return None
     schema = _load("events.schema.json")
     registry = Registry().with_resource(schema["$id"], Resource.from_contents(schema))
@@ -244,6 +252,25 @@ class Simulation:
     def timeline(self) -> list[Event]:
         """Every applied event, released or not, in canonical order."""
         return copy.deepcopy(self._timeline)
+
+    @property
+    def end_minutes(self) -> int:
+        """Sim time of the last applied event, or 0 when there are none."""
+        return self._timeline[-1]["sim_time_minutes"] if self._timeline else 0
+
+    def timeline_view(self) -> dict[str, Any]:
+        """Read-only GET /timeline body: every applied event, including future ones.
+
+        Unlike a snapshot, this is not a stream message and does not depend on
+        the clock beyond reporting it. Events with sim_time_minutes <= the
+        reported sim_time_minutes are the ones the current snapshot contains.
+        """
+        return {
+            **self._header(self.now),
+            "playback": self.playback,
+            "end_minutes": self.end_minutes,
+            "events": self.timeline,
+        }
 
 
 def replay(batch: dict[str, Any], speed: int = 1, step_minutes: int = 1) -> list[Message]:

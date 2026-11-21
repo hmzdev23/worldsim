@@ -126,9 +126,10 @@ class IngestTests(unittest.TestCase):
             "past": proposed("evt-past", 405, parents=[QUAKE["id"]]),
             "dup": proposed(QUAKE["id"], 500),
             "orphan": proposed("evt-orphan", 500, parents=["evt-missing"]),
-            "schema": proposed("evt-schema", 500, type="alien_invasion"),
-            "no_magnitude": proposed("evt-nomag", 500, payload={}),
         }
+        if Draft202012Validator is not None:  # schema rules need jsonschema
+            cases["schema"] = proposed("evt-schema", 500, type="alien_invasion")
+            cases["no_magnitude"] = proposed("evt-nomag", 500, payload={})
         out, rejected = self.sim.ingest(batch(*cases.values()))
         self.assertTrue(all(e["status"] == "rejected" for e in out))
         self.assertEqual(len(rejected), len(cases))
