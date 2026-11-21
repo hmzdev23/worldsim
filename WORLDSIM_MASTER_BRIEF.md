@@ -1,5 +1,7 @@
 # WORLD//SIM — Master Project Brief, Conversation Record & Multi-Agent Operating Protocol
 
+> **Current team direction:** Use the deterministic Japan earthquake fixtures. Actual AI prompting tests run on Hamza's computer through his signed-in Codex CLI. Teammates can use their existing coding agents and do not need a Codex installation.
+
 > **Current setup:** See the [README](README.md) for the GitHub task queue and the Codex CLI Director prototype. The Claude API plan below records the original discussion. Mathys is the current spelling; historical quotations are preserved.
 
 **Status:** Hackathon concept / pre-implementation

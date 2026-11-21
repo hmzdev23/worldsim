@@ -7,5 +7,5 @@ Read the [README](README.md) for current project direction and the [master brief
 - Read the repository instructions and any applicable contracts before editing. Check the current branch, working tree, open PRs, and issue dependencies.
 - Work on a dedicated `codex/<area>-<task>` or `feat/<area>-<task>` branch. Keep changes within the issue scope and open a PR. Discuss changes to shared contracts with the affected owners.
 - Start with the deterministic earthquake demo. The simulation engine validates and applies events, and WORLD//WIRE derives clearly fictional news from applied events.
-- The current local Director prototype is GPT-6 Luna at high effort through Codex CLI. Use mock events for offline development.
+- For the current demo, use the checked-in Japan earthquake fixtures for deterministic development and testing. Teammates do not need Codex or model credentials. Any actual AI prompting tests run on Hamza's computer through his signed-in Codex CLI.
 - In the PR, link your issue and record the checks you ran, contract changes, and any handoff or blockers. Keep credentials local.
