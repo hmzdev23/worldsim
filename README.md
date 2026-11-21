@@ -134,6 +134,18 @@ The first deliverable is a deterministic Japan earthquake demo. A fixture event 
 
 The [master brief](WORLDSIM_MASTER_BRIEF.md) records the original design and discussion. This README and the GitHub issues describe the current setup.
 
+## Run the earthquake demo check
+
+The offline demo check runs the shared fixture through a mock simulation stream into WORLD//WIRE and confirms that each news card focuses the map on its event. It needs no model login.
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install jsonschema   # optional, enables contract checks
+./scripts/smoke-demo.sh          # contracts, newsroom, and end-to-end checks
+./scripts/smoke-demo.sh --open   # also opens the WORLD//WIRE preview page
+```
+
+Shared event and stream shapes are in [contracts/](contracts/README.md).
+
 ## Try the World Director
 
 Install Codex CLI and run `codex login` with ChatGPT. Check your sign-in with `codex login status`.
