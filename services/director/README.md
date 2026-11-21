@@ -5,12 +5,11 @@ Turns a hypothetical scenario into a validated batch of **proposed** WORLD//SIM 
 ```bash
 cd services/director
 python3 -m worlddirector --fixture japan-earthquake        # deterministic, offline, no Codex
-python3 -m worlddirector "A M7.5 earthquake hits Lima"     # GPT-6 Luna (high) via Codex CLI
 python3 -m unittest discover -s ../../tests/director       # tests (Codex is faked)
 ../../scripts/smoke-demo.sh                                # everyone's checks, Director included
 ```
 
-Codex mode needs Codex CLI installed and signed in on the demo host (`codex login`). It runs like `scripts/try-director.sh`: ephemeral, read-only sandbox, user config ignored, and `OPENAI_API_KEY`/`CODEX_API_KEY` removed so the signed-in ChatGPT account is used.
+The team uses the Japan fixture for development and testing. Actual AI prompting tests will run later on Hamza's computer using his signed-in Codex CLI. Codex mode uses an ephemeral, read-only sandbox and strips API-key environment variables so the signed-in ChatGPT account is used.
 
 ## From Python
 
@@ -18,7 +17,7 @@ Codex mode needs Codex CLI installed and signed in on the demo host (`codex logi
 from worlddirector import DirectorError, generate
 
 try:
-    batch = generate("A M7.5 earthquake hits Lima", first_id=1)   # or generate(fixture="japan-earthquake")
+    batch = generate(fixture="japan-earthquake", first_id=1)
 except DirectorError as err:
     report(err.to_dict())   # {"error": "codex_timeout", "message": "...", "detail": "..."}
 ```

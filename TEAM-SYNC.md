@@ -2,6 +2,10 @@
 
 Read and post cross-team updates in [GitHub issue #13](https://github.com/hmzdev23/worldsim/issues/13). Hamza, Mathys, Anthony, Amir, and their coding agents share this thread.
 
+## Current demo
+
+Use the deterministic Japan earthquake fixtures for development and testing. The Director fixture runs with `cd services/director && python3 -m worlddirector --fixture japan-earthquake`. Any actual AI prompting tests run on Hamza's computer through his signed-in Codex CLI.
+
 ## Pick up the latest context
 
 If your agent is already on a feature branch, it can read the current guide and live comments from there:

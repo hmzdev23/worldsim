@@ -11,7 +11,10 @@ Already working? Open [TEAM-SYNC.md](TEAM-SYNC.md) and the
 
 Open the [WORLD//SIM invitation](https://github.com/hmzdev23/worldsim/invitations) while signed in to the GitHub account Hamza invited. Once you accept, confirm you can open the [private repository](https://github.com/hmzdev23/worldsim).
 
-### 2. Open Codex or Claude Code
+### 2. Open your coding agent
+
+Hamza uses Codex. Mathys, Anthony, and Amir can use Claude Code or their own coding agents.
+Running the Japan earthquake demo does not require Codex or a model login.
 
 - **Already have WORLD//SIM open locally?** Use that folder in your coding AI and go straight to step 3.
 - **Only have GitHub open in a browser?** Open your coding AI in the folder where you keep your projects. The prompt below tells it to clone the repo for you.
@@ -157,12 +160,20 @@ python3 -m venv .venv && .venv/bin/pip install jsonschema   # optional, enables 
 
 Shared event and stream shapes are in [contracts/](contracts/README.md).
 
-## Try the World Director
+## Run the Director fixture
 
-Install Codex CLI and run `codex login` with ChatGPT. Check your sign-in with `codex login status`.
+The Director can generate the set Japan scenario without model access:
 
 ```bash
-./scripts/try-director.sh "A major earthquake disrupts public transit in Tokyo"
+cd services/director
+python3 -m worlddirector --fixture japan-earthquake
 ```
 
-The script calls `codex exec` with GPT-6 Luna at high effort and sends a JSON event batch to stdout. It uses the local ChatGPT login and counts toward that account’s Codex limits. The schema in `scripts/` is for this standalone demo. The simulation and frontend integration are tracked in the issues above.
+The output is a deterministic batch of proposed events. The simulation applies
+the events and streams them to the map and newsroom. The shared single-event
+fixture in `contracts/fixtures/japan-earthquake.json` is used by the current
+offline smoke check.
+
+Future AI prompting tests run on Hamza's computer through his signed-in Codex
+CLI. The team can develop and test the demo with the fixtures on their own
+machines.
