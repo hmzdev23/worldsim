@@ -1,0 +1,113 @@
+{
+  "events": [
+    {
+      "type": "aftershock",
+      "sim_time_minutes": 2900,
+      "location": {
+        "name": "off the coast of Fukushima",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 37.5,
+        "lon": 141.8
+      },
+      "severity": 0.5,
+      "description": "A strong aftershock rattles the Fukushima coast as repairs begin.",
+      "magnitude": 6.1,
+      "depth_km": 28,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "caused_by": [],
+      "caused_by_events": [
+        "evt-0001"
+      ]
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 2950,
+      "location": {
+        "name": "Iwaki",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 37.05,
+        "lon": 140.89
+      },
+      "severity": 0.4,
+      "description": "Residents of damaged coastal neighborhoods move to inland shelters.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 15,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 3960,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.77
+      },
+      "severity": 0.4,
+      "description": "Factory shutdowns in the northeast stall supply chains for electronics and car parts.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "manufacturing supply chains",
+      "pathogen": null,
+      "label": null,
+      "caused_by": [],
+      "caused_by_events": [
+        "evt-0003"
+      ]
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 10080,
+      "location": {
+        "name": "Sendai",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 38.27,
+        "lon": 140.87
+      },
+      "severity": 0.2,
+      "description": "Power and rail service are largely restored across Miyagi.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "caused_by": [],
+      "caused_by_events": [
+        "evt-0003",
+        "evt-0004"
+      ]
+    }
+  ]
+}

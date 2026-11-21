@@ -20,8 +20,9 @@ CONTRACT_VISUALS: tuple = tuple(_EVENT_DEF["visual"]["enum"])
 SLUG_PATTERN: str = _EVENTS_SCHEMA["$defs"]["slug"]["pattern"]
 
 MAX_EVENTS = 12
+MAX_HISTORY_EVENTS = 200  # prior events shown to the model when continuing
 MAX_SCENARIO_CHARS = 2000
-MAX_SIM_MINUTES = 30 * 24 * 60  # 30 simulated days
+MAX_SIM_MINUTES = 365 * 24 * 60  # one simulated year (pandemics and wars run long)
 
 # Event type -> map animation key. The model picks the type and the visual is
 # derived here, so the map never receives an animation key it doesn't know.
@@ -118,6 +119,11 @@ OUTPUT_SCHEMA: dict = {
                         "items": {"type": "integer"},
                         "description": "0-based indexes of earlier events in this list that caused this one.",
                     },
+                    "caused_by_events": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "IDs of events that already happened (from the history) that caused this one.",
+                    },
                 },
                 "required": [
                     "type",
@@ -127,6 +133,7 @@ OUTPUT_SCHEMA: dict = {
                     "description",
                     *PAYLOAD_FIELDS,
                     "caused_by",
+                    "caused_by_events",
                 ],
                 "additionalProperties": False,
             },

@@ -22,7 +22,8 @@
       "target": null,
       "pathogen": null,
       "label": null,
-      "caused_by": []
+      "caused_by": [],
+      "caused_by_events": []
     },
     {
       "type": "tsunami_warning",
@@ -48,7 +49,8 @@
       "label": null,
       "caused_by": [
         0
-      ]
+      ],
+      "caused_by_events": []
     },
     {
       "type": "infrastructure_failure",
@@ -74,7 +76,8 @@
       "label": null,
       "caused_by": [
         0
-      ]
+      ],
+      "caused_by_events": []
     },
     {
       "type": "government_response",
@@ -101,7 +104,8 @@
       "caused_by": [
         0,
         2
-      ]
+      ],
+      "caused_by_events": []
     },
     {
       "type": "aftershock",
@@ -127,7 +131,8 @@
       "label": null,
       "caused_by": [
         0
-      ]
+      ],
+      "caused_by_events": []
     },
     {
       "type": "international_aid",
@@ -153,7 +158,8 @@
       "label": null,
       "caused_by": [
         3
-      ]
+      ],
+      "caused_by_events": []
     }
   ]
 }
