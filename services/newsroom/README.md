@@ -71,6 +71,47 @@ Impact values are **scenario-wide estimates as of that event**, so each story sh
 
 Field names follow Mathys's DIR-003 (#26) shape agreed in [#13](https://github.com/hmzdev23/worldsim/issues/13). `tests/newsroom/fixtures/impact-chain.json` is a test-only chain covering rejected and proposed events. The NEWS-004 alert checks run against the canonical 20-event `contracts/fixtures/japan-earthquake.json`.
 
+## Live news for any run (NEWS-005)
+
+The simulation service builds the response for `GET /scenarios/{id}/news` from the run's released snapshot:
+
+```python
+from worldwire import news_response
+
+body = news_response(sim.snapshot())   # sim is that run's Simulation
+```
+
+```json
+{
+  "schema_version": "0.1",
+  "simulation_id": "run-iceland",
+  "branch_id": "main",
+  "sim_time_minutes": 1500,
+  "items": [
+    {
+      "id": "news-evt-0006",
+      "event_id": "evt-0006",
+      "event_type": "international_aid",
+      "severity": 0.3,
+      "label": "SIMULATED",
+      "headline": "Norway sends 40 personnel, 25 tonnes of aid to Reykjavik, Iceland",
+      "dek": "Simulated relief: gas masks and field shelters.",
+      "sim_time_minutes": 1500,
+      "sequence": 0,
+      "sim_time_label": "DAY 2 · 01:00",
+      "focus": { "event_id": "evt-0006", "lat": 64.15, "lon": -21.94, "zoom": 6.0 },
+      "provenance": "template"
+    }
+  ]
+}
+```
+
+- **Run identity.** The envelope carries `simulation_id` and `branch_id`. Items keep the usual shape, newest first.
+- **Released events only.** Only applied events at or before `sim_time_minutes` are reported. The adapter applies this filter even when it receives future events, such as from the `/timeline` view.
+- **Stateless.** Each call is derived from scratch from that run's events. Nothing is cached by event ID, so runs that reuse `evt-0001` never mix, and a story reads the same during play, after a seek, and after a replay. A live alert and the archive entry for the same event are identical.
+- **Matching in the browser.** Drop a response whose `simulation_id` or `branch_id` isn't the active run. Keep only items whose `event_id` is in the current applied set. That also discards a response that was requested before a seek and arrives after it. The alert shows the item for each newly applied stream event, and the archive shows all kept items.
+- **Stream consumers.** `WireFeed` follows one run. A snapshot from another run starts it over, and event messages from any other run or branch are ignored.
+
 ## Web panel
 
 `apps/web` imports the generated `feeds/japan-earthquake.json`. Its `WorldWire` component shows a story only for events the simulation stream has applied, and falls back to a basic card for events missing from the feed. A test fails if the committed feed drifts from the fixture. The regenerate command is above.
