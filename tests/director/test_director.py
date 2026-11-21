@@ -78,7 +78,11 @@ class FixtureModeTest(unittest.TestCase):
 
     def test_fixture_covers_every_contract_type_with_causes(self):
         events = generate(fixture="japan-earthquake")["events"]
-        self.assertEqual({e["type"] for e in events}, set(EVENT_TYPES))
+        self.assertEqual(
+            {e["type"] for e in events},
+            {"earthquake", "aftershock", "tsunami_warning", "infrastructure_failure", "government_response", "international_aid"},
+        )
+        self.assertEqual(set(VISUALS), set(EVENT_TYPES))  # every contract type has an animation key
         ids = [e["id"] for e in events]
         for e in events:
             for parent in e["parent_ids"]:
@@ -110,7 +114,7 @@ class ValidationTest(unittest.TestCase):
         self.assertInvalid([])
         self.assertInvalid({"events": []})
         self.assertInvalid({"events": [{}]})
-        self.assertInvalid({"events": raw_fixture()["events"] + raw_fixture()["events"][:1]})  # too many
+        self.assertInvalid({"events": raw_fixture()["events"] * 3})  # too many
         self.assertInvalid({"events": [], "extra": 1})
 
     def test_rejects_unknown_type_and_extra_keys(self):
@@ -136,6 +140,19 @@ class ValidationTest(unittest.TestCase):
         self.assertInvalid(one_event(magnitude=None))
         self.assertInvalid(one_event(type="aftershock", depth_km=None))
         build_batch(one_event(type="government_response", magnitude=None, depth_km=None), simulation_id="t")
+
+    def test_new_types_and_payload_details(self):
+        none = {"magnitude": None, "depth_km": None}
+        self.assertInvalid(one_event(type="other_hazard", **none))  # needs label
+        batch = build_batch(one_event(type="other_hazard", label="solar superstorm", **none), simulation_id="t")
+        self.assertEqual(batch["events"][0]["payload"]["label"], "solar superstorm")
+        self.assertEqual(batch["events"][0]["visual"], "breaking_news")
+        self.assertInvalid(one_event(type="volcanic_eruption", vei=9, **none))
+        self.assertInvalid(one_event(type="volcanic_eruption", vei=4.5, **none))
+        self.assertInvalid(one_event(type="nuclear_detonation", yield_kt=-1, **none))
+        self.assertInvalid(one_event(type="disease_outbreak", pathogen="", **none))
+        ev = build_batch(one_event(type="nuclear_detonation", yield_kt=15, origin=" unknown ", **none), simulation_id="t")["events"][0]
+        self.assertEqual(ev["payload"], {"description": ev["payload"]["description"], "yield_kt": 15, "origin": "unknown"})
 
     def test_caused_by_must_point_backwards(self):
         raw = raw_fixture()

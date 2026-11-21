@@ -47,6 +47,33 @@ class DirectorPipelineTest(unittest.TestCase):
         for msg in self.messages:
             self.assertEqual([e.message for e in stream_v.iter_errors(msg)], [], msg["kind"])
 
+    @unittest.skipIf(Draft202012Validator is None, "pip install jsonschema for schema checks")
+    def test_new_hazard_types_validate_and_get_headlines(self):
+        from worlddirector import build_batch, load_fixture
+
+        base = load_fixture("japan-earthquake")["events"][0]
+        details = {
+            "disease_outbreak": {"pathogen": "novel influenza", "radius_km": 400},
+            "nuclear_detonation": {"yield_kt": 15, "origin": "unknown"},
+            "volcanic_eruption": {"vei": 6},
+            "meteor_impact": {"diameter_m": 150},
+            "cyber_attack": {"target": "power grid"},
+            "alien_contact": {},
+            "other_hazard": {"label": "solar superstorm"},
+        }
+        events = []
+        for i, (kind, extra) in enumerate(details.items()):
+            ev = {**base, "type": kind, "sim_time_minutes": i * 60, "magnitude": None, "depth_km": None, "caused_by": []}
+            ev.update(extra)
+            events.append(ev)
+        batch = build_batch({"events": events}, simulation_id="new-types")
+        schema = json.loads((ROOT / "contracts" / "events.schema.json").read_text())
+        self.assertEqual([e.message for e in Draft202012Validator(schema).iter_errors(batch)], [])
+        feed = news_from_stream(mock_stream.replay(apply_all(batch)))
+        self.assertEqual(len(feed), len(details))
+        for item in feed:
+            self.assertNotIn("Details are developing", item["dek"])
+
     def test_proposed_events_never_reach_the_wire(self):
         raw = list(mock_stream.replay(self.batch))
         self.assertEqual(news_from_stream(raw), [])

@@ -57,6 +57,34 @@ class ContractTests(unittest.TestCase):
             target[path[-1]] = value
             self.assertTrue(self.errors(self.events, doc), path)
 
+    def event_of(self, type_, **payload):
+        doc = copy.deepcopy(self.fixture)
+        event = doc["events"][0]
+        event["type"] = type_
+        event["payload"] = payload
+        return doc
+
+    def test_extended_hazard_and_consequence_types(self):
+        for type_, payload in (
+            ("disease_outbreak", {"pathogen": "novel influenza", "radius_km": 300}),
+            ("nuclear_detonation", {"yield_kt": 15, "origin": "unknown"}),
+            ("cyber_attack", {"target": "power grid"}),
+            ("meteor_impact", {"diameter_m": 120}),
+            ("volcanic_eruption", {"vei": 6}),
+            ("alien_contact", {"description": "Unidentified craft hover over the bay."}),
+            ("other_hazard", {"label": "solar superstorm"}),
+            ("conflict_escalation", {}),
+            ("recovery", {}),
+        ):
+            self.assertEqual(self.errors(self.events, self.event_of(type_, **payload)), [], type_)
+
+    def test_other_hazard_requires_label(self):
+        self.assertTrue(self.errors(self.events, self.event_of("other_hazard")))
+
+    def test_known_payload_keys_are_type_checked(self):
+        for payload in ({"vei": 9}, {"yield_kt": -1}, {"radius_km": "big"}, {"description": "x" * 281}):
+            self.assertTrue(self.errors(self.events, self.event_of("volcanic_eruption", **payload)), payload)
+
     def header(self, minutes):
         return {"schema_version": "0.1", "simulation_id": "demo-japan-earthquake",
                 "branch_id": "main", "sim_time_minutes": minutes}

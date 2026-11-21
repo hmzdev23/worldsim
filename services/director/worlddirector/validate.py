@@ -16,16 +16,15 @@ from .contract import (
     EVENT_TYPES,
     MAX_EVENTS,
     MAX_SIM_MINUTES,
-    QUAKE_TYPES,
+    PAYLOAD_FIELDS,
+    REQUIRED_PAYLOAD,
     SCHEMA_VERSION,
     SLUG_PATTERN,
     VISUALS,
 )
 from .errors import DirectorError
 
-_EVENT_KEYS = set(
-    "type sim_time_minutes location severity description magnitude depth_km origin caused_by".split()
-)
+_EVENT_KEYS = {"type", "sim_time_minutes", "location", "severity", "description", "caused_by", *PAYLOAD_FIELDS}
 _LOCATION_KEYS = {"name", "country", "country_code", "lat", "lon"}
 
 
@@ -78,15 +77,16 @@ def _check_event(i: int, ev: Any, events: list) -> list:
         if not _num(loc["lon"]) or not -180 <= loc["lon"] <= 180:
             errs.append(f"{where}.location.lon out of range")
 
-    for key, lo, hi in (("magnitude", 0, 10), ("depth_km", 0, 800)):
+    for key, (kind, lo, hi, _) in PAYLOAD_FIELDS.items():
         v = ev[key]
         if v is None:
-            if ev["type"] in QUAKE_TYPES:
+            if key in REQUIRED_PAYLOAD.get(ev["type"], ()):
                 errs.append(f"{where}.{key} is required for {ev['type']}")
-        elif not _num(v) or not lo <= v <= hi:
-            errs.append(f"{where}.{key} must be null or a number in {lo}..{hi}")
-    if ev["origin"] is not None and not _text(ev["origin"], 80):
-        errs.append(f"{where}.origin must be null or a short string")
+        elif kind == "string":
+            if not _text(v, hi):
+                errs.append(f"{where}.{key} must be null or a 1-{hi} character string")
+        elif not (_int(v) if kind == "integer" else _num(v)) or not lo <= v <= hi:
+            errs.append(f"{where}.{key} must be null or a {kind} in {lo}..{hi}")
 
     causes = ev["caused_by"]
     if not isinstance(causes, list) or len(causes) > MAX_EVENTS:
@@ -138,9 +138,9 @@ def build_batch(
         t = ev["sim_time_minutes"]
         seq_at[t] = seq_at.get(t, -1) + 1
         payload: dict = {"description": ev["description"].strip()}
-        for key in ("magnitude", "depth_km", "origin"):
+        for key in PAYLOAD_FIELDS:
             if ev[key] is not None:
-                payload[key] = ev[key]
+                payload[key] = ev[key].strip() if isinstance(ev[key], str) else ev[key]
         loc = ev["location"]
         out.append(
             {

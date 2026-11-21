@@ -54,6 +54,22 @@ class WorldWireTests(unittest.TestCase):
             "infrastructure_failure": "Major infrastructure failure hits",
             "government_response": "Japan mobilizes emergency response in",
             "international_aid": "International aid heads to",
+            "volcanic_eruption": "Volcano erupts near",
+            "meteor_impact": "Meteor strikes",
+            "extreme_weather": "Extreme weather batters",
+            "disease_outbreak": "Disease outbreak reported in",
+            "military_strike": "Military strike hits",
+            "nuclear_detonation": "Nuclear detonation reported near",
+            "cyber_attack": "Cyberattack disrupts systems in",
+            "alien_contact": "Unidentified craft reported over",
+            "other_hazard": "Emergency declared in",
+            "evacuation": "Evacuations ordered in",
+            "contamination": "Contamination alert issued for",
+            "economic_shock": "Economic shock hits",
+            "civil_unrest": "Unrest erupts in",
+            "conflict_escalation": "Conflict escalates near",
+            "ceasefire": "Ceasefire declared in",
+            "recovery": "Recovery under way in",
         }
         self.assertEqual(set(types), set(expected))
         for kind in types:
@@ -62,6 +78,22 @@ class WorldWireTests(unittest.TestCase):
             item = news_for_event(event)
             self.assertTrue(item["headline"].startswith(expected[kind]), item["headline"])
             self.assertTrue(item["dek"].startswith("Simulated"), item["dek"])
+
+    def test_new_hazard_templates_use_payload_details(self):
+        cases = (
+            ("disease_outbreak", {"pathogen": "novel influenza"}, "Novel influenza outbreak reported in"),
+            ("military_strike", {"origin": "Ruritania"}, "Ruritania launches strike on"),
+            ("military_strike", {"origin": "unknown"}, "Military strike hits"),
+            ("cyber_attack", {"target": "the power grid"}, "Cyberattack hits the power grid in"),
+            ("other_hazard", {"label": "solar superstorm"}, "Solar superstorm reported in"),
+        )
+        for kind, payload, start in cases:
+            event = quake()
+            event.update(type=kind, payload=payload)
+            self.assertTrue(news_for_event(event)["headline"].startswith(start), (kind, payload))
+        volcano = quake()
+        volcano.update(type="volcanic_eruption", payload={"vei": 5})
+        self.assertTrue(news_for_event(volcano)["headline"].endswith("(VEI 5)"))
 
     def test_aid_names_origin_and_severity_scales_wording(self):
         aid = quake()

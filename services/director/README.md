@@ -53,13 +53,13 @@ A batch that validates against [contracts/events.schema.json](../../contracts/ev
 - `provenance` is `{"source": "fixture"}` or `{"source": "model", "model": "gpt-6-luna"}`.
 - Events are sorted by `(sim_time_minutes, sequence)`. IDs start at `--first-id` (default 1), so a later batch can continue the sequence.
 - `parent_ids` comes from the model's `caused_by` indexes. A cause must be an earlier event in the same batch.
-- `visual` is derived from `type`: earthquake and aftershock → `earthquake_shockwave`, tsunami_warning → `weather_disaster`, infrastructure_failure → `power_grid_failure`, government_response → `emergency_mobilization`, international_aid → `animated_transport_route`.
-- `payload` always has `description`. It has `magnitude` and `depth_km` for earthquakes and aftershocks (required), and `origin` for international aid (WORLD//WIRE uses it in the headline).
-- The `japan-earthquake` fixture covers all six types. Its first event is identical to the shared contract fixture.
+- `visual` is derived from `type` (see `VISUALS` in `worlddirector/contract.py`, which fails on import if any contract type is missing).
+- `payload` always has `description`, plus whichever details the model filled for that event: `magnitude` and `depth_km` (required for quakes), `label` (required for `other_hazard`), `vei`, `diameter_m`, `yield_kt`, `radius_km`, `origin`, `target`, and `pathogen`. The meanings are listed in [contracts/README.md](../../contracts/README.md#event-types).
+- The `japan-earthquake` fixture covers the six earthquake-family types. Its first event is identical to the shared contract fixture.
 
 ## Validation and failures
 
-The model must follow a strict JSON schema (`OUTPUT_SCHEMA`), and its output is checked again locally: 1–6 events, contract types only, no extra keys, an alpha-3 country code, lat/lon/severity/time/magnitude/depth in range, magnitude and depth for quakes, causes that point backwards in time, and short non-empty text. Nothing is repaired except ordering. The scenario is capped at 2000 characters and passed to the model as delimited data.
+The model must follow a strict JSON schema (`OUTPUT_SCHEMA`), and its output is checked again locally: 1–12 events, contract types only, no extra keys, an alpha-3 country code, lat/lon/severity/time and payload details in range, magnitude and depth for quakes, a label for `other_hazard`, causes that point backwards in time, and short non-empty text. Nothing is repaired except ordering. The scenario is capped at 2000 characters and passed to the model as delimited data.
 
 | `error` | Meaning |
 | --- | --- |
