@@ -41,8 +41,37 @@ class WorldWireTests(unittest.TestCase):
         later.update(id="evt-0002", type="infrastructure_failure", sim_time_minutes=1500)
         feed = derive_news([quake(), later])
         self.assertEqual([i["event_id"] for i in feed], ["evt-0002", "evt-0001"])
-        self.assertEqual(feed[0]["headline"], "Infrastructure failure reported in off the coast of Miyagi, Japan")
+        self.assertEqual(feed[0]["headline"], "Major infrastructure failure hits off the coast of Miyagi, Japan")
         self.assertEqual(feed, derive_news([later, quake()]))
+
+    def test_every_contract_event_type_has_a_template(self):
+        schema = json.loads((ROOT / "contracts" / "events.schema.json").read_text())
+        types = schema["$defs"]["event"]["properties"]["type"]["enum"]
+        expected = {
+            "earthquake": "M7.8 earthquake strikes",
+            "aftershock": "M7.8 aftershock rattles",
+            "tsunami_warning": "Tsunami warning issued for",
+            "infrastructure_failure": "Major infrastructure failure hits",
+            "government_response": "Japan mobilizes emergency response in",
+            "international_aid": "International aid heads to",
+        }
+        self.assertEqual(set(types), set(expected))
+        for kind in types:
+            event = quake()
+            event["type"] = kind
+            item = news_for_event(event)
+            self.assertTrue(item["headline"].startswith(expected[kind]), item["headline"])
+            self.assertTrue(item["dek"].startswith("Simulated"), item["dek"])
+
+    def test_aid_names_origin_and_severity_scales_wording(self):
+        aid = quake()
+        aid.update(type="international_aid", payload={"origin": "Canada"})
+        self.assertTrue(news_for_event(aid)["headline"].startswith("Canada sends aid to"))
+        outage = quake()
+        outage.update(type="infrastructure_failure", severity=0.2, payload={})
+        self.assertTrue(news_for_event(outage)["headline"].startswith("Partial infrastructure failure"))
+        outage["severity"] = 0.5
+        self.assertTrue(news_for_event(outage)["headline"].startswith("Infrastructure failure"))
 
     def test_sequence_breaks_ties_at_same_sim_time(self):
         second = quake()

@@ -46,6 +46,58 @@ def _earthquake(event: Event) -> tuple[str, str]:
     return headline, dek + ". Emergency response assessment is under way."
 
 
+def _aftershock(event: Event) -> tuple[str, str]:
+    magnitude = event.get("payload", {}).get("magnitude")
+    strength = f"M{magnitude:.1f} " if isinstance(magnitude, (int, float)) else ""
+    return (
+        f"{strength}aftershock rattles {_place(event)}",
+        "Simulated aftershock adds strain to damaged structures. Residents are urged to stay alert.",
+    )
+
+
+def _severity_word(event: Event) -> str:
+    severity = event.get("severity")
+    if not isinstance(severity, (int, float)):
+        return ""
+    return "Major " if severity >= 0.7 else "Partial " if severity < 0.4 else ""
+
+
+def _tsunami_warning(event: Event) -> tuple[str, str]:
+    return (
+        f"Tsunami warning issued for {_place(event)}",
+        "Simulated coastal alert in effect. Authorities order evacuation of low-lying areas.",
+    )
+
+
+def _infrastructure_failure(event: Event) -> tuple[str, str]:
+    headline = f"{_severity_word(event)}infrastructure failure hits {_place(event)}"
+    return (
+        headline[0].upper() + headline[1:],
+        "Simulated outages disrupt power, transit, or communications. Crews are assessing damage.",
+    )
+
+
+def _government_response(event: Event) -> tuple[str, str]:
+    country = event["location"].get("country") or "Government"
+    return (
+        f"{country} mobilizes emergency response in {event['location'].get('name') or 'affected areas'}",
+        "Simulated government action deploys rescue teams and emergency services.",
+    )
+
+
+def _international_aid(event: Event) -> tuple[str, str]:
+    origin = event.get("payload", {}).get("origin")
+    headline = (
+        f"{origin} sends aid to {_place(event)}"
+        if isinstance(origin, str) and origin
+        else f"International aid heads to {_place(event)}"
+    )
+    return (
+        headline,
+        "Simulated relief shipments are under way to support the response.",
+    )
+
+
 def _generic(event: Event) -> tuple[str, str]:
     kind = str(event["type"]).replace("_", " ")
     return f"{kind.capitalize()} reported in {_place(event)}", "Details are developing in the simulation."
@@ -53,6 +105,11 @@ def _generic(event: Event) -> tuple[str, str]:
 
 TEMPLATES: dict[str, Callable[[Event], tuple[str, str]]] = {
     "earthquake": _earthquake,
+    "aftershock": _aftershock,
+    "tsunami_warning": _tsunami_warning,
+    "infrastructure_failure": _infrastructure_failure,
+    "government_response": _government_response,
+    "international_aid": _international_aid,
 }
 
 

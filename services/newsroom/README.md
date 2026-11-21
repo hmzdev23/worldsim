@@ -31,6 +31,8 @@ python3 -m unittest discover -s ../../tests/newsroom                 # tests
 - The feed is deterministic and sorted newest first by `(sim_time_minutes, sequence)`.
 - `news_from_stream(messages)` folds stream messages into the current feed: a `snapshot` replaces it, an `event` adds one item, and a `clock` adds nothing.
 
+Each event type in the contract has its own headline template, and `international_aid` uses `payload.origin` when present. A test fails if the contract adds a type without a template.
+
 ## Click to focus
 
 When a card is clicked, the page dispatches a window event with the item's `focus` object:
