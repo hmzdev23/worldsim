@@ -1,0 +1,512 @@
+{
+  "schema_version": "0.1",
+  "simulation_id": "demo-japan-earthquake",
+  "branch_id": "main",
+  "title": "M7.8 earthquake strikes off the coast of Miyagi, Japan",
+  "label": "FICTIONAL SIMULATION",
+  "hazard": "earthquake",
+  "format": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
+  "scenes": [
+    {
+      "id": "s01-hook-earthquake",
+      "beat": "hook",
+      "kind": "hook",
+      "min_duration_s": 6,
+      "event_ids": [
+        "evt-0001"
+      ],
+      "sim_time_label": "DAY 1 · 06:42",
+      "overlay": "M7.8 EARTHQUAKE HITS JAPAN",
+      "caption": "M7.8 earthquake strikes off the coast of Miyagi, Japan",
+      "narration": "In this fictional simulation: M7.8 earthquake strikes off the coast of Miyagi, Japan. A powerful offshore earthquake shakes northeastern Japan.",
+      "data": {
+        "hazard": "earthquake",
+        "place": "off the coast of Miyagi",
+        "country": "Japan",
+        "lat": 38.3,
+        "lon": 142.4,
+        "magnitude": 7.8,
+        "depth_km": 24,
+        "radius_km": 300
+      }
+    },
+    {
+      "id": "s02-first-hours-tsunami-siren",
+      "beat": "first_hours",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0002"
+      ],
+      "sim_time_label": "DAY 1 · 06:45",
+      "overlay": "18,000 DISPLACED",
+      "caption": "Tsunami warning issued for Miyagi coast, Japan",
+      "narration": "Tsunami warning issued for Miyagi coast, Japan. An estimated 18,000 people have been forced from their homes.",
+      "data": {
+        "vignette": "tsunami_siren",
+        "event_type": "tsunami_warning",
+        "severity": 0.8,
+        "place": "Miyagi coast",
+        "country": "Japan",
+        "lat": 38.43,
+        "lon": 141.3,
+        "figure": {
+          "key": "displaced",
+          "value": 18000,
+          "display": "18,000"
+        }
+      }
+    },
+    {
+      "id": "s03-first-hours-evacuation",
+      "beat": "first_hours",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0003"
+      ],
+      "sim_time_label": "DAY 1 · 07:00",
+      "overlay": "86,000 DISPLACED",
+      "caption": "Evacuations ordered in Ishinomaki, Japan",
+      "narration": "Evacuations ordered in Ishinomaki, Japan. An estimated 86,000 people have been forced from their homes.",
+      "data": {
+        "vignette": "evacuation",
+        "event_type": "evacuation",
+        "severity": 0.6,
+        "place": "Ishinomaki",
+        "country": "Japan",
+        "lat": 38.43,
+        "lon": 141.3,
+        "figure": {
+          "key": "displaced",
+          "value": 86000,
+          "display": "86,000"
+        }
+      }
+    },
+    {
+      "id": "s04-first-hours-power-out",
+      "beat": "first_hours",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0004"
+      ],
+      "sim_time_label": "DAY 1 · 07:18",
+      "overlay": "2.3 MILLION HOMES WITHOUT POWER",
+      "caption": "Regional power grid knocked out in Sendai, Japan",
+      "narration": "Regional power grid knocked out in Sendai, Japan. An estimated 2.3 million households are without power.",
+      "data": {
+        "vignette": "power_out",
+        "event_type": "infrastructure_failure",
+        "severity": 0.6,
+        "place": "Sendai",
+        "country": "Japan",
+        "lat": 38.27,
+        "lon": 140.87,
+        "figure": {
+          "key": "households_without_power",
+          "value": 2300000,
+          "display": "2.3 million"
+        }
+      }
+    },
+    {
+      "id": "s05-first-hours-flooding",
+      "beat": "first_hours",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0005"
+      ],
+      "sim_time_label": "DAY 1 · 07:35",
+      "overlay": "210 KM² UNDER WATER",
+      "caption": "Floodwaters swamp Sendai coastal plain, Japan",
+      "narration": "Floodwaters swamp Sendai coastal plain, Japan. An estimated 210 km² of land is under water.",
+      "data": {
+        "vignette": "flooding",
+        "event_type": "flooding",
+        "severity": 0.9,
+        "place": "Sendai coastal plain",
+        "country": "Japan",
+        "lat": 38.2,
+        "lon": 140.98,
+        "figure": {
+          "key": "flooded_area_km2",
+          "value": 210,
+          "display": "210 km²"
+        }
+      }
+    },
+    {
+      "id": "s06-domino-contamination",
+      "beat": "domino",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0012"
+      ],
+      "sim_time_label": "DAY 2 · 10:00",
+      "overlay": "DAY 2: 95 KM² CONTAMINATED",
+      "caption": "Contamination zone declared around Watari, Japan",
+      "narration": "Contamination zone declared around Watari, Japan. An estimated 95 km² of land is contaminated.",
+      "data": {
+        "vignette": "contamination",
+        "event_type": "contamination",
+        "severity": 0.4,
+        "place": "Watari",
+        "country": "Japan",
+        "lat": 38.04,
+        "lon": 140.87,
+        "figure": {
+          "key": "contaminated_area_km2",
+          "value": 95,
+          "display": "95 km²"
+        }
+      }
+    },
+    {
+      "id": "s07-domino-economic",
+      "beat": "domino",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0013"
+      ],
+      "sim_time_label": "DAY 2 · 14:00",
+      "overlay": "DAY 2: $38 BILLION IN LOSSES",
+      "caption": "Economic shock hits manufacturing supply chains in Tokyo, Japan",
+      "narration": "Economic shock hits manufacturing supply chains in Tokyo, Japan. Losses so far are estimated at $38 billion.",
+      "data": {
+        "vignette": "economic",
+        "event_type": "economic_shock",
+        "severity": 0.5,
+        "place": "Tokyo",
+        "country": "Japan",
+        "lat": 35.68,
+        "lon": 139.77,
+        "figure": {
+          "key": "economic_loss_usd",
+          "value": 38000000000,
+          "display": "$38 billion"
+        }
+      }
+    },
+    {
+      "id": "s08-domino-aftershock",
+      "beat": "domino",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0014"
+      ],
+      "sim_time_label": "DAY 2 · 19:20",
+      "overlay": "DAY 2: 905 DEAD",
+      "caption": "Another M6.1 aftershock rattles off the coast of Fukushima, Japan",
+      "narration": "Another M6.1 aftershock rattles off the coast of Fukushima, Japan. An estimated 905 people have died so far.",
+      "data": {
+        "vignette": "aftershock",
+        "event_type": "aftershock",
+        "severity": 0.5,
+        "place": "off the coast of Fukushima",
+        "country": "Japan",
+        "lat": 37.5,
+        "lon": 141.8,
+        "figure": {
+          "key": "deaths",
+          "value": 905,
+          "display": "905"
+        }
+      }
+    },
+    {
+      "id": "s09-explainer-earthquake",
+      "beat": "explainer",
+      "kind": "explainer",
+      "min_duration_s": 8,
+      "event_ids": [
+        "evt-0001"
+      ],
+      "sim_time_label": "DAY 1 · 06:42",
+      "overlay": "HOW AN EARTHQUAKE SPREADS",
+      "caption": "Illustration, not to scale.",
+      "narration": "Illustration: stress builds where two plates meet until the fault slips. Fast P-waves race out first, then slower, stronger S-waves. Under the sea, the jolt can lift the water and start a tsunami.",
+      "data": {
+        "hazard": "earthquake",
+        "place": "off the coast of Miyagi",
+        "country": "Japan",
+        "lat": 38.3,
+        "lon": 142.4,
+        "magnitude": 7.8,
+        "depth_km": 24,
+        "radius_km": 300,
+        "illustration": true
+      }
+    },
+    {
+      "id": "s10-response-response",
+      "beat": "response",
+      "kind": "map",
+      "min_duration_s": 8,
+      "event_ids": [
+        "evt-0010",
+        "evt-0011",
+        "evt-0016",
+        "evt-0017",
+        "evt-0019",
+        "evt-0020"
+      ],
+      "sim_time_label": "DAY 4 · 06:20",
+      "overlay": "4 COUNTRIES SEND HELP",
+      "caption": "Displacement eases in Sendai, Japan",
+      "narration": "Help arrives from Australia, South Korea, Taiwan and United States. Power returning across Sendai, Japan.",
+      "data": {
+        "places": [
+          {
+            "place": "off the coast of Miyagi",
+            "country": "Japan",
+            "lat": 38.3,
+            "lon": 142.4,
+            "event_type": "earthquake"
+          },
+          {
+            "place": "Miyagi coast",
+            "country": "Japan",
+            "lat": 38.43,
+            "lon": 141.3,
+            "event_type": "tsunami_warning"
+          },
+          {
+            "place": "Ishinomaki",
+            "country": "Japan",
+            "lat": 38.43,
+            "lon": 141.3,
+            "event_type": "evacuation"
+          },
+          {
+            "place": "Sendai",
+            "country": "Japan",
+            "lat": 38.27,
+            "lon": 140.87,
+            "event_type": "infrastructure_failure"
+          },
+          {
+            "place": "Sendai coastal plain",
+            "country": "Japan",
+            "lat": 38.2,
+            "lon": 140.98,
+            "event_type": "flooding"
+          },
+          {
+            "place": "Tokyo",
+            "country": "Japan",
+            "lat": 35.68,
+            "lon": 139.69,
+            "event_type": "government_response"
+          },
+          {
+            "place": "off the coast of Fukushima",
+            "country": "Japan",
+            "lat": 37.6,
+            "lon": 141.9,
+            "event_type": "aftershock"
+          },
+          {
+            "place": "Yamagata Airport",
+            "country": "Japan",
+            "lat": 38.41,
+            "lon": 140.37,
+            "event_type": "international_aid"
+          },
+          {
+            "place": "Watari",
+            "country": "Japan",
+            "lat": 38.04,
+            "lon": 140.87,
+            "event_type": "contamination"
+          },
+          {
+            "place": "Iwaki",
+            "country": "Japan",
+            "lat": 37.05,
+            "lon": 140.89,
+            "event_type": "evacuation"
+          },
+          {
+            "place": "Sendai Port",
+            "country": "Japan",
+            "lat": 38.27,
+            "lon": 141.02,
+            "event_type": "international_aid"
+          },
+          {
+            "place": "Kesennuma",
+            "country": "Japan",
+            "lat": 38.9,
+            "lon": 141.57,
+            "event_type": "economic_shock"
+          }
+        ],
+        "aid": [
+          {
+            "country": "United States",
+            "event_id": "evt-0010",
+            "minutes": 1560,
+            "place": "Yamagata Airport",
+            "destination_country": "Japan",
+            "lat": 38.41,
+            "lon": 140.37,
+            "personnel": 180,
+            "cargo_tonnes": 60,
+            "cargo": "search-and-rescue teams and relief supplies"
+          },
+          {
+            "country": "South Korea",
+            "event_id": "evt-0011",
+            "minutes": 1740,
+            "place": "Sendai",
+            "destination_country": "Japan",
+            "lat": 38.27,
+            "lon": 140.87,
+            "personnel": 120,
+            "cargo_tonnes": 30,
+            "cargo": "medical teams and supplies"
+          },
+          {
+            "country": "Australia",
+            "event_id": "evt-0016",
+            "minutes": 3120,
+            "place": "Ishinomaki",
+            "destination_country": "Japan",
+            "lat": 38.43,
+            "lon": 141.3,
+            "personnel": 75,
+            "cargo_tonnes": 45,
+            "cargo": "water purification units"
+          },
+          {
+            "country": "Taiwan",
+            "event_id": "evt-0017",
+            "minutes": 3480,
+            "place": "Sendai Port",
+            "destination_country": "Japan",
+            "lat": 38.27,
+            "lon": 141.02,
+            "personnel": 60,
+            "cargo_tonnes": 50,
+            "cargo": "rescue team and relief goods"
+          }
+        ],
+        "recovery": [
+          {
+            "event_id": "evt-0019",
+            "minutes": 4300,
+            "place": "Sendai",
+            "country": "Japan",
+            "lat": 38.27,
+            "lon": 140.87,
+            "headline": "Power returning across Sendai, Japan"
+          },
+          {
+            "event_id": "evt-0020",
+            "minutes": 4700,
+            "place": "Sendai",
+            "country": "Japan",
+            "lat": 38.26,
+            "lon": 140.88,
+            "headline": "Displacement eases in Sendai, Japan"
+          }
+        ]
+      }
+    },
+    {
+      "id": "s11-final-final",
+      "beat": "final",
+      "kind": "stats_card",
+      "min_duration_s": 8,
+      "event_ids": [
+        "evt-0020"
+      ],
+      "sim_time_label": "DAY 4 · 06:20",
+      "overlay": "FINAL SIMULATED ESTIMATES",
+      "caption": "Fictional estimates after 3 days.",
+      "narration": "After 3 days, the simulation estimates 1,480 dead, 4,300 injured, 1,050 missing. Every number here is fictional.",
+      "data": {
+        "stats": [
+          {
+            "key": "deaths",
+            "label": "Deaths",
+            "value": 1480,
+            "display": "1,480"
+          },
+          {
+            "key": "injuries",
+            "label": "Injured",
+            "value": 4300,
+            "display": "4,300"
+          },
+          {
+            "key": "missing",
+            "label": "Missing",
+            "value": 1050,
+            "display": "1,050"
+          },
+          {
+            "key": "displaced",
+            "label": "Displaced",
+            "value": 168000,
+            "display": "168,000"
+          },
+          {
+            "key": "sheltered",
+            "label": "In shelters",
+            "value": 100800,
+            "display": "100,800"
+          },
+          {
+            "key": "households_without_power",
+            "label": "Homes without power",
+            "value": 180000,
+            "display": "180,000"
+          },
+          {
+            "key": "households_without_water",
+            "label": "Homes without water",
+            "value": 210000,
+            "display": "210,000"
+          },
+          {
+            "key": "economic_loss_usd",
+            "label": "Economic loss",
+            "value": 61000000000,
+            "display": "$61 billion"
+          },
+          {
+            "key": "flooded_area_km2",
+            "label": "Flooded area",
+            "value": 210,
+            "display": "210 km²"
+          },
+          {
+            "key": "contaminated_area_km2",
+            "label": "Contaminated area",
+            "value": 95,
+            "display": "95 km²"
+          },
+          {
+            "key": "debris_tonnes",
+            "label": "Debris",
+            "value": 4100000,
+            "display": "4.1 million tonnes"
+          }
+        ],
+        "aid_countries": 4,
+        "days": 3
+      }
+    }
+  ]
+}

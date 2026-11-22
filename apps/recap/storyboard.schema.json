@@ -1,0 +1,142 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/hmzdev23/worldsim/apps/recap/storyboard.schema.json",
+  "title": "WORLD//SIM recap storyboard v0.1",
+  "description": "Shot list for the recap video of a finished run (RECAP-001, #67). Written by `python3 -m worldwire.storyboard`, narrated by RECAP-002, rendered by RECAP-003 and exported by RECAP-004. Every figure is a fictional estimate copied from the run's payload.impacts snapshots, never summed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "simulation_id", "branch_id", "title", "label", "hazard", "format", "scenes"],
+  "properties": {
+    "schema_version": { "const": "0.1" },
+    "simulation_id": { "type": "string" },
+    "branch_id": { "type": "string" },
+    "title": { "type": "string", "minLength": 1, "description": "WORLD//WIRE headline of the initiating event." },
+    "label": { "const": "FICTIONAL SIMULATION", "description": "Must stay visible for the whole video." },
+    "hazard": { "type": "string", "description": "Event type of the initiating event, e.g. earthquake." },
+    "format": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height", "fps"],
+      "properties": {
+        "width": { "const": 1080 },
+        "height": { "const": 1920 },
+        "fps": { "const": 30 }
+      }
+    },
+    "scenes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/scene" } }
+  },
+  "$defs": {
+    "place": {
+      "type": "object",
+      "required": ["place", "country", "lat", "lon"],
+      "properties": {
+        "place": { "type": "string" },
+        "country": { "type": "string" },
+        "lat": { "type": "number", "minimum": -90, "maximum": 90 },
+        "lon": { "type": "number", "minimum": -180, "maximum": 180 }
+      }
+    },
+    "figure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["key", "value", "display"],
+      "properties": {
+        "key": { "type": "string" },
+        "value": { "type": "number", "minimum": 0 },
+        "display": { "type": "string", "description": "Formatted value, e.g. '2.3 million', '$38 billion', '210 km²'." }
+      }
+    },
+    "scene": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "beat", "kind", "min_duration_s", "event_ids", "sim_time_label", "overlay", "caption", "narration", "data"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^s[0-9]{2}-[a-z0-9-]+$" },
+        "beat": { "enum": ["hook", "first_hours", "domino", "explainer", "response", "final"] },
+        "kind": { "enum": ["hook", "vignette", "explainer", "map", "stats_card"] },
+        "min_duration_s": { "type": "number", "exclusiveMinimum": 0, "description": "Scene length is max(min_duration_s, narration duration_s)." },
+        "event_ids": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "sim_time_label": { "type": "string", "description": "DAY n · HH:MM of the scene's moment in the run." },
+        "overlay": { "type": "string", "minLength": 1, "description": "Short uppercase on-screen text." },
+        "caption": { "type": "string", "minLength": 1, "description": "Subtitle line." },
+        "narration": { "type": "string", "minLength": 1, "description": "What the voice says." },
+        "data": { "type": "object" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "hook" } } },
+          "then": { "properties": { "data": { "allOf": [{ "$ref": "#/$defs/place" }, { "required": ["hazard"] }] } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "explainer" } } },
+          "then": { "properties": { "data": { "required": ["hazard", "illustration"], "properties": { "illustration": { "const": true } } } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "vignette" } } },
+          "then": {
+            "properties": {
+              "data": {
+                "allOf": [{ "$ref": "#/$defs/place" }],
+                "required": ["vignette", "event_type", "figure"],
+                "properties": {
+                  "vignette": { "enum": ["power_out", "water_out", "evacuation", "tsunami_siren", "flooding", "contamination", "economic", "aftershock", "government", "generic"] },
+                  "figure": { "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/figure" }] }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "map" } } },
+          "then": {
+            "properties": {
+              "data": {
+                "required": ["places", "aid", "recovery"],
+                "properties": {
+                  "places": { "type": "array", "items": { "$ref": "#/$defs/place" } },
+                  "aid": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "required": ["country", "event_id", "minutes", "place", "destination_country", "lat", "lon"],
+                      "description": "One aid arrival. `country` is the sender; personnel and cargo_tonnes are that sender's running totals at the end of the run."
+                    }
+                  },
+                  "recovery": { "type": "array", "items": { "type": "object", "required": ["event_id", "minutes", "place", "lat", "lon", "headline"] } }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "stats_card" } } },
+          "then": {
+            "properties": {
+              "data": {
+                "required": ["stats", "days"],
+                "properties": {
+                  "stats": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["key", "label", "value", "display"],
+                      "properties": {
+                        "key": { "type": "string" },
+                        "label": { "type": "string" },
+                        "value": { "type": "number", "minimum": 0 },
+                        "display": { "type": "string" }
+                      }
+                    }
+                  },
+                  "days": { "type": "integer", "minimum": 1 }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

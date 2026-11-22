@@ -145,7 +145,11 @@ Fast runs can apply several events in one tick (SIM-005 paces a run at 5% of its
 - playback is reproducible
 - a live server run gives matching `/news`
 
-It skips until the paced engine from #62 is merged.
+With #62 merged, the integration test now runs against the paced engine.
+
+## Recap storyboard (RECAP-001)
+
+`python3 -m worldwire.storyboard RUN` writes the shot list for the post-run recap video. The format and beats are described in [apps/recap/README.md](../../apps/recap/README.md), and the schema is [apps/recap/storyboard.schema.json](../../apps/recap/storyboard.schema.json). It reuses this package's headlines and impact formatting, so the video and WORLD//WIRE agree.
 
 ## Web panel
 

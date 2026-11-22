@@ -1,0 +1,222 @@
+{
+  "schema_version": "0.1",
+  "simulation_id": "test-multi-hour",
+  "branch_id": "main",
+  "events": [
+    {
+      "id": "evt-0001",
+      "sim_time_minutes": 30,
+      "sequence": 0,
+      "type": "earthquake",
+      "status": "proposed",
+      "location": {
+        "name": "Offshore fault",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 36.9,
+        "lon": -10.5
+      },
+      "severity": 0.9,
+      "visual": "earthquake_shockwave",
+      "payload": {
+        "magnitude": 7.6,
+        "depth_km": 18
+      },
+      "parent_ids": [],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0002",
+      "sim_time_minutes": 30,
+      "sequence": 1,
+      "type": "tsunami_warning",
+      "status": "proposed",
+      "location": {
+        "name": "Southern coast",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 37.0,
+        "lon": -8.9
+      },
+      "severity": 0.8,
+      "visual": "weather_disaster",
+      "payload": {},
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0003",
+      "sim_time_minutes": 31,
+      "sequence": 0,
+      "type": "evacuation",
+      "status": "proposed",
+      "location": {
+        "name": "Coastal towns",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 37.1,
+        "lon": -8.6
+      },
+      "severity": 0.6,
+      "visual": "evacuation_flow",
+      "payload": {},
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0004",
+      "sim_time_minutes": 95,
+      "sequence": 0,
+      "type": "infrastructure_failure",
+      "status": "proposed",
+      "location": {
+        "name": "Regional grid",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 38.0,
+        "lon": -8.5
+      },
+      "severity": 0.6,
+      "visual": "power_grid_failure",
+      "payload": {},
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0005",
+      "sim_time_minutes": 180,
+      "sequence": 0,
+      "type": "government_response",
+      "status": "proposed",
+      "location": {
+        "name": "National capital",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 38.72,
+        "lon": -9.14
+      },
+      "severity": 0.5,
+      "visual": "emergency_mobilization",
+      "payload": {},
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0006",
+      "sim_time_minutes": 181,
+      "sequence": 0,
+      "type": "aftershock",
+      "status": "proposed",
+      "location": {
+        "name": "Offshore fault",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 36.95,
+        "lon": -10.4
+      },
+      "severity": 0.5,
+      "visual": "earthquake_shockwave",
+      "payload": {
+        "magnitude": 6.2,
+        "depth_km": 22
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0007",
+      "sim_time_minutes": 181,
+      "sequence": 1,
+      "type": "international_aid",
+      "status": "proposed",
+      "location": {
+        "name": "Port relief hub",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 38.7,
+        "lon": -9.1
+      },
+      "severity": 0.4,
+      "visual": "animated_transport_route",
+      "payload": {
+        "origin": "Spain"
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0008",
+      "sim_time_minutes": 300,
+      "sequence": 0,
+      "type": "international_aid",
+      "status": "proposed",
+      "location": {
+        "name": "Port relief hub",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 38.7,
+        "lon": -9.1
+      },
+      "severity": 0.4,
+      "visual": "animated_transport_route",
+      "payload": {
+        "origin": "Morocco"
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    },
+    {
+      "id": "evt-0009",
+      "sim_time_minutes": 450,
+      "sequence": 0,
+      "type": "economic_shock",
+      "status": "proposed",
+      "location": {
+        "name": "National capital",
+        "country": "Portugal",
+        "country_code": "PRT",
+        "lat": 38.72,
+        "lon": -9.14
+      },
+      "severity": 0.4,
+      "visual": "market_shock",
+      "payload": {},
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "fixture"
+      }
+    }
+  ]
+}

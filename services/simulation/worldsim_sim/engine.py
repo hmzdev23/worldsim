@@ -21,6 +21,7 @@ from typing import Any
 
 SCHEMA_VERSION = "0.1"
 SPEEDS = (1, 2, 4, 16)
+PACE_FRACTION = 0.05  # default relative pacing for scenario runs: 5% of the span per tick
 CONTRACTS = Path(__file__).resolve().parents[3] / "contracts"
 
 Message = dict[str, Any]
@@ -74,8 +75,26 @@ class Simulation:
     sim_time: float = 0.0
     state: str = "playing"
     speed: int = 1
+    # Pacing (SIM-005): how many sim minutes one clock tick covers at 1x.
+    # pace=None: a fixed `minutes_per_tick`. pace=0.05: 5% of the scenario
+    # span (end_minutes - start_minutes) per tick, so short and year-long
+    # scenarios take the same number of ticks. Speed multiplies either.
+    pace: float | None = None
+    minutes_per_tick: float = 1.0
+    start_minutes: int = 0
     _timeline: list[Event] = field(default_factory=list)  # applied, canonical order
     _released: int = 0  # how many timeline events the stream has seen
+
+    def __post_init__(self) -> None:
+        if self.pace is not None and (
+            isinstance(self.pace, bool) or not isinstance(self.pace, (int, float))
+            or not math.isfinite(self.pace) or not 0 < self.pace <= 1
+        ):
+            raise ValueError("pace must be a fraction in (0, 1], or None for a fixed rate")
+        if not math.isfinite(self.minutes_per_tick) or self.minutes_per_tick <= 0:
+            raise ValueError("minutes_per_tick must be a positive finite number")
+        if isinstance(self.start_minutes, bool) or not isinstance(self.start_minutes, int) or self.start_minutes < 0:
+            raise ValueError("start_minutes must be a non-negative integer")
 
     # ---- construction -------------------------------------------------
 
@@ -193,12 +212,58 @@ class Simulation:
         if self.state == "playing":
             end = self.end_minutes
             if self.sim_time < end:
-                self.sim_time = min(self.sim_time + minutes * self.speed, float(end))
+                # Rounding to a microminute keeps float drift (20 × 5% of a
+                # span summing to 419.99999…) from holding an event back a tick.
+                self.sim_time = min(round(self.sim_time + minutes * self.speed, 6), float(end))
             if self.sim_time >= end:
                 self.state = "paused"
         messages = [self._event_message(e) for e in self._release_due()]
         messages.append(self.clock())
         return messages
+
+    @property
+    def span_minutes(self) -> int:
+        """Scenario length that relative pacing divides: end_minutes - start_minutes."""
+        return max(0, self.end_minutes - self.start_minutes)
+
+    @property
+    def step_minutes(self) -> float:
+        """Sim minutes one tick covers at 1x under the current pacing.
+
+        Relative pacing follows the current end, so a newly applied later
+        event lengthens the span and the following ticks.
+        """
+        if self.pace is None:
+            return self.minutes_per_tick
+        return self.pace * self.span_minutes
+
+    def tick(self, ticks: float = 1.0) -> list[Message]:
+        """Advance by `ticks` clock ticks (fractional for a late wall tick).
+
+        Same messages and end clamp as `advance`. Pacing only sets how far the
+        clock moves; events still release at their own sim_time_minutes, in
+        canonical order, each exactly once.
+        """
+        if isinstance(ticks, bool) or not isinstance(ticks, (int, float)) or not math.isfinite(ticks) or ticks < 0:
+            raise ValueError("tick takes a non-negative number of ticks")
+        step = self.step_minutes
+        if step == 0 and ticks > 0:
+            # Zero-length span (e.g. one event at the start): finish in one tick.
+            return self.advance(max(0.0, self.end_minutes - self.sim_time))
+        return self.advance(ticks * step)
+
+    @property
+    def pacing(self) -> dict[str, Any]:
+        """How the clock is paced, for HTTP responses (not part of stream messages)."""
+        if self.pace is None:
+            return {"mode": "fixed", "minutes_per_tick": self.minutes_per_tick}
+        return {
+            "mode": "relative",
+            "fraction_per_tick": self.pace,
+            "start_minutes": self.start_minutes,
+            "span_minutes": self.span_minutes,
+            "minutes_per_tick": self.step_minutes,
+        }
 
     def play(self) -> Message:
         self.state = "playing"
@@ -277,6 +342,7 @@ class Simulation:
         return {
             **self._header(self.now),
             "playback": self.playback,
+            "pacing": self.pacing,
             "end_minutes": self.end_minutes,
             "events": self.timeline,
         }
