@@ -21,7 +21,7 @@ const worldBounds: [[number, number], [number, number]] = [
   [179, 76],
 ];
 const pulseLayers = ["pulse-first", "pulse-second", "pulse-third"];
-const outbreakColor = "#d68ae8";
+const outbreakColor = "#78b9b5";
 const shockwaveColor = "#ff8f5c";
 const routeColor = "#83c9ae";
 const emptyCollection = { type: "FeatureCollection" as const, features: [] };

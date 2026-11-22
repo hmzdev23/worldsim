@@ -37,8 +37,6 @@ const shockwaveLabels: Record<string, string> = {
   nuclear_blast: "Detonation",
   weather_disaster: "Severe weather",
 };
-const defaultRadiusKm = 40;
-
 function canonical(a: ScenarioEvent, b: ScenarioEvent) {
   return a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence;
 }
@@ -49,7 +47,9 @@ function point(event: ScenarioEvent): EffectPoint {
 
 function radius(event: ScenarioEvent) {
   const value = event.payload?.radius_km;
-  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : defaultRadiusKm;
+  // Zero keeps a point pulse at the reported location without inventing a
+  // geographic footprint when the event has no measured radius.
+  return typeof value === "number" && Number.isFinite(value) && value > 0 ? value : 0;
 }
 
 function text(value: unknown) {

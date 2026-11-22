@@ -53,7 +53,7 @@
   transform: translateY(1px);
 }
 
-.legend li[data-kind="outbreak"]::before { background: #d68ae8; }
+.legend li[data-kind="outbreak"]::before { background: #78b9b5; }
 .legend li[data-kind="shockwave"]::before { background: #ff8f5c; }
 .legend li[data-kind="route"]::before { border: 1px dashed #83c9ae; border-radius: 2px; }
 

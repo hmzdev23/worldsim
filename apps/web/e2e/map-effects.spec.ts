@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { fallbackNewsItem, type ScenarioEvent } from "../lib/scenario";
+import { deriveMapEffects } from "../components/map-effects";
 
 // DIR-006 (#61): map effects come from applied events only. Desktop project only.
 
@@ -95,6 +96,12 @@ async function generate(page: Page, prompt: string, title: string) {
 
 test.beforeEach(({}, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Map effects are covered by the desktop project.");
+});
+
+test("an outbreak without a reported radius stays a point pulse", () => {
+  const event = evt("evt-no-radius", 10, "disease_outbreak", "contagion_spread",
+    loc("Quebec City", "Canada", "CAN", 46.81, -71.21), { pathogen: "unknown pathogen" });
+  expect(deriveMapEffects([event]).outbreaks[0]).toMatchObject({ id: "evt-no-radius", radiusKm: 0 });
 });
 
 test("outbreaks accumulate, disasters ring, and only a supported aid route is drawn", async ({ page }) => {
