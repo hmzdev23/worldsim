@@ -112,6 +112,10 @@ body = news_response(sim.snapshot())   # sim is that run's Simulation
 - **Matching in the browser.** Drop a response whose `simulation_id` or `branch_id` isn't the active run. Keep only items whose `event_id` is in the current applied set. That also discards a response that was requested before a seek and arrives after it. The alert shows the item for each newly applied stream event, and the archive shows all kept items.
 - **Stream consumers.** `WireFeed` follows one run. A snapshot from another run starts it over, and event messages from any other run or branch are ignored.
 
+## Recap storyboard (RECAP-001)
+
+`python3 -m worldwire.storyboard RUN` writes the shot list for the post-run recap video. The format and beats are described in [apps/recap/README.md](../../apps/recap/README.md), and the schema is [apps/recap/storyboard.schema.json](../../apps/recap/storyboard.schema.json). It reuses this package's headlines and impact formatting, so the video and WORLD//WIRE agree.
+
 ## Web panel
 
 `apps/web` imports the generated `feeds/japan-earthquake.json`. Its `WorldWire` component shows a story only for events the simulation stream has applied, and falls back to a basic card for events missing from the feed. A test fails if the committed feed drifts from the fixture. The regenerate command is above.
