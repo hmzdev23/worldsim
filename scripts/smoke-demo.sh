@@ -11,7 +11,7 @@ ROOT="$(pwd)"
 
 "${PY[@]}" -c "import jsonschema" 2>/dev/null || echo "note: jsonschema not installed; contract checks will be skipped (${PY[*]} -m venv .venv && $VENV_PIP install jsonschema)" >&2
 
-for suite in contracts director simulation newsroom integration; do
+for suite in contracts director simulation newsroom integration narration; do
   echo "== $suite"
   "${PY[@]}" -m unittest discover -s "tests/$suite" -t "tests/$suite"
 done
