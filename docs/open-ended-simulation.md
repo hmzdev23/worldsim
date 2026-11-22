@@ -132,7 +132,7 @@ Code: `experiments/recap-films/films/run`, the same format as the satire 3D film
 **Build a film:**
 
 ```sh
-export THREE_ROOT=/path/to/folder-with-node_modules/three   # npm install three@0.170.0
+export THREE_ROOT=/path/to/folder-with-node_modules/three   # or install once: npm install --prefix .cache/three --no-save three@0.170.0 (run-demo.sh uses it)
 scripts/recap-film.sh RUN_ID                                  # a run on the local server
 scripts/recap-film.sh --fixture tsunami --seed 1234           # offline
 RECAP_ESTIMATE=1 scripts/recap-film.sh RUN_ID                 # silent preview, no ElevenLabs call

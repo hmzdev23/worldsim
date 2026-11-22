@@ -10,6 +10,32 @@ Run `./scripts/run-demo.sh` and open http://127.0.0.1:3000. Starters run offline
 model or paid API. To film a run as a satirical recap, see
 [open-ended simulation](docs/open-ended-simulation.md).
 
+## Install everything
+
+Run `./scripts/check-setup.sh` at any time. It checks everything below, says
+which feature each missing piece is for, and prints the command to install it.
+
+| Needed for | What | Install |
+| --- | --- | --- |
+| **Everything** | Python 3.10+ | [python.org](https://www.python.org/downloads/) (macOS: `brew install python`, Windows: `winget install Python.Python.3.12`) |
+| **Everything** | Python packages | `python3 -m venv .venv && .venv/bin/pip install -r services/simulation/requirements.txt` (Windows Git Bash: `.venv/Scripts/pip`) |
+| **Everything** | Node.js 20.9+ | [nodejs.org](https://nodejs.org/) LTS (macOS: `brew install node`, Windows: `winget install OpenJS.NodeJS.LTS`) |
+| **Everything** | Web app packages | `(cd apps/web && npm ci)` |
+| **Typed prompts** | Claude Code, signed in | `curl -fsSL https://claude.ai/install.sh \| bash` (or `npm install -g @anthropic-ai/claude-code`), then run `claude` once to sign in. Any Claude plan works; the Director uses your login, no API key. |
+| Typed prompts, Codex instead | Codex CLI | `npm install -g @openai/codex && codex login`, then start with `WORLDSIM_DIRECTOR_ENGINE=codex` |
+| **Recap films** | ffmpeg (with ffprobe) | macOS: `brew install ffmpeg`. Linux: `sudo apt install ffmpeg`. Windows: `winget install ffmpeg`, then reopen Git Bash |
+| **Recap films** | three.js 0.170.0 | `npm install --prefix .cache/three --no-save three@0.170.0` (`run-demo.sh` finds it there; or set `THREE_ROOT`) |
+| **Recap films and browser tests** | Playwright Chromium | `(cd apps/web && npx playwright install chromium)` |
+| Recap film narration | ElevenLabs key | Add `ELEVENLABS_API_KEY=...` to `.env.local` in the repo root. It is git-ignored; never commit or post it. Without it, films have no narration. |
+
+Then start everything with `./scripts/run-demo.sh` and open http://127.0.0.1:3000.
+The ten starter scenarios work with just the **Everything** rows. The map's
+satellite imagery needs an internet connection.
+
+**macOS with the python.org installer:** if HTTPS calls from Python fail with
+`CERTIFICATE_VERIFY_FAILED`, run `/Applications/Python 3.x/Install Certificates.command`.
+The narration script already works around this.
+
 ## Start here
 
 Already working? Open [TEAM-SYNC.md](TEAM-SYNC.md) and the
@@ -89,12 +115,14 @@ setup.
 
 ## Run the full Japan demo
 
-Set up the local dependencies once:
+Set up the local dependencies once (the full list, including Claude Code and
+recap-film tools, is in [Install everything](#install-everything)):
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -r services/simulation/requirements.txt
 cd apps/web && npm ci && cd ../..
+./scripts/check-setup.sh
 ```
 
 Then start the simulation stream and web demo together:
