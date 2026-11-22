@@ -18,6 +18,7 @@ from typing import Optional
 from .contract import SLUG_PATTERN
 from .director import DEFAULT_EFFORT, DEFAULT_MODEL, DEFAULT_TIMEOUT_S, Runner, _clean_scenario, generate
 from .errors import DirectorError
+from .timing import Stages, stage
 
 MIN_TIMEOUT_S = 5.0
 MAX_TIMEOUT_S = 600.0
@@ -53,6 +54,7 @@ def prepare_scenario(
     model: str = DEFAULT_MODEL,
     effort: str = DEFAULT_EFFORT,
     runner: Runner = subprocess.run,
+    stages: Optional[Stages] = None,
 ) -> dict:
     """Predict a new, independent run and return its proposed event batch.
 
@@ -60,6 +62,8 @@ def prepare_scenario(
     timeout_s: bound on the model call, clamped to [5, 600] seconds.
     fixture: replay a checked-in scenario instead of calling the model
              (one of RUN_FIXTURES); the prompt is still validated.
+    stages: optional `timing.Stages` to record per-stage wall time and hear
+            when each stage starts (prompt, model, parse, validate).
     Always starts from an empty history. Raises DirectorError on any failure.
     """
     for name, value in (("simulation_id", simulation_id), ("branch_id", branch_id)):
@@ -75,7 +79,8 @@ def prepare_scenario(
         raise DirectorError("invalid_request", "timeout_s must be a number") from None
 
     if fixture is not None:
-        _clean_scenario(prompt)  # same prompt rules as a model run
+        with stage(stages, "prompt"):
+            _clean_scenario(prompt)  # same prompt rules as a model run
     try:
         batch = generate(
             prompt,
@@ -87,6 +92,7 @@ def prepare_scenario(
             effort=effort,
             timeout_s=timeout_s,
             runner=runner,
+            stages=stages,
         )
     except DirectorError:
         raise

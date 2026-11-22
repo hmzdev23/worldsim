@@ -5,6 +5,7 @@ from .director import build_prompt, generate, load_fixture, run_codex
 from .errors import DirectorError
 from .runner import RUN_FIXTURES, prepare_scenario, public_error
 from .sim_client import get_snapshot, post_batch
+from .timing import Stages
 from .validate import build_batch
 
 __all__ = [
@@ -13,6 +14,7 @@ __all__ = [
     "SCHEMA_VERSION",
     "VISUALS",
     "DirectorError",
+    "Stages",
     "RUN_FIXTURES",
     "prepare_scenario",
     "public_error",
