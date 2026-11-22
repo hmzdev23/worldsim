@@ -1,0 +1,26 @@
+{
+  "schema_version": "0.1",
+  "simulation_id": "test-recap-short",
+  "branch_id": "main",
+  "title": "Test eruption",
+  "label": "FICTIONAL SIMULATION",
+  "hazard": "volcanic_eruption",
+  "format": { "width": 1080, "height": 1920, "fps": 30 },
+  "scenes": [
+    {
+      "id": "s01-hook", "beat": "hook", "kind": "hook", "min_duration_s": 0.2, "event_ids": ["evt-0001"],
+      "sim_time_label": "DAY 1 · 03:10", "overlay": "VOLCANO ERUPTS", "caption": "A fissure eruption opens.",
+      "narration": "A fissure eruption opens on the peninsula.", "data": {}
+    },
+    {
+      "id": "s02-first-hours", "beat": "first_hours", "kind": "vignette", "min_duration_s": 0.2, "event_ids": ["evt-0002"],
+      "sim_time_label": "DAY 1 · 03:50", "overlay": "3,700 DISPLACED", "caption": "Evacuations ordered in Grindavik.",
+      "narration": "Within the hour, the town is evacuated.", "data": {}
+    },
+    {
+      "id": "s03-final", "beat": "final", "kind": "stats_card", "min_duration_s": 0.2, "event_ids": [],
+      "sim_time_label": "DAY 3 · 12:00", "overlay": "FINAL ESTIMATES", "caption": "",
+      "narration": "", "data": {}
+    }
+  ]
+}

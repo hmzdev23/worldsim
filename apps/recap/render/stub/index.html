@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Recap stub renderer</title>
+<style>html, body { margin: 0; background: #000; } canvas { display: block; }</style>
+</head>
+<body>
+<!--
+  RECAP-004 stub renderer. It implements the same page interface as the real
+  Three.js renderer (RECAP-003, #69) so the MP4 export can be proven before
+  that lands: window.recap.load(storyboard, narration?) and
+  window.recap.renderFrame(n), drawing on one <canvas id="recap">.
+  It draws the scene overlay, caption, label and frame number. Time comes only
+  from n, so every frame is reproducible.
+-->
+<canvas id="recap" width="1080" height="1920"></canvas>
+<script>
+(() => {
+  const canvas = document.getElementById("recap");
+  const ctx = canvas.getContext("2d");
+  const palette = ["#1d2733", "#3b1f1f", "#1f3326", "#2e2440", "#3a2f17", "#173236"];
+  let board = null;
+  let plan = null;
+
+  function wrap(text, maxWidth) {
+    const words = String(text || "").split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = "";
+    for (const word of words) {
+      const next = line ? `${line} ${word}` : word;
+      if (ctx.measureText(next).width > maxWidth && line) { lines.push(line); line = word; } else { line = next; }
+    }
+    if (line) lines.push(line);
+    return lines;
+  }
+
+  window.recap = {
+    async load(storyboard, narration) {
+      board = storyboard;
+      const { width, height, fps } = storyboard.format;
+      canvas.width = width;
+      canvas.height = height;
+      let frame = 0;
+      const scenes = storyboard.scenes.map((scene) => {
+        const voiced = narration && narration.scenes && narration.scenes[scene.id];
+        const seconds = Math.max(scene.min_duration_s || 0, voiced ? voiced.duration_s : 0);
+        const frames = Math.max(1, Math.ceil(seconds * fps - 1e-9));
+        const entry = { id: scene.id, start_frame: frame, end_frame: frame + frames };
+        frame += frames;
+        return entry;
+      });
+      plan = { fps, total_frames: frame, scenes };
+      return plan;
+    },
+    async renderFrame(n) {
+      if (!plan) throw new Error("call recap.load() first");
+      const index = Math.max(0, plan.scenes.findIndex((s) => n >= s.start_frame && n < s.end_frame));
+      const span = plan.scenes[index];
+      const scene = board.scenes[index];
+      const { width: w, height: h } = canvas;
+      const t = (n - span.start_frame) / Math.max(1, span.end_frame - span.start_frame);
+
+      ctx.fillStyle = palette[index % palette.length];
+      ctx.fillRect(0, 0, w, h);
+      // A bar that sweeps across each scene, so motion is visible frame to frame.
+      ctx.fillStyle = "#ffa96b";
+      ctx.fillRect(0, h * 0.62, w * t, 12);
+
+      ctx.fillStyle = "#f4f1ea";
+      ctx.textBaseline = "top";
+      ctx.font = "600 34px Arial, sans-serif";
+      ctx.fillText(board.label || "FICTIONAL SIMULATION", 56, 72);
+      ctx.font = "28px Arial, sans-serif";
+      ctx.fillText(`${scene.beat} · ${scene.kind} · ${scene.sim_time_label || ""}`, 56, 124);
+
+      ctx.font = "800 84px Arial, sans-serif";
+      wrap(scene.overlay, w - 112).forEach((line, i) => ctx.fillText(line, 56, h * 0.3 + i * 96));
+
+      ctx.font = "44px Arial, sans-serif";
+      wrap(scene.caption, w - 112).forEach((line, i) => ctx.fillText(line, 56, h * 0.74 + i * 56));
+
+      ctx.font = "600 30px Arial, sans-serif";
+      ctx.fillStyle = "#9aa3ab";
+      ctx.fillText(`STUB · frame ${n} / ${plan.total_frames}`, 56, h - 96);
+    },
+  };
+})();
+</script>
+</body>
+</html>
