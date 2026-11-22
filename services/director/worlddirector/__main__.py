@@ -33,8 +33,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         action="store_true",
         help="mark every event applied, as the simulation would (used to regenerate contracts/fixtures/japan-earthquake.json)",
     )
-    p.add_argument("--tone", choices=("straight", "satirical", "unhinged"), default="straight",
-                   help="satirical/unhinged also ask for an optional payload.satire layer (same model call)")
+    p.add_argument("--tone", choices=("straight", "satirical"), default="straight",
+                   help="satirical also asks for an optional payload.satire layer (same model call)")
     p.add_argument("--simulation-id")
     p.add_argument("--branch-id")
     p.add_argument("--first-id", type=int, help="number for the first evt-NNNN id (default: after the history)")

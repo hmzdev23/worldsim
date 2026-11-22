@@ -139,6 +139,23 @@ class ClaudeEngineTest(unittest.TestCase):
         self.assertEqual(len(seen["calls"]), 1)
         self.assertLessEqual(seen["calls"][0]["timeout"], 10, "the call gets the caller's limit, not more")
 
+    def test_haiku_gets_the_same_prompt_as_codex(self, _):
+        from worlddirector.director import CLAUDE_SYSTEM_PROMPT
+        claude_seen, codex_seen = {}, {}
+        generate(PROMPT, runner=claude_runner(success(), seen=claude_seen), seed=11, tone="satirical", engine="claude")
+
+        def codex_runner(cmd, **kw):
+            codex_seen["input"] = kw["input"]
+            Path(cmd[cmd.index("--output-last-message") + 1]).write_text(json.dumps(RAW), encoding="utf-8")
+            return subprocess.CompletedProcess(cmd, 0, stdout="", stderr="")
+
+        with mock.patch("shutil.which", return_value="/usr/local/bin/codex"):
+            generate(PROMPT, runner=codex_runner, seed=11, tone="satirical", engine="codex")
+        [call] = claude_seen["calls"]
+        self.assertEqual(call["input"], codex_seen["input"], "the Director prompt is byte-for-byte the same")
+        self.assertEqual(flag(call["cmd"], "--system-prompt"), CLAUDE_SYSTEM_PROMPT,
+                         "Claude Code's own coding-agent prompt is replaced by one neutral line")
+
     def test_codex_is_still_available(self, _):
         self.assertEqual(director_engine("codex"), "codex")
         with mock.patch.dict(os.environ, {ENGINE_ENV: "codex"}):

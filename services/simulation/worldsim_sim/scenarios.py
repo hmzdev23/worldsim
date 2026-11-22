@@ -32,7 +32,7 @@ ROOT = Path(__file__).resolve().parents[3]
 BRANCH_ID = "main"
 MAX_PROMPT_CHARS = 2000
 # Presentation tone of a run (satire layer). "straight" is the original experience.
-TONES = ("straight", "satirical", "unhinged")
+TONES = ("straight", "satirical")
 DEFAULT_TONE = "straight"
 
 # generator(prompt, *, fixture, simulation_id, branch_id, timeout_s) -> proposed batch.

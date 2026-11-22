@@ -828,14 +828,12 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 .tone-selector button:last-child { border-right: 0; }
 .tone-selector button[aria-checked="true"] { background: var(--raised); color: var(--text); }
 .tone-selector button[aria-checked="true"][data-tone="satirical"] { background: #3a1416; color: #ffd23f; }
-.tone-selector button[aria-checked="true"][data-tone="unhinged"] { background: #d7262e; color: #fff; }
 .tone-selector button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 .tone-hint { flex-basis: 100%; font-size: 11px; }
 .satire-stamp { color: #ffd23f; letter-spacing: .04em; text-transform: uppercase; }
 .workspace:not([data-tone="straight"]) .wire-meta > span:first-child { color: #ff5a5f; font-weight: 700; }
 .workspace:not([data-tone="straight"]) .wire-headline { text-transform: uppercase; letter-spacing: .01em; }
 .workspace:not([data-tone="straight"]) .headline-alert { box-shadow: 0 0 0 2px #d7262e, 0 14px 40px #000a; }
-.workspace[data-tone="unhinged"] .headline-alert { transform: rotate(-0.6deg); }
 .wire-original { color: var(--muted); font-size: 11px; font-style: italic; opacity: .8; }
 .absurdity-index, .social-feed { padding: 13px 14px; border-top: 1px solid var(--line); }
 .absurdity-index { background: repeating-linear-gradient(-45deg, transparent 0 10px, #ffd23f08 10px 20px); }

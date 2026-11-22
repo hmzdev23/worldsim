@@ -30,7 +30,7 @@ SATIRE_LIMITS: dict = {
     "posts": _SATIRE_DEF["posts"]["maxItems"],
 }
 # Presentation tones. "straight" is the original serious experience: no satire.
-TONES: tuple = ("straight", "satirical", "unhinged")
+TONES: tuple = ("straight", "satirical")
 DEFAULT_TONE = "straight"
 
 MAX_EVENTS = 12

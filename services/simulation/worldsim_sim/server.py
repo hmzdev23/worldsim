@@ -7,7 +7,7 @@ Fixture demo (the simulation the server was started with):
   POST /events     ingest a Director batch; returns it with statuses set
   POST /control    playback control (same body as a WebSocket control message)
   WS   /stream     snapshot on connect, then event and clock messages
-  GET  /satire     satire layer (?tone=satirical|unhinged|straight) for released events
+  GET  /satire     satire layer (?tone=satirical|straight) for released events
   GET  /starters   starter scenarios (a prompt and an offline fixture each)
 
 Scenario runs created from a prompt, each fully isolated (see scenarios.py):

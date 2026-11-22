@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Film one simulation run as a satirical recap (experiments/recap-films/films/run).
 #
-#   scripts/recap-film.sh RUN_ID [--tone satirical|unhinged]      # a run on the local simulation server
+#   scripts/recap-film.sh RUN_ID [--tone satirical]      # a run on the local simulation server
 #   scripts/recap-film.sh --fixture tsunami [--seed 1234]          # offline, like a starter run
 #
 # Needs: Python 3, Node 20+, ffmpeg, Playwright's Chromium (apps/web), and THREE_ROOT pointing

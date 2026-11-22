@@ -123,10 +123,6 @@ SATIRE_RULES = """- satire: a {tone} presentation layer for each event, shown as
 
 TONE_DETAIL = {
     "satirical": "  Tone: plausible institutions reacting slightly absurdly. Dry, understated.\n",
-    "unhinged": (
-        "  Tone: escalate. Each event's reactions get more ridiculous: committees\n"
-        "  for committees, trademarked crisis products, officials doubling down.\n"
-    ),
 }
 
 HISTORY_RULES = """- This simulation is already running. The history below lists what has
@@ -237,12 +233,20 @@ def claude_schema(max_events: int = MAX_EVENTS) -> dict:
     return schema
 
 
+# Replaces Claude Code's built-in coding-agent system prompt, so Haiku reads the
+# same Director prompt (on stdin) as Codex does and nothing else.
+CLAUDE_SYSTEM_PROMPT = (
+    "Follow the instructions in the user message exactly. Reply only with the requested structured output."
+)
+
+
 def claude_command(claude: str, model: str, effort: str, schema: dict) -> list[str]:
     """`claude -p` with no tools, no MCP servers, no saved session and no settings files."""
     return [
         claude, "-p",
         "--model", model,
         "--effort", effort,
+        "--system-prompt", CLAUDE_SYSTEM_PROMPT,
         "--output-format", "json",
         "--json-schema", json.dumps(schema),
         "--tools", "",
@@ -417,7 +421,7 @@ def generate(
     simulation: same simulation/branch IDs, later times, continuing event IDs.
     With fixture set, no model is called and the scenario text is optional.
     stages: optional timing recorder (see timing.py); it never changes the result.
-    tone: "straight" (default), "satirical" or "unhinged". Non-straight tones
+    tone: "straight" (default) or "satirical". The satirical tone
     ask the same model call for an optional payload.satire layer; facts,
     impacts and validation are unchanged.
     seed: the run's variation seed (variation.py). A model run gets seeded

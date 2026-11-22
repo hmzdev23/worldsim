@@ -26,7 +26,7 @@ def main() -> int:
     run_id, tone = sys.argv[1:]
     if not run_id or any(char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-" for char in run_id):
         raise SystemExit("invalid run id")
-    if tone not in {"straight", "satirical", "unhinged"}:
+    if tone not in {"straight", "satirical"}:
         raise SystemExit("invalid tone")
 
     server = os.environ.get("SIMULATION_HTTP_URL", "http://127.0.0.1:8765").rstrip("/")
@@ -45,7 +45,7 @@ def main() -> int:
     result_path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
     python = os.environ.get("PYTHON_EXECUTABLE", "python3")
     node = os.environ.get("NODE_EXECUTABLE", "node")
-    film_tone = tone if tone in {"satirical", "unhinged"} else "satirical"
+    film_tone = "satirical"
 
     run([python, str(job_dir / "make-script.py"), "--result", str(result_path), "--tone", film_tone], "script")
     run([python, str(job_dir / "make-audio.py")], "narration")

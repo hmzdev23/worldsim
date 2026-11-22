@@ -62,9 +62,9 @@ class SatireRouteTests(unittest.TestCase):
         return run
 
     def test_tone_is_stored_and_passed_to_the_director(self):
-        run = self.ready(tone="unhinged")
-        self.assertEqual(run["tone"], "unhinged")
-        self.assertEqual(self.director.tones, ["unhinged"])
+        run = self.ready(tone="satirical")
+        self.assertEqual(run["tone"], "satirical")
+        self.assertEqual(self.director.tones, ["satirical"])
         self.assertEqual(self.ready()["tone"], "straight")  # default keeps the original experience
 
     def test_bad_tone_is_rejected(self):
@@ -89,7 +89,7 @@ class SatireRouteTests(unittest.TestCase):
         self.assertEqual(self.client.get(path, params={"tone": "nope"}).status_code, 422)
 
     def test_satire_does_not_change_the_simulation(self):
-        run = self.ready(tone="unhinged")
+        run = self.ready(tone="satirical")
         sim = self.registry.get(run["id"]).channel.sim
         sim.seek(sim.end_minutes)
         before = self.client.get(f"/scenarios/{run['id']}/timeline").json()
@@ -100,7 +100,7 @@ class SatireRouteTests(unittest.TestCase):
         body = self.client.get("/satire").json()
         self.assertEqual((body["tone"], body["items"]), ("satirical", []))  # demo starts before the quake
         self.demo.seek(self.demo.end_minutes)
-        body = self.client.get("/satire", params={"tone": "unhinged"}).json()
+        body = self.client.get("/satire", params={"tone": "satirical"}).json()
         self.assertEqual(len(body["items"]), len(self.demo.timeline))
         self.assertTrue(body["posts"] and body["absurdity"])
 
