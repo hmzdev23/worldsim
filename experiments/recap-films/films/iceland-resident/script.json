@@ -7,16 +7,11 @@
   "tone": "satirical",
   "outro_seconds": 3.5,
   "stats_title": "SIGRÚN'S THREE DAYS",
-  "disclaimer": "Fictional simulation. Sigrún, every company, statement and statistic here is invented.",
   "source": {
     "fixture": "iceland-eruption",
     "layer": "worldwire.satire"
   },
   "stats": [
-    {
-      "label": "Notifications received",
-      "value": 16
-    },
     {
       "label": "Press conferences held",
       "value": 1
@@ -54,66 +49,36 @@
       "scene": "eruption",
       "event_id": "evt-0001",
       "date": "DAY 1 · 03:10",
-      "notification": {
-        "author": "ThriftJet Air",
-        "handle": "@ThriftJetAir",
-        "text": "Our new VolcanoFlex™ fare lets you change your flight whenever the volcano changes its mind. Terms and conditions apply."
-      },
-      "narration": "Then the ground opened outside town. Her airline already had a new fare."
+      "narration": "Then the ground opened outside town. The airport departure board started cancelling flights."
     },
     {
       "scene": "evacuation",
       "event_id": "evt-0002",
       "date": "DAY 1 · 03:50",
-      "notification": {
-        "author": "ThriftJet Air",
-        "handle": "@ThriftJetAir",
-        "text": "ThriftJet now offers Evacuation Class: same seat, louder announcements. Bags extra."
-      },
-      "narration": "Sigrún evacuated in an orderly queue, according to the brochure."
+      "narration": "Sigrún joined the road out. A sign assured drivers the queue was moving smoothly."
     },
     {
       "scene": "shelter",
       "event_id": "evt-0003",
       "date": "DAY 1 · 07:00",
-      "notification": {
-        "author": "Synergexa",
-        "handle": "@Synergexa",
-        "text": "Introducing CandleBox™ Premium: the outage-ready subscription. Now three times the price."
-      },
-      "narration": "At the shelter, the power went out. Her phone suggested a subscription."
+      "narration": "At the shelter, the power went out. The glowing exit sign became the room's main attraction."
     },
     {
       "scene": "airport",
       "event_id": "evt-0005",
       "date": "DAY 1 · 18:20",
-      "notification": {
-        "author": "Synergexa",
-        "handle": "@Synergexa",
-        "text": "Synergexa shares are up 4% after we announced we are 'monitoring the situation'."
-      },
-      "narration": "By evening, every flight was grounded. Including hers."
+      "narration": "By evening, every flight was grounded. The board still asked everyone to keep checking."
     },
     {
       "scene": "aid",
       "event_id": "evt-0006",
       "date": "DAY 2 · 01:00",
-      "notification": {
-        "author": "Committee for Global Stability (Interim)",
-        "handle": "@StabilityCommittee",
-        "text": "We warmly welcome the aid from Norway and have formed a working group to decide where to put it."
-      },
-      "narration": "Day two: help from Norway, and a six-hundred-page customs form."
+      "narration": "Day two: help from Norway. Officials posed beside the supplies before unloading them."
     },
     {
       "scene": "home-again",
       "event_id": "evt-0008",
       "date": "DAY 3 · 12:00",
-      "notification": {
-        "author": "Brandwell Inc.",
-        "handle": "@BrandwellInc",
-        "text": "We apologise for any inconvenience the crisis caused. The crisis was not us. Use code BACK20."
-      },
       "narration": "Day three: the power came back. Her flight did not."
     }
   ]

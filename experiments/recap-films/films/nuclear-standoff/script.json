@@ -7,7 +7,6 @@
   "tone": "satirical",
   "outro_seconds": 3.5,
   "stats_title": "TOM'S THREE DAYS",
-  "disclaimer": "Fictional simulation: real countries, invented events. No such war has happened or is predicted. Tom, every company, statement and statistic here is invented.",
   "map": {
     "blast": {
       "name": "Celtic Sea",
@@ -36,10 +35,6 @@
   },
   "stats": [
     {
-      "label": "Notifications received",
-      "value": 16
-    },
-    {
       "label": "Press conferences held",
       "value": 1
     },
@@ -60,7 +55,7 @@
       "value": 2
     },
     {
-      "label": "Reassuring pamphlets read",
+      "label": "Meeting tables agreed upon",
       "value": 0
     }
   ],
@@ -70,34 +65,19 @@
       "event_id": "evt-0001",
       "date": "DAY 1 · 10:00",
       "lower_third": "TOM · UNITED KINGDOM",
-      "notification": {
-        "author": "Synergexa",
-        "handle": "@Synergexa",
-        "text": "Our servers are fine. Unrelatedly, our servers are down. We apologise for any inconvenience."
-      },
-      "narration": "This is Tom, in London. He writes reassuring pamphlets for the government. At ten, the internet went down."
+      "narration": "This is Tom, in London. He maintains the government's emergency status board. At ten, the internet went down."
     },
     {
       "scene": "street",
       "event_id": "evt-0002",
       "date": "DAY 1 · 12:00",
-      "notification": {
-        "author": "Desk Anchor Morgan Vale",
-        "handle": "@AnchorMorganVale",
-        "text": "Our analyst says this is either an escalation or a de-escalation. More after the break."
-      },
-      "narration": "By noon, France had mobilised. Tom was asked to make the pamphlets more reassuring."
+      "narration": "By noon, France had mobilised. The status board changed to 'ALL CLEAR: DRAFT'."
     },
     {
       "scene": "queue",
       "event_id": "evt-0003",
       "date": "DAY 1 · 13:00",
-      "notification": {
-        "author": "ThriftJet Air",
-        "handle": "@ThriftJetAir",
-        "text": "ThriftJet now offers Evacuation Class: same seat, louder announcements. Bags extra."
-      },
-      "narration": "At one, the sirens. Tom went underground, with the pamphlets."
+      "narration": "At one, the sirens. Londoners queued beneath a sign asking them to queue calmly."
     },
     {
       "scene": "blast",
@@ -109,34 +89,19 @@
       "scene": "shelter",
       "event_id": "evt-0004",
       "date": "DAY 1 · 15:30",
-      "notification": {
-        "author": "Committee for Global Stability (Interim)",
-        "handle": "@StabilityCommittee",
-        "text": "Emergency session convened. First item on the agenda: whether this is on the agenda."
-      },
-      "narration": "Underground, an emergency meeting was scheduled to schedule the emergency meeting."
+      "narration": "Underground, an emergency meeting was scheduled to schedule the emergency meeting. The table location was still pending."
     },
     {
       "scene": "ceasefire",
       "event_id": "evt-0007",
       "date": "DAY 2 · 09:00",
-      "notification": {
-        "author": "Committee for Global Stability (Interim)",
-        "handle": "@StabilityCommittee",
-        "text": "The committee congratulates itself on the ceasefire, which it read about this morning."
-      },
-      "narration": "On day two, a ceasefire. Both sides argued about the table."
+      "narration": "On day two, a ceasefire. Both sides agreed on peace, then moved the meeting table again."
     },
     {
       "scene": "home-again",
       "event_id": "evt-0008",
       "date": "DAY 3 · 07:00",
-      "notification": {
-        "author": "Brandwell Inc.",
-        "handle": "@BrandwellInc",
-        "text": "We apologise for any inconvenience the crisis caused. The crisis was not us. Use code BACK20."
-      },
-      "narration": "On day three, Tom came home. The pamphlets were finally ready."
+      "narration": "On day three, Tom came home. The status board now says 'NORMAL: DEFINITION PENDING'."
     }
   ]
 }

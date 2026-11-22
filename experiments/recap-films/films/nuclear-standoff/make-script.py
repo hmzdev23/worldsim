@@ -47,50 +47,41 @@ def main() -> int:
 
     events = [{**e, "status": "applied"} for e in generate(fixture="nuclear-standoff", simulation_id="standoff")["events"]]
     layer = satire_for_events(events, args.tone)
-    posts = list(reversed(layer["posts"]))
     kind = lambda k: next(e for e in events if e["type"] == k)  # noqa: E731
     cyber, escalation, evac = kind("cyber_attack"), kind("conflict_escalation"), kind("evacuation")
     blast, fallout, ceasefire, recovery = kind("nuclear_detonation"), kind("contamination"), kind("ceasefire"), kind("recovery")
     own, enemy = cyber["location"]["country"], escalation["location"]["country"]
     day = lambda e: WORDS[e["sim_time_minutes"] // 1440 + 1]  # noqa: E731
 
-    def note(event: dict, prefer: tuple = ()) -> dict:
-        mine = [p for p in posts if p["event_id"] == event["id"]]
-        pick = next((p for p in mine if p["kind"] in prefer), mine[0])
-        return {k: pick[k] for k in ("author", "handle", "text")}
-
     def at(event: dict) -> str:
         return format_sim_time(event["sim_time_minutes"])
 
     shots = [
         {"scene": "home", "event_id": cyber["id"], "date": at(cyber), "lower_third": f"{name.upper()} · {own.upper()}",
-         "notification": note(cyber, ("company",)),
-         "narration": f"This is {name}, in {cyber['location']['name']}. He writes reassuring pamphlets for the government. "
+         "narration": f"This is {name}, in {cyber['location']['name']}. He maintains the government's emergency status board. "
                       f"At {clock(cyber['sim_time_minutes'])}, the internet went down."},
-        {"scene": "street", "event_id": escalation["id"], "date": at(escalation), "notification": note(escalation, ("anchor",)),
-         "narration": f"By {clock(escalation['sim_time_minutes'])}, {enemy} had mobilised. {name} was asked to make the pamphlets more reassuring."},
-        {"scene": "queue", "event_id": evac["id"], "date": at(evac), "notification": note(evac, ("airline",)),
-         "narration": f"At {clock(evac['sim_time_minutes'])}, the sirens. {name} went underground, with the pamphlets."},
+        {"scene": "street", "event_id": escalation["id"], "date": at(escalation),
+         "narration": f"By {clock(escalation['sim_time_minutes'])}, {enemy} had mobilised. The status board changed to 'ALL CLEAR: DRAFT'."},
+        {"scene": "queue", "event_id": evac["id"], "date": at(evac),
+         "narration": f"At {clock(evac['sim_time_minutes'])}, the sirens. Londoners queued beneath a sign asking them to queue calmly."},
         {"scene": "blast", "event_id": blast["id"], "date": at(blast),
          "narration": f"At {clock(blast['sim_time_minutes'])}, {enemy} detonated a nuclear weapon over the {blast['location']['name']}, as a warning."},
-        {"scene": "shelter", "event_id": blast["id"], "date": at(fallout), "notification": note(blast, ("committee",)),
-         "narration": "Underground, an emergency meeting was scheduled to schedule the emergency meeting."},
-        {"scene": "ceasefire", "event_id": ceasefire["id"], "date": at(ceasefire), "notification": note(ceasefire, ("committee",)),
-         "narration": f"On day {day(ceasefire)}, a ceasefire. Both sides argued about the table."},
-        {"scene": "home-again", "event_id": recovery["id"], "date": at(recovery), "notification": note(recovery, ("company",)),
-         "narration": f"On day {day(recovery)}, {name} came home. The pamphlets were finally ready."},
+        {"scene": "shelter", "event_id": blast["id"], "date": at(fallout),
+         "narration": "Underground, an emergency meeting was scheduled to schedule the emergency meeting. The table location was still pending."},
+        {"scene": "ceasefire", "event_id": ceasefire["id"], "date": at(ceasefire),
+         "narration": f"On day {day(ceasefire)}, a ceasefire. Both sides agreed on peace, then moved the meeting table again."},
+        {"scene": "home-again", "event_id": recovery["id"], "date": at(recovery),
+         "narration": f"On day {day(recovery)}, {name} came home. The status board now says 'NORMAL: DEFINITION PENDING'."},
     ]
-    stats = [{"label": "Notifications received", "value": len(posts)}] + [
+    stats = [
         {"label": m["label"], "value": m["value"]} for m in layer["absurdity"] if m["value"]
-    ] + [{"label": "Reassuring pamphlets read", "value": 0}]
+    ] + [{"label": "Meeting tables agreed upon", "value": 0}]
     script = {
         "title": f"{name}'s three days",
         "person": {"name": name, "home": own},
         "tone": args.tone,
         "outro_seconds": 3.5,
         "stats_title": f"{name.upper()}'S THREE DAYS",
-        "disclaimer": (f"Fictional simulation: real countries, invented events. No such war has happened or is predicted. "
-                       f"{name}, every company, statement and statistic here is invented."),
         "map": {"blast": blast["location"], "places": [{"name": e["location"]["country"].upper(), "lat": e["location"]["lat"], "lon": e["location"]["lon"]}
                                                      for e in (escalation, cyber)]},
         "ceasefire_place": ceasefire["location"]["name"],
@@ -100,8 +91,7 @@ def main() -> int:
     }
     (HERE / "script.json").write_text(json.dumps(script, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for i, shot in enumerate(shots, 1):
-        extra = f"  [phone: {shot['notification']['handle']}]" if "notification" in shot else ""
-        print(f"{i}. {shot['date']} {shot['narration']}{extra}")
+        print(f"{i}. {shot['date']} {shot['narration']}")
     return 0
 
 

@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 """Write script.json: the Japan earthquake seen through one invented resident, Mika.
 
-Facts (times, places, magnitude, aid origins) come from the Japan fixture and
-are narrated plainly. The humor arrives on Mika's phone as fictional
-notifications taken from worldwire.satire, and the closing card uses the
-satire layer's absurdity index. Mika is never the joke; institutions are.
-Impact estimates (deaths, injuries) are not used.
+Facts come from the Japan fixture. Satire stays in the physical setting and
+targets institutional habits; there are no phone notifications. Mika is never
+the joke. Impact estimates (deaths, injuries) are not used.
 
     python3 make-script.py [--tone satirical|unhinged] [--name Mika]
 """
@@ -47,7 +45,6 @@ def main() -> int:
 
     events = [{**e, "status": "applied"} for e in generate(fixture="japan-earthquake", simulation_id="resident-japan")["events"]]
     layer = satire_for_events(events, args.tone)
-    posts = list(reversed(layer["posts"]))  # oldest first
 
     def first(kind: str, after: int = -1) -> dict:
         return next(e for e in events if e["type"] == kind and e["sim_time_minutes"] > after)
@@ -60,44 +57,32 @@ def main() -> int:
     magnitude = quake["payload"].get("magnitude")
     day = lambda e: e["sim_time_minutes"] // 1440 + 1  # noqa: E731
 
-    def note(event: dict, prefer: tuple = ()) -> dict:
-        own = [p for p in posts if p["event_id"] == event["id"]]
-        pick = next((p for p in own if p["kind"] in prefer), own[0])
-        return {k: pick[k] for k in ("author", "handle", "text")}
-
     shots = [
         {"scene": "home", "event_id": quake["id"], "date": format_sim_time(quake["sim_time_minutes"] - 1),
          "lower_third": f"{name.upper()} · {home.upper()}",
          "narration": f"This is {name}, in {home}. At {spoken_time(quake['sim_time_minutes'] - 1)}, "
                       "her biggest problem was the toaster."},
         {"scene": "quake", "event_id": quake["id"], "date": format_sim_time(quake["sim_time_minutes"]),
-         "notification": note(quake, ("government",)),
          "narration": f"At {spoken_time(quake['sim_time_minutes'])}, a magnitude {magnitude} earthquake. "
-                      "Her phone already had a statement ready."},
+                      "The evacuation sign stayed perfectly level."},
         {"scene": "warning", "event_id": warning["id"], "date": format_sim_time(warning["sim_time_minutes"]),
-         "notification": note(warning, ("insurer",)),
-         "narration": "Three minutes later: a tsunami warning, plus a note about her insurance."},
+         "narration": "Three minutes later: a tsunami warning. The harbor loudspeaker began with a reminder to remain calm."},
         {"scene": "evacuation", "event_id": evac["id"], "date": format_sim_time(evac["sim_time_minutes"]),
-         "notification": note(evac, ("airline",)),
-         "narration": f"{name} walked to higher ground. Her phone offered an upgrade."},
+         "narration": f"{name} walked to higher ground. The evacuation map had arrows pointing in every direction."},
         {"scene": "shelter", "event_id": outage["id"], "date": format_sim_time(outage["sim_time_minutes"]),
-         "notification": note(outage, ("company",)),
-         "narration": "At the shelter, the power went out. Her phone suggested candles. Premium ones."},
+         "narration": "At the shelter, the power went out. The emergency lights illuminated a queue for the charging station."},
         {"scene": "aid", "event_id": aid["id"], "date": format_sim_time(aid["sim_time_minutes"]),
-         "notification": note(aid, ("committee",)),
          "narration": f"Day {NUMBERS[day(aid)]}: rescue teams from {country(aid['payload']['origin'])}, "
-                      "and a six-hundred-page form."},
+                      "welcomed by a ribbon-cutting ceremony for the supply boxes."},
         {"scene": "aftershock", "event_id": aftershock["id"], "date": format_sim_time(aftershock["sim_time_minutes"]),
-         "notification": note(aftershock, ("committee",)),
-         "narration": f"That evening, another aftershock. {name} reached page two hundred."},
+         "narration": f"That evening, another aftershock. The shelter sign changed from 'WELCOME' to 'STILL WELCOME.'"},
         {"scene": "home-again", "event_id": recovery["id"], "date": format_sim_time(recovery["sim_time_minutes"]),
-         "notification": note(recovery, ("company",)),
          "narration": f"Day {NUMBERS[day(recovery)]}: the trains came back, and so did {name}. "
                       "The toast was waiting."},
     ]
     for shot in shots:
         shot["narration"] = shot["narration"].replace("™", "")
-    stats = [{"label": "Notifications received", "value": len(posts)}] + [
+    stats = [
         {"label": m["label"], "value": m["value"]} for m in layer["absurdity"] if m["value"]
     ] + [{"label": "Pieces of toast finished", "value": 0}]
     script = {
@@ -105,15 +90,13 @@ def main() -> int:
         "person": {"name": name, "home": home},
         "tone": args.tone,
         "outro_seconds": 3.5,
-        "disclaimer": f"Fictional simulation. {name}, every company, statement and statistic here is invented.",
         "source": {"fixture": "japan-earthquake", "layer": "worldwire.satire"},
         "stats": stats,
         "shots": shots,
     }
     (HERE / "script.json").write_text(json.dumps(script, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for i, shot in enumerate(shots, 1):
-        extra = f"  [phone: {shot['notification']['handle']}]" if "notification" in shot else ""
-        print(f"{i}. {shot['date']} {shot['narration']}{extra}")
+        print(f"{i}. {shot['date']} {shot['narration']}")
     return 0
 
 

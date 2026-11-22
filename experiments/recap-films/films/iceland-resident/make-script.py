@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Write script.json: the Iceland eruption seen through one invented resident, Sigrún.
 
-Same humor as the other films: facts from the fixture narrated plainly, the
-jokes arrive on her phone from worldwire.satire (aimed at institutions), a
-running gag (her flight) pays off at the end, and a stats card closes. Casualty
-estimates are never used.
+Facts come from the fixture; the satire lives in the airport and emergency
+infrastructure. There are no phone notifications. Her flight remains the
+running gag, and casualty estimates are never used.
 
     python3 make-script.py [--tone satirical|unhinged] [--name Sigrún]
 """
@@ -35,7 +34,6 @@ def main() -> int:
 
     events = [{**e, "status": "applied"} for e in generate(fixture="iceland-eruption", simulation_id="resident-iceland")["events"]]
     layer = satire_for_events(events, args.tone)
-    posts = list(reversed(layer["posts"]))
     first = lambda k: next(e for e in events if e["type"] == k)  # noqa: E731
     eruption, evac, outage = first("volcanic_eruption"), first("evacuation"), first("infrastructure_failure")
     flights, aid, recovery = first("economic_shock"), first("international_aid"), first("recovery")
@@ -43,28 +41,23 @@ def main() -> int:
     day = lambda e: WORDS[e["sim_time_minutes"] // 1440 + 1]  # noqa: E731
     at = lambda e, d=0: format_sim_time(e["sim_time_minutes"] + d)  # noqa: E731
 
-    def note(event: dict, prefer: tuple = ()) -> dict:
-        mine = [p for p in posts if p["event_id"] == event["id"]]
-        pick = next((p for p in mine if p["kind"] in prefer), mine[0])
-        return {k: pick[k] for k in ("author", "handle", "text")}
-
     shots = [
         {"scene": "home", "event_id": eruption["id"], "date": at(eruption, -1), "lower_third": f"{name.upper()} · {home.upper()}",
          "narration": f"This is {name}, in {home}. At three in the morning, she was packing for a flight."},
-        {"scene": "eruption", "event_id": eruption["id"], "date": at(eruption), "notification": note(eruption, ("airline",)),
-         "narration": "Then the ground opened outside town. Her airline already had a new fare."},
-        {"scene": "evacuation", "event_id": evac["id"], "date": at(evac), "notification": note(evac, ("airline",)),
-         "narration": f"{name} evacuated in an orderly queue, according to the brochure."},
-        {"scene": "shelter", "event_id": outage["id"], "date": at(outage), "notification": note(outage, ("company",)),
-         "narration": "At the shelter, the power went out. Her phone suggested a subscription."},
-        {"scene": "airport", "event_id": flights["id"], "date": at(flights), "notification": note(flights, ("company",)),
-         "narration": "By evening, every flight was grounded. Including hers."},
-        {"scene": "aid", "event_id": aid["id"], "date": at(aid), "notification": note(aid, ("committee",)),
-         "narration": f"Day {day(aid)}: help from {aid['payload']['origin']}, and a six-hundred-page customs form."},
-        {"scene": "home-again", "event_id": recovery["id"], "date": at(recovery), "notification": note(recovery, ("company",)),
+        {"scene": "eruption", "event_id": eruption["id"], "date": at(eruption),
+         "narration": "Then the ground opened outside town. The airport departure board started cancelling flights."},
+        {"scene": "evacuation", "event_id": evac["id"], "date": at(evac),
+         "narration": f"{name} joined the road out. A sign assured drivers the queue was moving smoothly."},
+        {"scene": "shelter", "event_id": outage["id"], "date": at(outage),
+         "narration": "At the shelter, the power went out. The glowing exit sign became the room's main attraction."},
+        {"scene": "airport", "event_id": flights["id"], "date": at(flights),
+         "narration": "By evening, every flight was grounded. The board still asked everyone to keep checking."},
+        {"scene": "aid", "event_id": aid["id"], "date": at(aid),
+         "narration": f"Day {day(aid)}: help from {aid['payload']['origin']}. Officials posed beside the supplies before unloading them."},
+        {"scene": "home-again", "event_id": recovery["id"], "date": at(recovery),
          "narration": f"Day {day(recovery)}: the power came back. Her flight did not."},
     ]
-    stats = [{"label": "Notifications received", "value": len(posts)}] + [
+    stats = [
         {"label": m["label"], "value": m["value"]} for m in layer["absurdity"] if m["value"]
     ] + [{"label": "Flights taken", "value": 0}]
     script = {
@@ -73,15 +66,13 @@ def main() -> int:
         "tone": args.tone,
         "outro_seconds": 3.5,
         "stats_title": f"{name.upper()}'S THREE DAYS",
-        "disclaimer": f"Fictional simulation. {name}, every company, statement and statistic here is invented.",
         "source": {"fixture": "iceland-eruption", "layer": "worldwire.satire"},
         "stats": stats,
         "shots": shots,
     }
     (HERE / "script.json").write_text(json.dumps(script, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     for i, shot in enumerate(shots, 1):
-        extra = f"  [phone: {shot['notification']['handle']}]" if "notification" in shot else ""
-        print(f"{i}. {shot['date']} {shot['narration']}{extra}")
+        print(f"{i}. {shot['date']} {shot['narration']}")
     return 0
 
 

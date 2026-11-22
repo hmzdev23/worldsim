@@ -6,16 +6,11 @@
   },
   "tone": "satirical",
   "outro_seconds": 3.5,
-  "disclaimer": "Fictional simulation. Mika, every company, statement and statistic here is invented.",
   "source": {
     "fixture": "japan-earthquake",
     "layer": "worldwire.satire"
   },
   "stats": [
-    {
-      "label": "Notifications received",
-      "value": 40
-    },
     {
       "label": "Press conferences held",
       "value": 7
@@ -53,77 +48,42 @@
       "scene": "quake",
       "event_id": "evt-0001",
       "date": "DAY 1 · 06:42",
-      "notification": {
-        "author": "Ministry of Reassurance",
-        "handle": "@MinistryOfReassurance",
-        "text": "We can confirm the ground has been asked to remain still. The situation remains fluid."
-      },
-      "narration": "At six forty-two, a magnitude 7.8 earthquake. Her phone already had a statement ready."
+      "narration": "At six forty-two, a magnitude 7.8 earthquake. The evacuation sign stayed perfectly level."
     },
     {
       "scene": "warning",
       "event_id": "evt-0002",
       "date": "DAY 1 · 06:45",
-      "notification": {
-        "author": "Shrug Mutual Insurance",
-        "handle": "@ShrugMutual",
-        "text": "Water damage is covered unless the water came from the sea, a river, the sky or a pipe. See clause 94(b)."
-      },
-      "narration": "Three minutes later: a tsunami warning, plus a note about her insurance."
+      "narration": "Three minutes later: a tsunami warning. The harbor loudspeaker began with a reminder to remain calm."
     },
     {
       "scene": "evacuation",
       "event_id": "evt-0003",
       "date": "DAY 1 · 07:00",
-      "notification": {
-        "author": "ThriftJet Air",
-        "handle": "@ThriftJetAir",
-        "text": "ThriftJet now offers Evacuation Class: same seat, louder announcements. Bags extra."
-      },
-      "narration": "Mika walked to higher ground. Her phone offered an upgrade."
+      "narration": "Mika walked to higher ground. The evacuation map had arrows pointing in every direction."
     },
     {
       "scene": "shelter",
       "event_id": "evt-0004",
       "date": "DAY 1 · 07:18",
-      "notification": {
-        "author": "Synergexa",
-        "handle": "@Synergexa",
-        "text": "Introducing CandleBox™ Premium: the outage-ready subscription. Now three times the price."
-      },
-      "narration": "At the shelter, the power went out. Her phone suggested candles. Premium ones."
+      "narration": "At the shelter, the power went out. The emergency lights illuminated a queue for the charging station."
     },
     {
       "scene": "aid",
       "event_id": "evt-0010",
       "date": "DAY 2 · 02:00",
-      "notification": {
-        "author": "Committee for Global Stability (Interim)",
-        "handle": "@StabilityCommittee",
-        "text": "We warmly welcome the aid from the United States and have formed a working group to decide where to put it."
-      },
-      "narration": "Day two: rescue teams from the United States, and a six-hundred-page form."
+      "narration": "Day two: rescue teams from the United States, welcomed by a ribbon-cutting ceremony for the supply boxes."
     },
     {
       "scene": "aftershock",
       "event_id": "evt-0014",
       "date": "DAY 2 · 19:20",
-      "notification": {
-        "author": "Committee for Global Stability (Interim)",
-        "handle": "@StabilityCommittee",
-        "text": "We have established a subcommittee to determine whether this constitutes a precedent."
-      },
-      "narration": "That evening, another aftershock. Mika reached page two hundred."
+      "narration": "That evening, another aftershock. The shelter sign changed from 'WELCOME' to 'STILL WELCOME.'"
     },
     {
       "scene": "home-again",
       "event_id": "evt-0020",
       "date": "DAY 4 · 06:20",
-      "notification": {
-        "author": "Brandwell Inc.",
-        "handle": "@BrandwellInc",
-        "text": "We apologise for any inconvenience the crisis caused. The crisis was not us. Use code BACK20."
-      },
       "narration": "Day four: the trains came back, and so did Mika. The toast was waiting."
     }
   ]

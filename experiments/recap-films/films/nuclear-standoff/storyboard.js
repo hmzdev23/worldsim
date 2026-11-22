@@ -1,6 +1,6 @@
 // "Tom's three days": a fictional UK-France nuclear standoff (real countries, invented
 // events, no real people or organizations), followed through one invented clerk. Text comes from script.json (fixture facts +
-// worldwire.satire notifications); cuts come from timing.json.
+// physical environmental satire); cuts come from timing.json.
 // window.render(t) depends only on t: no wall clock, no unseeded randomness.
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -169,19 +169,13 @@ function gym(s, {lit = true} = {}) {
 const shots = {};
 const NAME = script.person.name;
 
-function pamphlets(parent, x, y, z, label, h = .25) {
-  const stack = block(parent, x, y + h / 2, z, .34, h, .46, 0xf3efe4);
-  sign(parent, label, x, y + h + .09, z + .24, .5, .16, {bg: '#ffffff', fg: '#10131b', size: 104, w: 768});
-  return stack;
-}
-
 shots.home = () => {
   const s = new T.Scene(); s.background = new T.Color(0x2a2f3a); lights(s, {power: 1.4, from: [6, 9, 8]});
   const a = apartment(s); a.toast.forEach(t => { t.visible = false; });  // the "toaster" is his coffee machine here
   const laptop = block(a.room, .9, .45, .2, .5, .03, .34, 0x2b2f36);
   const screen = sign(a.room, ['NO CONNECTION', 'TRY AGAIN LATER'], .9, .62, .02, .48, .3, {bg: '#1d2b4a', fg: '#ffffff', size: 84, w: 768});
   screen.rotation.x = -.2;
-  pamphlets(a.room, 1.7, .41, .35, ['DON\'T PANIC', 'DRAFT 3']);
+  sign(a.room, ['EMERGENCY STATUS', 'UPDATE PENDING'], 0, 2.25, -2.88, 2.8, .85, {bg: '#172033', fg: '#ffd23f', size: 84, accent: '#d7262e'});
   const tomas = person(a.room, 'man', .9, 1.05, Math.PI, HERO, 'Idle');
   s.userData.tick = (t) => { tomas.userData.pose('Idle', t); screen.visible = t > 1 || Math.sin(t * 20) > 0; };
   s.userData.camera = {from: [3, 1.7, 3.9], to: [2.3, 1.5, 3.1], look: () => [.9, .7, .2]};
@@ -192,6 +186,7 @@ shots.street = () => {
   const s = new T.Scene(); sky(s, 0x6f93b8, 0xe9d6bc); lights(s); street(s);
   const pole = block(s, 4, 3.1, -6, .15, 6.2, .15, 0x595959); block(s, 4, 6, -6, .7, .7, .6, 0xcea64f);
   const beacon = block(s, 4, 6.5, -6, .9, .5, .7, 0xb84331);
+  sign(s, ['ALL CLEAR', 'DRAFT'], 4, 4.9, -5.8, 2.8, .8, {bg: '#172033', fg: '#ffd23f', size: 82, accent: '#d7262e'});
   // Jets cross high overhead, nose first (+X), the way they fly.
   const jets = [0, 1, 2].map(i => { const j = new T.Group(); block(j, 0, 0, 0, .3, .2, 1.6, 0x6b7280); block(j, 0, 0, -.2, 1.4, .05, .5, 0x6b7280); j.rotation.y = Math.PI / 2; j.position.set(-40, 24 + i, -30 - i * 3); s.add(j); return j; });
   const tomas = person(s, 'man', -.6, -8, 0, HERO, 'Walk');
@@ -270,8 +265,11 @@ function shelter({ceasefire = false} = {}) {
   const tubes = []; for (let i = 0; i < 4; i++) tubes.push(block(s, -4.5 + i * 3, 3.15, -1, 1.4, .08, .2, glow(0xe9f2ff, 1.4)));
   const lamp = new T.PointLight(0xe9f2ff, 24, 20); lamp.position.set(0, 2.9, 0); s.add(lamp);
   const seat = (x, z) => block(s, x, .21, z, .42, .32, .42, 0xb08a5c);
-  // Committee table at the back with three seated officials under their banner.
-  block(s, 0, .55, -5.2, 3.6, .08, 1, 0x5a4632); for (const x of [-1.6, 1.6]) block(s, x, .27, -5.2, .08, .54, .9, 0x4a3828);
+  // The committee's table keeps shifting while the meeting tries to begin.
+  const meetingTable = new T.Group(); s.add(meetingTable);
+  block(meetingTable, 0, .55, -5.2, 3.6, .08, 1, 0x5a4632);
+  for (const x of [-1.6, 1.6]) block(meetingTable, x, .27, -5.2, .08, .54, .9, 0x4a3828);
+  sign(meetingTable, ['TABLE LOCATION', 'UNDER REVIEW'], 0, .98, -5.2, 2.3, .6, {bg: '#172033', fg: '#ffd23f', size: 76});
   sign(s, ['EMERGENCY MEETING', '(TO SCHEDULE EMERGENCY MEETING)'], 0, 2.35, -6.75, 3.8, .9, {bg: '#0f1a33', fg: '#ffd23f', size: 78, accent: '#d7262e'});
   const officials = [-1, 0, 1].map((k, i) => { seat(k * 1.1, -5.95); return person(s, i % 2 ? 'woman' : 'man', k * 1.1, -5.95, 0, [0x2f3a56, 0x3a2f45, 0x2f4538][i], 'Sitting'); });
   officials.forEach(p => { p.position.y = .02; });
@@ -286,11 +284,12 @@ function shelter({ceasefire = false} = {}) {
   const spot = ceasefire ? [.1, -.9] : [.2, -.6]; if (!ceasefire) seat(...spot);
   const tomas = person(s, 'man', spot[0], spot[1], ceasefire ? -Math.PI / 2 : Math.PI * .1, HERO, ceasefire ? 'Clapping' : 'Sitting');
   tomas.position.y = ceasefire ? 0 : .02;
-  if (!ceasefire) pamphlets(s, spot[0] + .55, 0, spot[1] + .1, ['DON\'T PANIC', 'DRAFT 9'], .5);
   s.userData.tick = (t) => {
     const flicker = !ceasefire && (Math.sin(t * 13) > .92 || (t > 1.5 && t < 1.6));
     tubes.forEach(b => { b.material.emissiveIntensity = flicker ? .2 : 1.4; }); lamp.intensity = flicker ? 6 : 24;
     officials.forEach(p => p.userData.pose('Sitting', 0));
+    meetingTable.position.x = Math.sin(t * 1.1) * .6;
+    meetingTable.rotation.y = Math.sin(t * .8) * .08;
     crowd.forEach(p => p.userData.pose(ceasefire ? 'Clapping' : 'Sitting', t));
     tomas.userData.pose(ceasefire ? 'Clapping' : 'Sitting', t);
   };
@@ -303,12 +302,12 @@ shots.shelter = () => shelter();
 shots.ceasefire = () => shelter({ceasefire: true});
 
 shots['home-again'] = () => {
-  // Two beats: Tomas comes up the street, then he is home with the finished pamphlets.
+  // Two beats: Tom comes home to an updated status board.
   const out = new T.Scene(); sky(out, 0x8ec2e6, 0xfbe3c2); lights(out); street(out);
   const walker = person(out, 'man', .6, -10, 0, HERO, 'Walk');
   const home = new T.Scene(); home.background = new T.Color(0x2a2f3a); lights(home, {power: 1.6, from: [6, 9, 8]});
   const a = apartment(home); a.toast.forEach(t => { t.visible = false; });
-  pamphlets(a.room, 1.7, .41, .35, ['DON\'T PANIC', 'FINAL'], .55);
+  sign(a.room, ['NORMAL OPERATIONS', 'DEFINITION PENDING'], 0, 2.25, -2.88, 3.2, .9, {bg: '#172033', fg: '#ffd23f', size: 82, accent: '#77d5a1'});
   const tomas = person(a.room, 'man', 3.2, 1.2, 0, HERO, 'Walk');
   const split = 2.6, to = [1.15, .9], walkLen = Math.hypot(to[0] - 3.2, to[1] - 1.2);
   const tick = (t) => {
@@ -329,7 +328,6 @@ const $ = (q) => document.querySelector(q);
 $('#lower .name').textContent = NAME.toUpperCase();
 $('#stats h2').textContent = script.stats_title;
 $('#stats .rows').innerHTML = script.stats.map(m => `<div class="row"><span>${m.label}</span><b data-v="${m.value}">0</b></div>`).join('');
-$('#stats p').textContent = script.disclaimer;
 
 const camera = new T.PerspectiveCamera(50, W / H, .05, 300);
 const OUTRO = script.outro_seconds;
@@ -361,16 +359,8 @@ window.render = (localTime) => {
   $('#caption').textContent = local < (timing.voice_durations[i] + timing.lead_in + .6) ? data.narration : '';
   $('#lower').style.opacity = data.lower_third ? fade((local - .4) / .3) * fade((len - 1 - local) / .3) : 0;
   $('#flash').style.opacity = window.FLASH;
-  const phone = $('#phone');
-  if (data.notification) {
-    phone.querySelector('.who').replaceChildren(data.notification.author, Object.assign(document.createElement('span'), {textContent: data.notification.handle}));
-    phone.querySelector('.text').textContent = data.notification.text;
-    const k = fade((local - 1.1) / .3) * fade((len - .3 - local) / .3);
-    phone.style.opacity = k; phone.style.transform = `translateY(${(1 - k) * -60}px)`;
-  } else phone.style.opacity = 0;
   const last = i === scenes.length - 1, outro = last ? time - cuts[cuts.length - 1] : -1;
   $('#stats').style.opacity = last ? fade(outro / .4) : 0;
-  if (last && outro > 0) phone.style.opacity = 0;
   if (last) document.querySelectorAll('#stats b').forEach(b => { b.textContent = Math.round(Number(b.dataset.v) * fade((outro - .3) / 2)); });
   renderer.render(scene, camera);
 };

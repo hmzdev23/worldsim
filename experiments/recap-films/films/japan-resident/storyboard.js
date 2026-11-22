@@ -1,6 +1,6 @@
 // "Mika's four days": the Japan earthquake fixture followed through one invented resident.
 // Eight deterministic Three.js shots plus an outro card. Text comes from script.json
-// (fixture facts + worldwire.satire notifications); cuts come from timing.json.
+// (fixture facts + in-scene institutional satire); cuts come from timing.json.
 // window.render(t) depends only on t: no wall clock, no unseeded randomness.
 import * as T from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -215,7 +215,7 @@ shots.evacuation = () => {
   // A long, orderly queue toward higher ground. Mika is in yellow.
   const queue = []; for (let i = 0; i < 14; i++) queue.push(person(s, i % 2 ? 'man' : 'woman', (i % 2 ? -.35 : .35), 4 - i * 1.25, 0, i === 3 ? MIKA : crowdShirts[i % 6], 'Walk', rand(i) * 2));
   block(s, 2.6, 3, -9, .16, 6, .16, 0x555555); block(s, 5.4, 3, -9, .16, 6, .16, 0x555555);
-  sign(s, ['EVACUATE IN AN', 'ORDERLY QUEUE :)', 'OFFICIAL BROCHURE · PAGE 1 OF 48'], 4, 5.6, -8.9, 4.6, 2.5, {bg: '#ffd23f', fg: '#0f1a33', size: 86, h: 420, w: 768});
+  sign(s, ['HIGHER GROUND →', 'THIS WAY ←', 'AND THIS WAY →'], 3.8, 4.5, -18, 2.5, 1.25, {bg: '#ffd23f', fg: '#0f1a33', size: 54, h: 360, w: 768});
   const mika = queue[3];
   s.userData.tick = (t) => queue.forEach((p, i) => { go(p, i % 2 ? -.35 : .35, 4 - i * 1.25, 0, -1, t * WALK); p.userData.pose('Walk', t); });
   s.userData.camera = {from: [-2.2, 2.6, 7], to: [-1.6, 2.4, 2.5], look: () => [mika.position.x, 1.1, mika.position.z - 2]};
@@ -226,19 +226,19 @@ shots.shelter = () => {
   const s = new T.Scene(); s.background = new T.Color(0x151924); lights(s, {power: .5, ambient: .7, from: [8, 10, 6]});
   const g = gym(s), spot = g.spot;
   const mika = person(s, 'woman', spot.position.x, spot.position.z, Math.PI * .1, MIKA, 'Sitting');
-  const screen = block(s, spot.position.x + .05, .72, spot.position.z + .3, .12, .2, .02, glow(0x9fd3ff, 0));
-  const phoneLight = new T.PointLight(0x9fd3ff, 0, 2.5); phoneLight.position.set(spot.position.x + .1, .7, spot.position.z + .5); s.add(phoneLight);
+  sign(s, ['CHARGING STATION →', 'PLEASE FORM A QUEUE'], 4.8, 2.8, -6.7, 4.4, 1.15, {bg: '#172033', fg: '#aee3ff', size: 82, accent: '#aee3ff'});
+  const queue = [0, 1, 2].map(i => person(s, i % 2 ? 'man' : 'woman', 4.2 + i * .65, -3.2 + i * .7, Math.PI, crowdShirts[i], 'Idle', i * .3));
   s.userData.tick = (t) => {
     const on = t < 1.6;
     g.panels.forEach(p => { p.material.emissiveIntensity = on ? 1.6 : 0; }); g.lamp.intensity = on ? 40 : 0;
-    screen.material.emissiveIntensity = on ? 0 : 2; phoneLight.intensity = on ? 0 : 3;
     g.crowd.forEach(p => p.userData.pose('Sitting', 1.2)); mika.userData.pose('Sitting', 1.2);
+    queue.forEach(p => p.userData.pose('Idle', t));
   };
   s.userData.camera = {from: [spot.position.x + 2.4, 1.6, spot.position.z + 3.4], to: [spot.position.x + 1.4, 1.2, spot.position.z + 2.2], look: () => [spot.position.x, .5, spot.position.z]};
   return s;
 };
 
-function shelterDay(paperStart, paperEnd, night, page) {
+function shelterDay(night) {
   const s = new T.Scene(); s.background = new T.Color(night ? 0x151924 : 0x2a3140);
   lights(s, {power: night ? .6 : 1.3, ambient: night ? .9 : 1.5, from: [8, 10, 6]});
   const g = gym(s, {lit: true}), spot = g.spot;
@@ -246,22 +246,21 @@ function shelterDay(paperStart, paperEnd, night, page) {
   const mika = person(s, 'woman', spot.position.x, spot.position.z, Math.PI * .1, MIKA, 'Sitting');
   block(s, spot.position.x + .05, .56, spot.position.z + .22, .26, .02, .34, 0xffffff); // clipboard on her lap
   // Pages done on her left, pages still to do on her right.
-  const left = block(s, spot.position.x - .75, .05, spot.position.z + .1, .42, .1, .56, 0xf7f4ea);
-  const right = block(s, spot.position.x + .8, .05, spot.position.z - .2, .42, .1, .56, 0xf7f4ea);
-  const label = sign(s, ['FORM 77-B', `PAGE ${page} OF 600`], spot.position.x + .8, 1, spot.position.z + .09, .6, .2, {bg: '#ffffff', fg: '#10131b', size: 110, w: 768});
+  const status = sign(s, ['SHELTER STATUS', night ? 'STILL OPEN' : 'SUPPLIES: ARRIVED'], 0, 3.7, -6.75, 3.4, .9, {bg: '#172033', fg: '#f4e6bb', size: 82, accent: night ? '#ffb347' : '#77d5a1'});
   const crates = []; if (!night) for (let j = 0; j < 6; j++) crates.push(block(s, 5 + (j % 3) * .9, .4 + Math.floor(j / 3) * .8, -5.5, .8, .75, .8, 0x9c7b56));
+  if (!night) {
+    block(s, 5, .8, -5.08, 2.6, .08, .04, 0xc72e3a);
+    block(s, 5, .8, -5.11, .08, .8, .04, 0xc72e3a);
+  }
   s.userData.tick = (t) => {
-    const done = paperStart + (paperEnd - paperStart) * Math.min(1, t / 5);
-    left.scale.y = 1 + done * 12; left.position.y = .05 * left.scale.y;
-    right.scale.y = 1 + (1 - done) * 12; right.position.y = .05 * right.scale.y; label.position.y = .1 * right.scale.y + .14;
     g.crowd.forEach(p => p.userData.pose('Sitting', 1.2)); mika.userData.pose('Sitting', 1.2);
     if (night) { const k = Math.max(0, 1 - t / 4) * (t > .6 ? 1 : 0); s.position.set(Math.sin(t * 29) * .05 * k, 0, Math.cos(t * 23) * .04 * k); }  // aftershock
   };
   s.userData.camera = {from: [spot.position.x + 1.2, 1.5, spot.position.z + 3.6], to: [spot.position.x + .9, 1.2, spot.position.z + 2.7], look: () => [spot.position.x + .3, .45, spot.position.z]};
   return s;
 }
-shots.aid = () => shelterDay(0, .01, false, 1);
-shots.aftershock = () => shelterDay(.33, .34, true, 200);
+shots.aid = () => shelterDay(false);
+shots.aftershock = () => shelterDay(true);
 
 shots['home-again'] = () => {
   // Two beats in one shot: the train comes back, then Mika is home with her toast.
@@ -301,7 +300,6 @@ const $ = (q) => document.querySelector(q);
 $('#lower .name').textContent = script.person.name.toUpperCase();
 $('#stats h2').textContent = `${script.person.name.toUpperCase()}'S FOUR DAYS`;
 $('#stats .rows').innerHTML = script.stats.map(m => `<div class="row"><span>${m.label}</span><b data-v="${m.value}">0</b></div>`).join('');
-$('#stats p').textContent = script.disclaimer;
 
 const camera = new T.PerspectiveCamera(50, W / H, .05, 260);
 const OUTRO = 3.5;
@@ -331,17 +329,9 @@ window.render = (localTime) => {
   const speaking = local < (timing.voice_durations[i] + timing.lead_in + .6);
   $('#caption').textContent = speaking ? data.narration : '';
   $('#lower').style.opacity = data.lower_third ? fade((local - .4) / .3) * fade((len - 1 - local) / .3) : 0;
-  const phone = $('#phone');
-  if (data.notification) {
-    phone.querySelector('.who').innerHTML = '';
-    phone.querySelector('.who').append(data.notification.author, Object.assign(document.createElement('span'), {textContent: data.notification.handle}));
-    phone.querySelector('.text').textContent = data.notification.text;
-    const k = fade((local - 1.1) / .3) * fade((len - .3 - local) / .3);
-    phone.style.opacity = k; phone.style.transform = `translateY(${(1 - k) * -60}px)`;
-  } else phone.style.opacity = 0;
   const last = i === scenes.length - 1, outro = last ? time - cuts[cuts.length - 1] : -1;
   $('#stats').style.opacity = last ? fade(outro / .4) : 0;
-  if (last) { phone.style.opacity = outro > 0 ? 0 : phone.style.opacity; document.querySelectorAll('#stats b').forEach(b => { b.textContent = Math.round(Number(b.dataset.v) * fade((outro - .3) / 2)); }); }
+  if (last) document.querySelectorAll('#stats b').forEach(b => { b.textContent = Math.round(Number(b.dataset.v) * fade((outro - .3) / 2)); });
   renderer.render(scene, camera);
 };
 window.READY = true; window.render(0);

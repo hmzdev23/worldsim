@@ -1,4 +1,4 @@
-# Satire mode and person-centred recap films
+# Satire mode and recap films
 
 Owner: Mathys. Branch: `feat/satire-recap-films`. This adds a satirical presentation layer to WORLD//SIM and three short recap films built on it. The simulation itself is untouched: facts, impact estimates and validation work exactly as before, and satire sits on top as an optional layer.
 
@@ -41,25 +41,27 @@ Owner: Mathys. Branch: `feat/satire-recap-films`. This adds a satirical presenta
 
 ## 2. Recap films (experiments/recap-films/films)
 
-Each film follows **one invented person** through a scenario, and all of them share the same humor format:
+The format can follow either one resident or the world as a crowd. Fixed scenario fixtures make both approaches repeatable: each film selects the same event beats in the same order, then stages its own scenes around those beats.
 
 - The facts (times, places, magnitude, aid origins) come from a Director fixture and are narrated plainly.
-- The jokes arrive as notifications on the person's phone, taken from the satire layer.
+- Jokes appear in the environment and the reactions people can see: signs, departure boards, public displays, queues and official ceremonies. Films do not use phone notifications.
 - A running gag pays off at the end.
-- A stats card closes the film: notifications, the absurdity index and the gag stat.
+- The recap follows the event timeline. A brief end card can pay off the running gag and show the absurdity index.
+- The protagonist can be a single person for a local event or a crowd/world montage for a global, deliberately absurd scenario.
 
-| Film | Scenario | Person | Running gag | Length |
+| Film | Scenario | Point of view | Running gag | Length |
 | --- | --- | --- | --- | --- |
 | `japan-resident` | Japan earthquake fixture | Mika, Ishinomaki | the toast | 48.5 s |
-| `iceland-resident` | Iceland eruption fixture | Sigrún, Grindavík | her flight | 38.3 s |
-| `nuclear-standoff` | UK–France standoff (new fixture `nuclear-standoff`) | Tom, London | reassuring pamphlets | 42.7 s |
+| `iceland-resident` | Iceland eruption fixture | Sigrún, Grindavík | her delayed flight | 38.3 s |
+| `nuclear-standoff` | UK–France standoff (new fixture `nuclear-standoff`) | Tom and the shelter committee | a meeting table that never settles | 42.7 s |
 
 **Rules all three follow:**
 - **Length and voice:** 50 seconds at most (`make-audio.py` refuses longer), with the ElevenLabs voice `XA3P1cj7XJexe6Zq0ATX`.
 - **Motion:** everything that moves faces its direction of travel. All models face local +Z, and `go()` handles placement. Walk and run speeds match the animations.
 - **Sets and look:** outdoor ground reaches the horizon, with fog, and interiors are closed rooms. Characters look like plausible locals for each setting, and the protagonist always wears yellow.
-- **Labels:** "SATIRE · FICTIONAL" stays on screen. The nuclear film uses real countries but invented events, says so on the end card, has no real leaders or organizations, and shows a single warning shot over open sea, plainly and with no joke.
+- **Presentation:** satire is clear from the tone and scenes; no phone banner or persistent fiction label is burned into the picture. The nuclear film uses real countries but invented events, has no real leaders or organizations, and shows a single warning shot over open sea plainly and without a joke.
 - `iceland-satire` is the earlier news-broadcast cut, kept for reference and superseded by `iceland-resident`.
+
 
 ### Build a film
 
