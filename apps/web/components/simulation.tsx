@@ -5,26 +5,16 @@ import { MotionConfig } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { japanDemo } from "../lib/earthquake";
 import { listStarters, pauseRun, prepareScenario } from "../lib/scenario-api";
-import { generationStageLabel, tones, type ScenarioRun, type Starter, type Tone } from "../lib/scenario";
+import { generationStageLabel, type ScenarioRun, type Starter, type Tone } from "../lib/scenario";
 import { RunConsole } from "./run-console";
 import { ScenarioStarters, type StarterLaunch } from "./scenario-starters";
 
 // Used when the box is empty: press Enter (or Simulate) to run it.
 const DEFAULT_PROMPT = "What if a volcanic eruption closed Iceland’s main airport for two days?";
-import { ToneSelector } from "./tone-selector";
 
-const toneKey = "worldsim:tone";
-function storedTone(): Tone | undefined {
-  try {
-    const value = window.localStorage.getItem(toneKey);
-    return tones.some((tone) => tone.value === value) ? value as Tone : undefined;
-  } catch {
-    return undefined;
-  }
-}
-function storeTone(tone: Tone) {
-  try { window.localStorage.setItem(toneKey, tone); } catch { /* private mode: not remembered */ }
-}
+// Satire is switched off for now: every run is straight-faced. The satire
+// layer still exists in the Director, newsroom and server, unused by the app.
+const RUN_TONE: Tone = "straight";
 
 type View = "home" | "watch";
 type LaunchState = { status: "idle" | "generating" | "ready" } | { status: "failed"; message: string };
@@ -45,23 +35,15 @@ function ScenarioWorkspace() {
   const [autoStart, setAutoStart] = useState(false);
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [stage, setStage] = useState<string>();
-  // The tone for the next run, and the tone each run is watched in.
-  const [nextTone, setNextTone] = useState<Tone>("straight");
-  const [toneByRun, setToneByRun] = useState<Record<string, Tone>>({});
   const request = useRef<AbortController | null>(null);
   const lastRequest = useRef<Request | null>(null);
   const preparingSince = useRef<number | undefined>(undefined);
   const busy = launch.status === "generating";
   const isDemo = run === japanDemo;
-  const runTone: Tone = toneByRun[run.id] ?? (isDemo ? nextTone : run.tone ?? "straight");
-  // On the home screen the selector sets the next run's tone; while watching, the current run's.
-  const shownTone: Tone = view === "home" ? nextTone : runTone;
+  const runTone = RUN_TONE;
+  const nextTone = RUN_TONE;
 
   useEffect(() => () => request.current?.abort(), []);
-  useEffect(() => {
-    const remembered = storedTone();
-    if (remembered) setNextTone(remembered);
-  }, []);
   useEffect(() => {
     const controller = new AbortController();
     setStartersLoading(true); setStartersError(undefined);
@@ -81,11 +63,6 @@ function ScenarioWorkspace() {
     return () => clearInterval(timer);
   }, [busy]);
 
-  function chooseTone(tone: Tone) {
-    setNextTone(tone);
-    setToneByRun((previous) => ({ ...previous, [run.id]: tone }));
-    storeTone(tone);
-  }
   function pauseCurrent() {
     if (view === "watch" && !isDemo) void pauseRun(run.id).catch(() => {});
   }
@@ -103,7 +80,6 @@ function ScenarioWorkspace() {
         (p) => { if (!controller.signal.aborted) setStage(p.stage); }, next.tone, next.fixture);
       if (controller.signal.aborted) return;
       pauseCurrent();
-      setToneByRun((previous) => ({ ...previous, [scenario.id]: scenario.tone ?? next.tone }));
       setRun(scenario); setAutoStart(true); setView("watch"); setLaunch({ status: "ready" });
     } catch (error) {
       if (!controller.signal.aborted) {
@@ -140,7 +116,7 @@ function ScenarioWorkspace() {
   return <main className={`simulation-shell view-${view}`}>
     <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span><span>WORLD<span className="wordmark-slashes">//</span>SIM</span></h1>
       <div className="masthead-actions">
-        <span className="mode-label">{runTone === "straight" ? "Fictional simulation" : "Fictional simulation · satire"}</span>
+        <span className="mode-label">Fictional simulation</span>
         {view !== "home" && <button type="button" className="demo-button" disabled={busy} onClick={goHome}>New scenario</button>}
       </div>
     </header>
@@ -162,11 +138,6 @@ function ScenarioWorkspace() {
           }}
           onChange={(e) => { setPrompt(e.currentTarget.value); if (launch.status !== "idle") setLaunch({ status: "idle" }); }} />
           <button className="generate-button" type="submit" disabled={busy}>{busy ? "Preparing…" : launch.status === "failed" ? "Try again" : "Simulate"}<ArrowRight size={16} aria-hidden="true" /></button></div>
-        <div className="scenario-tone-row">
-          <span id="tone-label">Tone</span>
-          <ToneSelector value={shownTone} onChange={chooseTone} />
-          <span className="tone-hint">{shownTone === "straight" ? "Serious presentation." : "Satire is a fictional presentation layer. Facts and impact estimates stay unchanged."}</span>
-        </div>
         <div className="scenario-launch-footer"><p id="prompt-enter-hint" className={launch.status === "failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
 </div>
       </form>

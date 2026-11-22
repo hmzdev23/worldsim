@@ -822,14 +822,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 
 @media (max-width:680px) { .onboarding:has(.setup-briefing) .setup-footer { position: static; } }
 /* ---- Satire layer (local experiment) ------------------------------------ */
-.scenario-tone-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; color: var(--muted); font-size: 12px; }
-.tone-selector { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.tone-selector button { border: 0; border-right: 1px solid var(--line); background: transparent; color: var(--muted); font: inherit; font-size: 12px; padding: 6px 10px; cursor: pointer; }
-.tone-selector button:last-child { border-right: 0; }
-.tone-selector button[aria-checked="true"] { background: var(--raised); color: var(--text); }
-.tone-selector button[aria-checked="true"][data-tone="satirical"] { background: #3a1416; color: #ffd23f; }
-.tone-selector button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.tone-hint { flex-basis: 100%; font-size: 11px; }
 .satire-stamp { color: #ffd23f; letter-spacing: .04em; text-transform: uppercase; }
 .workspace:not([data-tone="straight"]) .wire-meta > span:first-child { color: #ff5a5f; font-weight: 700; }
 .workspace:not([data-tone="straight"]) .wire-headline { text-transform: uppercase; letter-spacing: .01em; }

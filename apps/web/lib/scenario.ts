@@ -52,10 +52,6 @@ export type Pacing =
 
 // Presentation tone (satire layer). "straight" is the original, serious experience.
 export type Tone = "straight" | "satirical";
-export const tones: { value: Tone; label: string }[] = [
-  { value: "straight", label: "Straight-faced" },
-  { value: "satirical", label: "Satirical" },
-];
 
 /** A starter scenario from GET /starters. */
 export type Starter = { fixture: string; title: string; category: string; icon: string; prompt: string; summary: string };
