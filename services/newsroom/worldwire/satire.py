@@ -321,6 +321,11 @@ def check_tone(tone: str) -> str:
     return tone
 
 
+def _country(name: str) -> str:
+    """'the United States', 'the Philippines'; most country names take no article."""
+    return f"the {name}" if name.startswith(("United ", "Republic ")) or name in ("Netherlands", "Philippines") else name
+
+
 def _fields(event: Event, n: int) -> dict[str, str]:
     loc = event.get("location", {})
     name, country = loc.get("name") or "", loc.get("country") or "the region"
@@ -336,7 +341,7 @@ def _fields(event: Event, n: int) -> dict[str, str]:
     return {
         "at": at,
         "country": country,
-        "origin": origin if origin and origin.lower() != "unknown" else "abroad",
+        "origin": _country(origin) if origin and origin.lower() != "unknown" else "abroad",
         "label": (label or "Unexplained phenomenon").capitalize(),
         "n": str(n),
     }

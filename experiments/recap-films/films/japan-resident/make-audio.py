@@ -1,0 +1,89 @@
+#!/usr/bin/env python3
+"""Narrate script.json with ElevenLabs and write timing.json (shot cuts fitted to the voice).
+
+The key comes from ELEVENLABS_API_KEY or the repo's untracked .env.local. Clips
+are cached by a hash of text, voice and model, so re-runs cost nothing. Sound
+effects and music are reused from the team's other films (no generation calls).
+"""
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import subprocess
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+ROOT = next(p for p in HERE.parents if (p / "services").is_dir())
+AUDIO = HERE / "audio"
+VOICE = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")  # premade "George": dry, newsreader-like
+MODEL = "eleven_multilingual_v2"
+LEAD_IN, TAIL, MIN_SHOT = 0.35, 0.9, 4.0
+
+
+def api_key() -> str:
+    key = os.environ.get("ELEVENLABS_API_KEY", "")
+    env = ROOT / ".env.local"
+    if not key and env.is_file():
+        for line in env.read_text(encoding="utf-8").splitlines():
+            name, _, value = line.partition("=")
+            if name.strip().removeprefix("export ").strip() == "ELEVENLABS_API_KEY":
+                key = value.strip().strip("'\"")
+    if not key:
+        raise SystemExit("ELEVENLABS_API_KEY not set (environment or .env.local)")
+    return key
+
+
+def duration(path: Path) -> float:
+    out = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(path)],
+                         capture_output=True, text=True, check=True)
+    return float(out.stdout.strip())
+
+
+def speak(text: str, key: str) -> bytes:
+    body = {"text": text, "model_id": MODEL,
+            "voice_settings": {"stability": 0.7, "similarity_boost": 0.75, "speed": 1.05}}
+    req = urllib.request.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}?output_format=mp3_44100_128",
+        data=json.dumps(body).encode(), method="POST",
+        headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/mpeg"})
+    try:
+        with urllib.request.urlopen(req, timeout=90) as resp:
+            data = resp.read()
+    except urllib.error.HTTPError as err:
+        raise SystemExit(f"ElevenLabs HTTP {err.code}: {err.read()[:200].decode('utf-8', 'replace')}".replace(key, "[redacted]"))
+    if len(data) < 1000:
+        raise SystemExit("ElevenLabs returned too little audio")
+    return data
+
+
+def main() -> int:
+    script = json.loads((HERE / "script.json").read_text(encoding="utf-8"))
+    AUDIO.mkdir(exist_ok=True)
+    key = None
+    cuts, voices = [0.0], []
+    for i, shot in enumerate(script["shots"], 1):
+        digest = hashlib.sha256(f"{shot['narration']}|{VOICE}|{MODEL}".encode()).hexdigest()[:16]
+        clip, stamp = AUDIO / f"voice-{i:02}.mp3", AUDIO / f"voice-{i:02}.txt"
+        if not (clip.is_file() and stamp.is_file() and stamp.read_text() == digest):
+            key = key or api_key()
+            clip.write_bytes(speak(shot["narration"], key))
+            stamp.write_text(digest)
+            print(f"voice-{i:02}: generated ({len(shot['narration'])} characters)")
+        else:
+            print(f"voice-{i:02}: cached")
+        length = duration(clip)
+        voices.append(round(length, 3))
+        cuts.append(round(cuts[-1] + max(MIN_SHOT, LEAD_IN + length + TAIL), 2))
+    timing = {"cuts": cuts, "voice_durations": voices, "lead_in": LEAD_IN, "voice_id": VOICE, "model_id": MODEL}
+    (HERE / "timing.json").write_text(json.dumps(timing, indent=2) + "\n", encoding="utf-8")
+    (AUDIO / "narration-lines.json").write_text(
+        json.dumps([s["narration"] for s in script["shots"]], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    print(f"total {cuts[-1]:.1f}s, cuts {cuts}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
