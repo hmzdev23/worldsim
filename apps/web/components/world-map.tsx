@@ -33,9 +33,28 @@ function kmRadius(scale: number, min = 5): ExpressionSpecification {
   const perPixel = 40075 / 512;
   return [
     "interpolate", ["exponential", 2], ["zoom"],
-    0, ["max", min, ["*", ["get", "radiusKm"], scale / perPixel]],
-    8, ["max", min, ["*", ["get", "radiusKm"], (scale * 256) / perPixel]],
+    0, ["max", min * 0.1, ["*", ["get", "radiusKm"], scale / perPixel]],
+    4, ["max", min * 0.24, ["*", ["get", "radiusKm"], (scale * 16) / perPixel]],
+    8, ["max", min * 0.8, ["*", ["get", "radiusKm"], (scale * 256) / perPixel]],
   ];
+}
+
+// Illustrative markers grow with the map, but remain bounded and do not claim
+// to represent a measured disaster footprint.
+function effectScale(zoom: number) {
+  const stops = [[0, 0.08], [2, 0.12], [4.65, 0.28], [7, 0.65]] as const;
+  if (zoom <= stops[0][0]) return stops[0][1];
+  for (let i = 1; i < stops.length; i++) {
+    const [z, value] = stops[i];
+    const [prevZ, prev] = stops[i - 1];
+    if (zoom <= z) return prev + (value - prev) * ((zoom - prevZ) / (z - prevZ));
+  }
+  return stops[stops.length - 1][1];
+}
+
+function zoomScaledRadius(radius: number): ExpressionSpecification {
+  return ["interpolate", ["linear"], ["zoom"], 0, radius * 0.08, 2, radius * 0.12,
+    4.65, radius * 0.28, 7, radius * 0.65];
 }
 
 function effectData(effects: MapEffects) {
@@ -168,7 +187,7 @@ const mapStyle: StyleSpecification = {
       id: "epicenter-halo",
       type: "circle",
       source: "epicenter",
-      paint: { "circle-color": accent, "circle-radius": 15, "circle-opacity": 0.13 },
+      paint: { "circle-color": accent, "circle-radius": zoomScaledRadius(15), "circle-opacity": 0.13 },
     },
     // Event effects (DIR-006): reported outbreak areas, disaster shockwaves, inferred aid routes.
     {
@@ -201,7 +220,7 @@ const mapStyle: StyleSpecification = {
       id: "effect-shockwave-core",
       type: "circle",
       source: "effect-shockwaves",
-      paint: { "circle-color": shockwaveColor, "circle-opacity": 0.22, "circle-radius": 7 },
+      paint: { "circle-color": shockwaveColor, "circle-opacity": 0.22, "circle-radius": zoomScaledRadius(7) },
     },
     {
       id: "effect-shockwave-ring",
@@ -409,7 +428,7 @@ export function WorldMap({
       const phase = ((elapsedSeconds / 4) + index / pulseLayers.length) % 1;
       const radius = active ? 12 + 92 * phase : 20 + index * 20;
       const opacity = active ? (1 - phase) * 0.72 : 0.62 - index * 0.16;
-      map.setPaintProperty(id, "circle-radius", radius);
+      map.setPaintProperty(id, "circle-radius", zoomScaledRadius(radius));
       map.setPaintProperty(id, "circle-stroke-opacity", opacity);
     });
   }, [elapsedSeconds, mapReady, quake]);
@@ -500,6 +519,21 @@ export function WorldMap({
     volcanoMarkers.current.forEach(marker => { marker.getElement().dataset.playing = String(playing); });
   }, [effects.shockwaves, mapReady, playing]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    const updateScale = () => {
+      const scale = String(effectScale(map.getZoom()));
+      for (const marker of [...volcanoMarkers.current, ...tornadoMarkers.current, ...cueMarkers.current]) {
+        marker.getElement().style.setProperty("--effect-scale", scale);
+      }
+      for (const { marker } of aidMarkers.current.values()) marker.getElement().style.setProperty("--effect-scale", scale);
+    };
+    updateScale();
+    map.on("zoom", updateScale);
+    return () => { map.off("zoom", updateScale); };
+  }, [effects, mapReady]);
+
   // Animation follows the clock: pulses, rings and aid markers move only while
   // the simulation plays, and hold still with reduced motion.
   useEffect(() => {
@@ -514,7 +548,7 @@ export function WorldMap({
     map.setPaintProperty("effect-water-wave", "circle-radius", kmRadius(still ? 1 : 0.5 + phase, 12 + phase * 10));
     map.setPaintProperty("effect-water-wave", "circle-stroke-opacity", still ? 0.45 : 0.55 * (1 - phase));
     for (const marker of cueMarkers.current) {
-      marker.getElement().style.scale = still ? "1" : String(1 + 0.08 * Math.sin(elapsedSeconds * 2));
+      marker.getElement().style.setProperty("--effect-motion", still ? "1" : String(1 + 0.08 * Math.sin(elapsedSeconds * 2)));
     }
     for (const marker of tornadoMarkers.current) {
       marker.getElement().style.rotate = still ? "0deg" : `${5 * Math.sin(elapsedSeconds * 2)}deg`;

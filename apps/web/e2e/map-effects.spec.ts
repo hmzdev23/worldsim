@@ -114,6 +114,13 @@ test("special effects appear on the map and clear on rewind", async ({ page }) =
   await expect(map.getByRole("group", { name: "Map effects" })).toContainText("Tsunami warning");
   await expect(map.locator('[data-effect="alien"]')).toHaveCount(1);
   await expect(map.locator('[data-effect="tornado"]')).toHaveCount(1);
+  const alien = map.locator('[data-effect="alien"]');
+  const tornado = map.locator('[data-effect="tornado"]');
+  const initialAlien = (await alien.boundingBox())!.width;
+  const initialTornado = (await tornado.boundingBox())!.width;
+  await map.getByRole("button", { name: "Zoom in" }).click();
+  await expect.poll(async () => (await alien.boundingBox())!.width).toBeGreaterThan(initialAlien);
+  await expect.poll(async () => (await tornado.boundingBox())!.width).toBeGreaterThan(initialTornado);
   await playback.getByRole("slider").press("Home");
   await expect(map.locator('[data-effect="alien"]')).toHaveCount(0);
   await expect(map.locator('[data-effect="tornado"]')).toHaveCount(0);
@@ -175,6 +182,8 @@ test("outbreaks accumulate, disasters ring, and only a supported aid route is dr
   await expect(effects).toContainText("Routes are inferred");
   await expect(effects).toContainText("Outbreak circles mark reported places only.");
   await expect(map.locator('[data-effect="volcano"]')).toHaveCount(1);
+  const volcano = map.locator('[data-effect="volcano"]');
+  const initialWidth = (await volcano.boundingBox())!.width;
   // One route: Germany has an earlier event (Frankfurt); Norway has none, so no route to Reykjavik.
   await expect(map.locator('[data-effect="aid-marker"]')).toHaveCount(1);
   await expect(map.locator('[data-effect="aid-marker"]')).toHaveAttribute("data-event-id", "evt-0004");
@@ -183,6 +192,7 @@ test("outbreaks accumulate, disasters ring, and only a supported aid route is dr
   // The effects never block the map controls or take clicks.
   await expect(effects).toHaveCSS("pointer-events", "none");
   await map.getByRole("button", { name: "Zoom in" }).click();
+  await expect.poll(async () => (await volcano.boundingBox())!.width).toBeGreaterThan(initialWidth);
 
   // Seeking back removes effects for events that are no longer applied.
   const slider = playback.getByRole("slider");

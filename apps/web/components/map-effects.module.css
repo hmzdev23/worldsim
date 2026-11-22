@@ -93,6 +93,8 @@
 .tornado span:nth-child(1) { width: 21px; }
 .tornado span:nth-child(2) { width: 14px; }
 .tornado span:nth-child(3) { width: 7px; }
+.tornado, .scenarioCue, .volcano, .aidMarker { scale: calc(var(--effect-scale, 0.12) * var(--effect-motion, 1)); }
+.volcano { transform-origin: center bottom; }
 .scenarioCue { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #b8d6c5aa; border-radius: 50%; background: #182623d9; color: #d3f0dd; font-size: 19px; line-height: 1; pointer-events: none; }
 .scenarioCue[data-kind="nuclear"] { color: #f2c57b; border-color: #e7be7799; }
 .scenarioCue[data-kind="darkness"] { color: #d9e2f0; border-color: #aebfd999; }
