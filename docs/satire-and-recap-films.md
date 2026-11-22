@@ -4,6 +4,10 @@ Owner: Mathys. Branch: `feat/satire-recap-films`. This adds a satirical presenta
 
 ## 1. Satire mode in the app
 
+> **Switched off for now.** The app has no tone selector and every run is straight-faced.
+> The satire layer still exists in the Director, newsroom and simulation server, so it can
+> be turned back on by restoring `apps/web/components/tone-selector.tsx` from git history.
+
 **Tone selector:** a control next to the prompt bar offers two tones.
 
 | Tone | What you see |

@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import ssl
 import subprocess
 import urllib.error
 import urllib.request
@@ -25,6 +26,24 @@ VOICE = "XA3P1cj7XJexe6Zq0ATX"  # the team's chosen narrator voice for every rec
 MODEL = "eleven_multilingual_v2"
 LEAD_IN, TAIL, MIN_SHOT = 0.25, 0.55, 3.5
 MAX_SECONDS = 50.0  # hard cap for the whole film, outro included
+
+
+def tls_context() -> ssl.SSLContext:
+    """Trusted certificates for HTTPS, wherever python3 came from.
+
+    The python.org build on macOS has no trusted certificates until its
+    "Install Certificates" step is run, so HTTPS fails with
+    CERTIFICATE_VERIFY_FAILED. Use certifi when installed, else the system bundle.
+    """
+    try:
+        import certifi
+        return ssl.create_default_context(cafile=certifi.where())
+    except ImportError:
+        pass
+    for bundle in ("/etc/ssl/cert.pem", "/etc/ssl/certs/ca-certificates.crt"):
+        if os.path.exists(bundle):
+            return ssl.create_default_context(cafile=bundle)
+    return ssl.create_default_context()
 
 
 def api_key() -> str:
@@ -54,7 +73,7 @@ def speak(text: str, key: str) -> bytes:
         data=json.dumps(body).encode(), method="POST",
         headers={"xi-api-key": key, "Content-Type": "application/json", "Accept": "audio/mpeg"})
     try:
-        with urllib.request.urlopen(req, timeout=90) as resp:
+        with urllib.request.urlopen(req, timeout=90, context=tls_context()) as resp:
             data = resp.read()
     except urllib.error.HTTPError as err:
         raise SystemExit(f"ElevenLabs HTTP {err.code}: {err.read()[:200].decode('utf-8', 'replace')}".replace(key, "[redacted]"))
