@@ -139,6 +139,7 @@ export function RunConsole({ run, isDemo, onRestart, onSelectRole, onSelectScena
     started.current = true;
     sendControl({ action: "speed", speed: initialSpeed });
     setWantPlaying(true);
+    if (!run.player) sendControl({ action: "play" });
     // The presentation scheduler starts the clock after any opening report.
   }, [autoStart, connected, initialSpeed]);
   const [beatSerial, setBeatSerial] = useState(0);
@@ -412,6 +413,8 @@ export function RunConsole({ run, isDemo, onRestart, onSelectRole, onSelectScena
       </div>}
       <WorldMap
         ref={mapRef}
+        playing={playback.state === "playing"}
+        initialFocus={autoStart ? run.firstEvent.location : undefined}
         elapsedSeconds={(simTime - run.startMinute) / (run.pacing?.mode === "relative" && run.pacing.minutes_per_tick > 0
           ? run.pacing.minutes_per_tick / run.pacing.tick_seconds
           : minutesPerSecond)}

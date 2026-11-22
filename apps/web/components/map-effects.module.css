@@ -55,6 +55,9 @@
 
 .legend li[data-kind="outbreak"]::before { background: #78b9b5; }
 .legend li[data-kind="shockwave"]::before { background: #ff8f5c; }
+.legend li[data-kind="water"]::before { background: #8dd8f4; }
+.legend li[data-kind="tornado"]::before { background: #d5e0dc; }
+.legend li[data-kind="alien"]::before, .legend li[data-kind="insects"]::before, .legend li[data-kind="ai"]::before, .legend li[data-kind="darkness"]::before, .legend li[data-kind="nuclear"]::before { background: #a9c8b6; }
 .legend li[data-kind="route"]::before { border: 1px dashed #83c9ae; border-radius: 2px; }
 
 .note {
@@ -84,3 +87,23 @@
   white-space: nowrap;
   pointer-events: none;
 }
+
+.tornado { display: grid; justify-items: center; gap: 2px; width: 32px; padding: 5px; border-radius: 50%; background: #172124b8; pointer-events: none; }
+.tornado span { display: block; height: 2px; border-radius: 2px; background: #e0ece6; }
+.tornado span:nth-child(1) { width: 21px; }
+.tornado span:nth-child(2) { width: 14px; }
+.tornado span:nth-child(3) { width: 7px; }
+.tornado, .scenarioCue, .volcano, .aidMarker { scale: calc(var(--effect-scale, 0.12) * var(--effect-motion, 1)); }
+.volcano { transform-origin: center bottom; }
+.scenarioCue { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid #b8d6c5aa; border-radius: 50%; background: #182623d9; color: #d3f0dd; font-size: 19px; line-height: 1; pointer-events: none; }
+.scenarioCue[data-kind="nuclear"] { color: #f2c57b; border-color: #e7be7799; }
+.scenarioCue[data-kind="darkness"] { color: #d9e2f0; border-color: #aebfd999; }
+
+.volcano { position: relative; width: 52px; height: 78px; pointer-events: none; }
+.mountain { position: absolute; left: 4px; bottom: 0; width: 44px; height: 30px; background: #574138; clip-path: polygon(0 100%, 40% 8%, 60% 8%, 100% 100%); filter: drop-shadow(0 2px 2px #0008); }
+.lava { position: absolute; left: 22px; bottom: 20px; width: 8px; height: 18px; background: #ff9c52; clip-path: polygon(15% 0, 85% 0, 100% 50%, 66% 100%, 45% 50%, 0 35%); box-shadow: 0 0 12px #ff743a; animation: lava-glow 1.5s ease-in-out infinite alternate; }
+.ash { position: absolute; left: 12px; bottom: 25px; width: 27px; height: 34px; border-radius: 48% 50% 35% 40%; background: radial-gradient(circle at 40% 70%, #ffc087aa 0, #8d7e77ba 32%, #b7aaa077 65%, transparent 75%); transform-origin: center bottom; animation: ash-rise 2.6s ease-out infinite; }
+.volcano:not([data-playing="true"]) .ash, .volcano:not([data-playing="true"]) .lava { animation-play-state: paused; }
+@keyframes ash-rise { 0% { transform: translateY(0) scale(.6); opacity: .9; } 100% { transform: translateY(-25px) scale(1.35); opacity: .12; } }
+@keyframes lava-glow { from { opacity: .7; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .volcano .ash, .volcano .lava { animation: none; } }

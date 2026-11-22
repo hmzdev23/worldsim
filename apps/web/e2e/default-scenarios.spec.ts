@@ -39,5 +39,8 @@ test("other default scenarios use their offline fixture", async ({ page }) => {
   const request = page.waitForRequest(r => r.url().endsWith("/api/simulation/scenarios") && r.method() === "POST");
   await page.getByRole("button", { name: "Watch default simulation" }).click();
   expect((await request).postDataJSON().fixture).toBe("tsunami");
-  await expect(page.getByRole("region", { name: "Simulation playback" })).toBeVisible();
+  const playback = page.getByRole("region", { name: "Simulation playback" });
+  await expect(playback).toBeVisible();
+  await expect(playback.getByRole("button", { name: "Pause", exact: true })).toBeVisible();
+  await expect(playback.getByLabel("Playback pacing")).toContainText("0.5% of the scenario per second");
 });

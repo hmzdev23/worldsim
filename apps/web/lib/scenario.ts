@@ -97,8 +97,9 @@ export function pacingSummary(pacing: Pacing | undefined, speed: number, remaini
   const percent = Math.round(pacing.fraction_per_tick * 100 * speed * 10) / 10;
   const per = pacing.tick_seconds === 1 ? "second" : `${pacing.tick_seconds} seconds`;
   const step = pacing.minutes_per_tick * speed;
+  const units = step >= 1440 ? `${(step / 1440).toFixed(1)} days` : step >= 60 ? `${(step / 60).toFixed(1)} hours` : step >= 1 ? `${Math.round(step)} minutes` : `${Math.round(step * 60)} seconds`;
   const left = step > 0 ? Math.ceil(Math.max(0, remainingMinutes) / step - 1e-9) * pacing.tick_seconds : 0;
-  return { rate: `≈${percent}% of the scenario per ${per}`, left: left > 0 ? `about ${formatDuration(left)} left` : "at the end" };
+  return { rate: `≈${percent}% of the scenario per ${per} · ${units} simulated`, left: left > 0 ? `about ${formatDuration(left)} left` : "at the end" };
 }
 
 export type Playback = { state: "playing" | "paused"; speed: number };

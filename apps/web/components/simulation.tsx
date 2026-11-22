@@ -130,7 +130,7 @@ function ScenarioWorkspace() {
       {coach && <div className="game-coach" role="status"><p><strong>You’re in charge.</strong> Follow the news. When it’s time to decide, the clock pauses for you.</p><button type="button" onClick={()=>setCoach(false)}>Got it</button></div>}
     </>}
     {(view==="game" || view==="watch") && <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo}
-      autoStart={autoStart} initialSpeed={runPace==="demo" ? 4 : 1}
+      autoStart={autoStart} initialSpeed={run.player && runPace==="demo" ? 4 : 1}
       onSelectRole={()=>setup(2)} onSelectScenario={()=>setup(1)}
       onRestart={run.player ? ()=>playAsRole(playable.find(s=>s.fixture===run.player?.fixture),run.player?.role) : undefined}/>}
   </main>;
