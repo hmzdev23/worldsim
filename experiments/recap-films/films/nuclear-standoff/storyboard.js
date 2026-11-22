@@ -1,5 +1,5 @@
-// "Tomas's three days": a fictional nuclear standoff between two invented countries,
-// followed through one invented clerk. Text comes from script.json (fixture facts +
+// "Tom's three days": a fictional UK-France nuclear standoff (real countries, invented
+// events, no real people or organizations), followed through one invented clerk. Text comes from script.json (fixture facts +
 // worldwire.satire notifications); cuts come from timing.json.
 // window.render(t) depends only on t: no wall clock, no unseeded randomness.
 import * as T from 'three';
@@ -15,6 +15,7 @@ document.body.prepend(renderer.domElement);
 const base = '/@film/';
 const script = await (await fetch(`${base}script.json`)).json();
 const timing = await (await fetch(`${base}timing.json`)).json();
+const europe = await (await fetch(`${base}map-europe.json`)).json();
 const loader = new GLTFLoader(), pool = {}, people = {};
 const wanted = [['city-kit-commercial', 'building-a'], ['city-kit-commercial', 'building-d'], ['city-kit-commercial', 'building-f'],
   ['city-kit-suburban', 'building-type-e'], ['city-kit-suburban', 'tree-small'], ['city-kit-roads', 'light-curved'],
@@ -216,26 +217,25 @@ shots.queue = () => {
 };
 
 shots.blast = () => {
-  // An invented archipelago, seen from high above. The detonation is shown plainly and far away.
+  // Real coastlines (Natural Earth) seen from high above. The warning detonation over the
+  // Celtic Sea is shown plainly and far away, with no joke.
   const s = new T.Scene(); s.background = new T.Color(0x8fb4c0); s.fog = new T.Fog(0x8fb4c0, 40, 120);
   s.add(new T.HemisphereLight(0xffffff, 0x61706b, 2.3)); const sun = new T.DirectionalLight(0xfff0d0, 1.6); sun.position.set(-6, 12, 7); s.add(sun);
   const ocean = new T.Mesh(new T.PlaneGeometry(400, 400), mat(0x6f9fb0)); ocean.rotation.x = -Math.PI / 2; ocean.position.y = -.05; s.add(ocean);
-  // An invented map, laid out for a vertical frame: east-west is compressed.
-  const lon0 = -143.5, lat0 = -30, k = 2.2, xy = (lon, lat) => [(lon - lon0) * k * .42, -(lat - lat0) * k];
-  function island(lon, lat, r, seed, colour) {
-    const shape = new T.Shape(); const n = 28;
-    for (let i = 0; i <= n; i++) { const a = i / n * Math.PI * 2, rr = r * (.75 + .35 * rand(seed + i) + .15 * Math.sin(a * 3 + seed)); const x = Math.cos(a) * rr, y = Math.sin(a) * rr * .7; i ? shape.lineTo(x, y) : shape.moveTo(x, y); }
-    const m = new T.Mesh(new T.ExtrudeGeometry(shape, {depth: .35, bevelEnabled: false}), mat(colour)); m.rotation.x = -Math.PI / 2;
-    const [x, z] = xy(lon, lat); m.position.set(x, 0, z); s.add(m);
+  const lon0 = -2.5, lat0 = 50, k = 1.1, cos = Math.cos(lat0 * Math.PI / 180), xy = (lon, lat) => [(lon - lon0) * k * cos, -(lat - lat0) * k];
+  const colours = {GBR: 0xeadfc2, FRA: 0xe3d6b6};
+  for (const [iso, rings] of Object.entries(europe)) for (const ring of rings) {
+    const shape = new T.Shape(); ring.forEach(([lon, lat], i) => { const [x, y] = xy(lon, lat); i ? shape.lineTo(x, -y) : shape.moveTo(x, -y); });
+    const m = new T.Mesh(new T.ExtrudeGeometry(shape, {depth: colours[iso] ? .3 : .15, bevelEnabled: false}), mat(colours[iso] ?? 0xcfc9b6));
+    m.rotation.x = -Math.PI / 2; s.add(m);
   }
-  island(-147, -28.2, 3.4, 3, 0xd8cfb4); island(-140.6, -31.6, 3.2, 11, 0xeadfc2); island(-143.8, -29.5, .4, 29, 0xe9e3d2);
-  for (const p of script.map.places) { const [x, z] = xy(p.lon, p.lat); sign(s, [p.name], x - .4, 1.2, z - 2.1, 3, .66, {bg: '#10131b', fg: '#ffffff', size: 120}).rotation.x = -.9; }
+  for (const p of script.map.places) { const [x, z] = xy(p.lon, p.lat); sign(s, [p.name], x, 1, z, p.name.length > 8 ? 3.6 : 2.4, .55, {bg: '#10131b', fg: '#ffffff', size: 110}).rotation.x = -.9; }
   const b = script.map.blast, [bx, bz] = xy(b.lon, b.lat);
   const flash = new T.Mesh(new T.SphereGeometry(1, 24, 16), new T.MeshBasicMaterial({color: 0xfff6d8, transparent: true}));
   flash.position.set(bx, .4, bz); s.add(flash);
   const ring = new T.Mesh(new T.RingGeometry(.9, 1, 48), new T.MeshBasicMaterial({color: 0xffffff, transparent: true, side: T.DoubleSide}));
   ring.rotation.x = -Math.PI / 2; ring.position.set(bx, .45, bz); s.add(ring);
-  const cloud = new T.Group(); cloud.position.set(bx, 0, bz); cloud.scale.setScalar(.45); s.add(cloud);
+  const cloud = new T.Group(); cloud.position.set(bx, 0, bz); cloud.scale.setScalar(.36); s.add(cloud);
   const stem = new T.Mesh(new T.CylinderGeometry(.35, .6, 1, 12), mat(0x9b938a)); cloud.add(stem);
   const cap = []; for (let i = 0; i < 9; i++) { const c = new T.Mesh(new T.IcosahedronGeometry(1, 1), mat(i % 2 ? 0xb3aaa0 : 0x8f877e)); c.userData.a = i / 9 * Math.PI * 2; cloud.add(c); cap.push(c); }
   s.userData.tick = (t) => {
@@ -247,9 +247,8 @@ shots.blast = () => {
     cap.forEach((c, i) => { const r = (.3 + rise * .45) * (i % 3 ? 1 : .4); c.position.set(Math.cos(c.userData.a) * r, h + .15 * (i % 2), Math.sin(c.userData.a) * r); c.scale.setScalar(.5 + rise * 1.1); });
     window.FLASH = f > 0 && f < .25 ? 1 - f / .25 : 0;
   };
-  // Framed wide enough to show both countries and the atoll between them.
-  const [mx, mz] = xy(-143.6, -30.1);
-  s.userData.camera = {from: [mx, 17, mz + 24], to: [mx, 15, mz + 21], look: () => [mx, 0, mz + 1.5]};
+  const [mx, mz] = xy(-2.3, 50);
+  s.userData.camera = {from: [mx, 27, mz + 13], to: [mx, 24, mz + 11], look: () => [mx, 0, mz]};
   return s;
 };
 
@@ -268,7 +267,7 @@ function shelter({ceasefire = false} = {}) {
   const officials = [-1, 0, 1].map((k, i) => { seat(k * 1.1, -5.95); return person(s, i % 2 ? 'woman' : 'man', k * 1.1, -5.95, 0, [0x2f3a56, 0x3a2f45, 0x2f4538][i], 'Sitting'); });
   officials.forEach(p => { p.position.y = .02; });
   // Wall TV on the left wall.
-  const tv = sign(s, ceasefire ? ['CEASEFIRE', 'SIGNED AT MIRREN ATOLL'] : ['STAY TUNED', 'REASSURANCE FOLLOWS'], -6.75, 1.9, -1.5, 2.6, 1.3,
+  const tv = sign(s, ceasefire ? ['CEASEFIRE', `SIGNED IN ${script.ceasefire_place.toUpperCase()}`] : ['STAY TUNED', 'REASSURANCE FOLLOWS'], -6.75, 1.9, -1.5, 2.6, 1.3,
     {bg: ceasefire ? '#0f3a24' : '#1d2b4a', fg: '#ffffff', size: 100, accent: '#ffd23f'}, Math.PI / 2);
   // Seated, people face every which way; at the ceasefire they all stand and face the TV (-X).
   const crowd = []; const spots = ceasefire

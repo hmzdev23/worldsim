@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Write script.json: a fictional nuclear standoff seen through one invented clerk, Tomas.
+"""Write script.json: a fictional UK-France nuclear standoff seen through one invented clerk, Tom.
 
-Borovia and Kestria are invented countries (codes XBO/XKE, from ISO's
-user-assigned X range) on invented islands, so the film is about no real
-conflict. Facts come from services/director/fixtures/nuclear-standoff.json
-and are narrated plainly; the detonation shot carries no joke. The humor is
-institutional and arrives on his phone from worldwire.satire. Casualty
-estimates are never used.
+Real countries, invented events: no such war has happened or is predicted. No
+real leader, agency or company appears; every statement comes from the satire
+layer's invented organizations. Facts come from
+services/director/fixtures/nuclear-standoff.json and are narrated plainly: one
+warning detonation over open sea, shown without a joke. Casualty estimates are
+never used.
 
-    python3 make-script.py [--tone satirical|unhinged] [--name Tomas]
+    python3 make-script.py [--tone satirical|unhinged] [--name Tom]
 """
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def clock(minutes: int) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--tone", choices=("satirical", "unhinged"), default="satirical")
-    parser.add_argument("--name", default="Tomas")
+    parser.add_argument("--name", default="Tom")
     args = parser.parse_args()
     name = args.name
 
@@ -51,7 +51,7 @@ def main() -> int:
     kind = lambda k: next(e for e in events if e["type"] == k)  # noqa: E731
     cyber, escalation, evac = kind("cyber_attack"), kind("conflict_escalation"), kind("evacuation")
     blast, fallout, ceasefire, recovery = kind("nuclear_detonation"), kind("contamination"), kind("ceasefire"), kind("recovery")
-    home, enemy, own = cyber["location"]["country"], escalation["location"]["country"], cyber["location"]["country"]
+    own, enemy = cyber["location"]["country"], escalation["location"]["country"]
     day = lambda e: WORDS[e["sim_time_minutes"] // 1440 + 1]  # noqa: E731
 
     def note(event: dict, prefer: tuple = ()) -> dict:
@@ -65,13 +65,14 @@ def main() -> int:
     shots = [
         {"scene": "home", "event_id": cyber["id"], "date": at(cyber), "lower_third": f"{name.upper()} · {own.upper()}",
          "notification": note(cyber, ("company",)),
-         "narration": f"This is {name}. He writes reassuring pamphlets for {home}. At {clock(cyber['sim_time_minutes'])}, the internet went down."},
+         "narration": f"This is {name}, in {cyber['location']['name']}. He writes reassuring pamphlets for the government. "
+                      f"At {clock(cyber['sim_time_minutes'])}, the internet went down."},
         {"scene": "street", "event_id": escalation["id"], "date": at(escalation), "notification": note(escalation, ("anchor",)),
          "narration": f"By {clock(escalation['sim_time_minutes'])}, {enemy} had mobilised. {name} was asked to make the pamphlets more reassuring."},
         {"scene": "queue", "event_id": evac["id"], "date": at(evac), "notification": note(evac, ("airline",)),
          "narration": f"At {clock(evac['sim_time_minutes'])}, the sirens. {name} went underground, with the pamphlets."},
         {"scene": "blast", "event_id": blast["id"], "date": at(blast),
-         "narration": f"At {clock(blast['sim_time_minutes'])}, a nuclear weapon was detonated over the {blast['location']['name']}."},
+         "narration": f"At {clock(blast['sim_time_minutes'])}, {enemy} detonated a nuclear weapon over the {blast['location']['name']}, as a warning."},
         {"scene": "shelter", "event_id": blast["id"], "date": at(fallout), "notification": note(blast, ("committee",)),
          "narration": "Underground, an emergency meeting was scheduled to schedule the emergency meeting."},
         {"scene": "ceasefire", "event_id": ceasefire["id"], "date": at(ceasefire), "notification": note(ceasefire, ("committee",)),
@@ -84,13 +85,15 @@ def main() -> int:
     ] + [{"label": "Reassuring pamphlets read", "value": 0}]
     script = {
         "title": f"{name}'s three days",
-        "person": {"name": name, "home": home},
+        "person": {"name": name, "home": own},
         "tone": args.tone,
         "outro_seconds": 3.5,
         "stats_title": f"{name.upper()}'S THREE DAYS",
-        "disclaimer": f"Fictional simulation. {enemy}, {home}, {name}, every company, statement and statistic here is invented.",
+        "disclaimer": (f"Fictional simulation: real countries, invented events. No such war has happened or is predicted. "
+                       f"{name}, every company, statement and statistic here is invented."),
         "map": {"blast": blast["location"], "places": [{"name": e["location"]["country"].upper(), "lat": e["location"]["lat"], "lon": e["location"]["lon"]}
                                                      for e in (escalation, cyber)]},
+        "ceasefire_place": ceasefire["location"]["name"],
         "source": {"fixture": "nuclear-standoff", "layer": "worldwire.satire"},
         "stats": stats,
         "shots": shots,

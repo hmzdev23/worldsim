@@ -1,34 +1,35 @@
 {
-  "title": "Tomas's three days",
+  "title": "Tom's three days",
   "person": {
-    "name": "Tomas",
-    "home": "Kestria"
+    "name": "Tom",
+    "home": "United Kingdom"
   },
   "tone": "satirical",
   "outro_seconds": 3.5,
-  "stats_title": "TOMAS'S THREE DAYS",
-  "disclaimer": "Fictional simulation. Borovia, Kestria, Tomas, every company, statement and statistic here is invented.",
+  "stats_title": "TOM'S THREE DAYS",
+  "disclaimer": "Fictional simulation: real countries, invented events. No such war has happened or is predicted. Tom, every company, statement and statistic here is invented.",
   "map": {
     "blast": {
-      "name": "Kestrel Point naval base",
-      "country": "Kestria",
-      "country_code": "XKE",
-      "lat": -32.4,
-      "lon": -139.6
+      "name": "Celtic Sea",
+      "country": "United Kingdom",
+      "country_code": "GBR",
+      "lat": 48.9,
+      "lon": -7.6
     },
     "places": [
       {
-        "name": "BOROVIA",
-        "lat": -27.9,
-        "lon": -146.8
+        "name": "FRANCE",
+        "lat": 48.857,
+        "lon": 2.352
       },
       {
-        "name": "KESTRIA",
-        "lat": -31.2,
-        "lon": -141.5
+        "name": "UNITED KINGDOM",
+        "lat": 51.507,
+        "lon": -0.128
       }
     ]
   },
+  "ceasefire_place": "Geneva",
   "source": {
     "fixture": "nuclear-standoff",
     "layer": "worldwire.satire"
@@ -68,13 +69,13 @@
       "scene": "home",
       "event_id": "evt-0001",
       "date": "DAY 1 · 10:00",
-      "lower_third": "TOMAS · KESTRIA",
+      "lower_third": "TOM · UNITED KINGDOM",
       "notification": {
         "author": "Synergexa",
         "handle": "@Synergexa",
         "text": "Our servers are fine. Unrelatedly, our servers are down. We apologise for any inconvenience."
       },
-      "narration": "This is Tomas. He writes reassuring pamphlets for Kestria. At ten, the internet went down."
+      "narration": "This is Tom, in London. He writes reassuring pamphlets for the government. At ten, the internet went down."
     },
     {
       "scene": "street",
@@ -85,7 +86,7 @@
         "handle": "@AnchorMorganVale",
         "text": "Our analyst says this is either an escalation or a de-escalation. More after the break."
       },
-      "narration": "By noon, Borovia had mobilised. Tomas was asked to make the pamphlets more reassuring."
+      "narration": "By noon, France had mobilised. Tom was asked to make the pamphlets more reassuring."
     },
     {
       "scene": "queue",
@@ -96,13 +97,13 @@
         "handle": "@ThriftJetAir",
         "text": "ThriftJet now offers Evacuation Class: same seat, louder announcements. Bags extra."
       },
-      "narration": "At one, the sirens. Tomas went underground, with the pamphlets."
+      "narration": "At one, the sirens. Tom went underground, with the pamphlets."
     },
     {
       "scene": "blast",
       "event_id": "evt-0004",
       "date": "DAY 1 · 14:10",
-      "narration": "At ten past two, a nuclear weapon was detonated over the Kestrel Point naval base."
+      "narration": "At ten past two, France detonated a nuclear weapon over the Celtic Sea, as a warning."
     },
     {
       "scene": "shelter",
@@ -135,7 +136,7 @@
         "handle": "@BrandwellInc",
         "text": "We apologise for any inconvenience the crisis caused. The crisis was not us. Use code BACK20."
       },
-      "narration": "On day three, Tomas came home. The pamphlets were finally ready."
+      "narration": "On day three, Tom came home. The pamphlets were finally ready."
     }
   ]
 }
