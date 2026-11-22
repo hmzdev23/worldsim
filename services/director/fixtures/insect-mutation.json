@@ -1,0 +1,414 @@
+{
+  "events": [
+    {
+      "type": "other_hazard",
+      "sim_time_minutes": 0,
+      "location": {
+        "name": "Manaus",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -3.12,
+        "lon": -60.02
+      },
+      "severity": 0.7,
+      "description": "Beetles the size of dogs emerge from the forest outside Manaus after a mutation spreads through the colony.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 30,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Giant insect mutation",
+      "impacts": {
+        "deaths": 40,
+        "injuries": 600,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 480,
+      "location": {
+        "name": "Manaus",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -3.12,
+        "lon": -60.02
+      },
+      "severity": 0.6,
+      "description": "Manaus evacuates its northern districts as the insects move into the city.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 40,
+        "injuries": 600,
+        "missing": null,
+        "displaced": 180000,
+        "sheltered": 70000,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 1440,
+      "location": {
+        "name": "Manaus",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -3.12,
+        "lon": -60.02
+      },
+      "severity": 0.6,
+      "description": "Swarms chew through power lines and block the river port.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "power lines and port",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 40,
+        "injuries": 600,
+        "missing": null,
+        "displaced": 180000,
+        "sheltered": 70000,
+        "households_without_power": 420000,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "other_hazard",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "Bogotá",
+        "country": "Colombia",
+        "country_code": "COL",
+        "lat": 4.71,
+        "lon": -74.07
+      },
+      "severity": 0.8,
+      "description": "Locusts a metre long strip farmland outside Bogotá; the mutation is spreading.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 120,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Giant locust swarm",
+      "impacts": {
+        "deaths": 310,
+        "injuries": 4200,
+        "missing": null,
+        "displaced": 180000,
+        "sheltered": 70000,
+        "households_without_power": 420000,
+        "households_without_water": null,
+        "economic_loss_usd": 9000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 5760,
+      "location": {
+        "name": "Brasília",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -15.79,
+        "lon": -47.88
+      },
+      "severity": 0.6,
+      "description": "Brazil declares a national emergency and sends the army to defend farms and towns.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "caused_by": [
+        1,
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "contamination",
+      "sim_time_minutes": 7200,
+      "location": {
+        "name": "Manaus",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -3.12,
+        "lon": -60.02
+      },
+      "severity": 0.5,
+      "description": "Heavy pesticide spraying poisons rivers around Manaus but barely slows the swarms.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 60,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 310,
+        "injuries": 4200,
+        "missing": null,
+        "displaced": 180000,
+        "sheltered": 70000,
+        "households_without_power": 420000,
+        "households_without_water": null,
+        "economic_loss_usd": 9000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 4500,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 10080,
+      "location": {
+        "name": "São Paulo",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -23.55,
+        "lon": -46.63
+      },
+      "severity": 0.7,
+      "description": "Food prices jump across South America as harvests are lost.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 310,
+        "injuries": 4200,
+        "missing": null,
+        "displaced": 180000,
+        "sheltered": 70000,
+        "households_without_power": 420000,
+        "households_without_water": null,
+        "economic_loss_usd": 58000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 4500,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "other_hazard",
+      "sim_time_minutes": 12960,
+      "location": {
+        "name": "Lima",
+        "country": "Peru",
+        "country_code": "PER",
+        "lat": -12.05,
+        "lon": -77.04
+      },
+      "severity": 0.7,
+      "description": "Giant wasps reach Lima's outskirts; schools close across the city.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 40,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Giant wasp nests",
+      "impacts": {
+        "deaths": 780,
+        "injuries": 11000,
+        "missing": null,
+        "displaced": 650000,
+        "sheltered": 230000,
+        "households_without_power": 420000,
+        "households_without_water": null,
+        "economic_loss_usd": 58000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 4500,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 15840,
+      "location": {
+        "name": "Bogotá",
+        "country": "Colombia",
+        "country_code": "COL",
+        "lat": 4.71,
+        "lon": -74.07
+      },
+      "severity": 0.5,
+      "description": "The United States sends entomologists, traps and protective gear to Colombia.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "United States",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 780,
+        "injuries": 11000,
+        "missing": null,
+        "displaced": 650000,
+        "sheltered": 230000,
+        "households_without_power": 420000,
+        "households_without_water": null,
+        "economic_loss_usd": 58000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 4500,
+        "debris_tonnes": null,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 600,
+            "cargo_tonnes": 320,
+            "cargo": "traps and protective gear"
+          }
+        ]
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 28800,
+      "location": {
+        "name": "Brasília",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -15.79,
+        "lon": -47.88
+      },
+      "severity": 0.4,
+      "description": "A cold snap slows the giant insects and their numbers fall; farms start to replant.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 780,
+        "injuries": 11000,
+        "missing": null,
+        "displaced": 260000,
+        "sheltered": 80000,
+        "households_without_power": 60000,
+        "households_without_water": null,
+        "economic_loss_usd": 58000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 4500,
+        "debris_tonnes": null,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 600,
+            "cargo_tonnes": 320,
+            "cargo": "traps and protective gear"
+          }
+        ]
+      },
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

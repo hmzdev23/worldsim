@@ -41,6 +41,7 @@ const shockwaveLabels: Record<string, string> = {
 // Some event types share a visual; name them by type so the list reads right.
 const typeLabels: Record<string, string> = {
   flooding: "Flooding",
+  conflict_escalation: "Escalation",
   volcanic_eruption: "Eruption",
 };
 function canonical(a: ScenarioEvent, b: ScenarioEvent) {

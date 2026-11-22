@@ -1,0 +1,468 @@
+{
+  "events": [
+    {
+      "type": "disease_outbreak",
+      "sim_time_minutes": 0,
+      "location": {
+        "name": "Atlanta",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 33.75,
+        "lon": -84.39
+      },
+      "severity": 0.7,
+      "description": "Hospitals in Atlanta report violent patients who keep moving after their hearts stop.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 15,
+      "origin": null,
+      "target": null,
+      "pathogen": "Fictional reanimation virus",
+      "label": null,
+      "impacts": {
+        "deaths": 120,
+        "injuries": 900,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 600,
+      "location": {
+        "name": "Atlanta",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 33.75,
+        "lon": -84.39
+      },
+      "severity": 0.6,
+      "description": "Georgia seals off downtown Atlanta and orders residents to stay indoors.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 120,
+        "injuries": 900,
+        "missing": null,
+        "displaced": null,
+        "sheltered": 40000,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "civil_unrest",
+      "sim_time_minutes": 1440,
+      "location": {
+        "name": "Atlanta",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 33.75,
+        "lon": -84.39
+      },
+      "severity": 0.7,
+      "description": "Crowds storm the cordon as rumours spread faster than the infection.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 2300,
+        "injuries": 8500,
+        "missing": null,
+        "displaced": 150000,
+        "sheltered": 40000,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "disease_outbreak",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "Chicago",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 41.88,
+        "lon": -87.63
+      },
+      "severity": 0.8,
+      "description": "Cases appear in Chicago, carried by travellers who left Atlanta before the cordon.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 40,
+      "origin": null,
+      "target": null,
+      "pathogen": "Fictional reanimation virus",
+      "label": null,
+      "impacts": {
+        "deaths": 9000,
+        "injuries": 31000,
+        "missing": 20000,
+        "displaced": 150000,
+        "sheltered": 40000,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.75,
+      "description": "Millions leave New York for the countryside; bridges and tunnels jam for hours.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 9000,
+        "injuries": 31000,
+        "missing": 20000,
+        "displaced": 3200000,
+        "sheltered": 600000,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "disease_outbreak",
+      "sim_time_minutes": 5760,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.51,
+        "lon": -0.13
+      },
+      "severity": 0.8,
+      "description": "The first European cluster is confirmed at a London hospital.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 30,
+      "origin": null,
+      "target": null,
+      "pathogen": "Fictional reanimation virus",
+      "label": null,
+      "impacts": {
+        "deaths": 24000,
+        "injuries": 70000,
+        "missing": 55000,
+        "displaced": 3200000,
+        "sheltered": 600000,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 7200,
+      "location": {
+        "name": "Atlanta",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 33.75,
+        "lon": -84.39
+      },
+      "severity": 0.7,
+      "description": "With too few workers left, Atlanta's power and water systems shut down.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "power and water",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 24000,
+        "injuries": 70000,
+        "missing": 55000,
+        "displaced": 3200000,
+        "sheltered": 600000,
+        "households_without_power": 1900000,
+        "households_without_water": 1400000,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 8640,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.75,
+      "description": "Stock markets close indefinitely and supply chains stall worldwide.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 24000,
+        "injuries": 70000,
+        "missing": 55000,
+        "displaced": 3200000,
+        "sheltered": 600000,
+        "households_without_power": 1900000,
+        "households_without_water": 1400000,
+        "economic_loss_usd": 2600000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        4,
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "disease_outbreak",
+      "sim_time_minutes": 12960,
+      "location": {
+        "name": "Mexico City",
+        "country": "Mexico",
+        "country_code": "MEX",
+        "lat": 19.43,
+        "lon": -99.13
+      },
+      "severity": 0.75,
+      "description": "Mexico City reports its first cases despite closed borders.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 40,
+      "origin": null,
+      "target": null,
+      "pathogen": "Fictional reanimation virus",
+      "label": null,
+      "impacts": {
+        "deaths": 61000,
+        "injuries": 150000,
+        "missing": 120000,
+        "displaced": 3200000,
+        "sheltered": 600000,
+        "households_without_power": 1900000,
+        "households_without_water": 1400000,
+        "economic_loss_usd": 2600000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 17280,
+      "location": {
+        "name": "Atlanta",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 33.75,
+        "lon": -84.39
+      },
+      "severity": 0.5,
+      "description": "Canada sends medical teams and protective equipment to the Atlanta quarantine zone.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Canada",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 61000,
+        "injuries": 150000,
+        "missing": 120000,
+        "displaced": 3200000,
+        "sheltered": 600000,
+        "households_without_power": 1900000,
+        "households_without_water": 1400000,
+        "economic_loss_usd": 2600000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": [
+          {
+            "country": "Canada",
+            "personnel": 1800,
+            "cargo_tonnes": 700,
+            "cargo": "protective equipment"
+          }
+        ]
+      },
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 43200,
+      "location": {
+        "name": "Atlanta",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 33.75,
+        "lon": -84.39
+      },
+      "severity": 0.5,
+      "description": "A vaccine that blocks reanimation passes its first trials; new cases begin to fall.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 88000,
+        "injuries": 150000,
+        "missing": 60000,
+        "displaced": 1800000,
+        "sheltered": 400000,
+        "households_without_power": 700000,
+        "households_without_water": 500000,
+        "economic_loss_usd": 2600000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": [
+          {
+            "country": "Canada",
+            "personnel": 1800,
+            "cargo_tonnes": 700,
+            "cargo": "protective equipment"
+          }
+        ]
+      },
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

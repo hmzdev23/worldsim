@@ -27,6 +27,7 @@ MAX_TIMEOUT_S = 600.0
 # Japan continuation needs history, so it is not a standalone run.
 RUN_FIXTURES = (
     "iceland-eruption", "global-pandemic", "japan-earthquake", "pacific-tsunami", "vesuvius-eruption",
+    "nuclear-war", "zombie-outbreak", "alien-invasion", "sun-disappears", "insect-mutation", "ai-takeover",
 )
 
 # code -> (UI state, retryable, HTTP status, message shown to the user)

@@ -92,7 +92,9 @@ def contributor(impacts: Impacts, country: str) -> dict[str, Any] | None:
 
 
 def fmt_count(value: float) -> str:
-    """12400 -> '12,400'; 1800000 -> '1.8 million'."""
+    """12400 -> '12,400'; 1800000 -> '1.8 million'; 4.8e12 -> '4.8 trillion'."""
+    if value >= 1_000_000_000_000:
+        return f"{value / 1_000_000_000_000:.1f}".rstrip("0").rstrip(".") + " trillion"
     if value >= 1_000_000_000:
         return f"{value / 1_000_000_000:.1f}".rstrip("0").rstrip(".") + " billion"
     if value >= 1_000_000:

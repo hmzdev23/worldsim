@@ -1,0 +1,457 @@
+{
+  "events": [
+    {
+      "type": "alien_contact",
+      "sim_time_minutes": 1200,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.9,
+      "description": "A vast craft stops above Manhattan and blacks out the night sky.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 20,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": null,
+        "injuries": 3000,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "alien_contact",
+      "sim_time_minutes": 1230,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
+      "severity": 0.9,
+      "description": "A second craft appears over Tokyo half an hour later.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 20,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "alien_contact",
+      "sim_time_minutes": 1260,
+      "location": {
+        "name": "Cairo",
+        "country": "Egypt",
+        "country_code": "EGY",
+        "lat": 30.04,
+        "lon": 31.24
+      },
+      "severity": 0.9,
+      "description": "A third craft settles above Cairo, next to the Giza plateau.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 20,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 1320,
+      "location": {
+        "name": "Washington, D.C.",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 38.9,
+        "lon": -77.04
+      },
+      "severity": 0.8,
+      "description": "Satellite links and mobile networks are jammed across three continents.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "satellites and mobile networks",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": null,
+        "injuries": 3000,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 4000000,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0,
+        1,
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 1560,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.8,
+      "description": "Authorities order Manhattan evacuated as beams of light sweep the streets.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": null,
+        "injuries": 11000,
+        "missing": null,
+        "displaced": 2100000,
+        "sheltered": 500000,
+        "households_without_power": 4000000,
+        "households_without_water": null,
+        "economic_loss_usd": null,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "military_strike",
+      "sim_time_minutes": 2040,
+      "location": {
+        "name": "alien craft over Manhattan",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.76,
+        "lon": -73.98
+      },
+      "severity": 0.95,
+      "description": "The United States fires on the craft over Manhattan; the shots have no visible effect.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 10,
+      "origin": "United States",
+      "target": "alien craft",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 14000,
+        "injuries": 36000,
+        "missing": 9000,
+        "displaced": 2100000,
+        "sheltered": 500000,
+        "households_without_power": 4000000,
+        "households_without_water": null,
+        "economic_loss_usd": 120000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 3500000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "military_strike",
+      "sim_time_minutes": 2280,
+      "location": {
+        "name": "Midtown Manhattan",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.75,
+        "lon": -73.99
+      },
+      "severity": 1.0,
+      "description": "The craft answers with a blast that levels several blocks of Midtown.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 5,
+      "origin": "Alien craft",
+      "target": "Midtown Manhattan",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 52000,
+        "injuries": 110000,
+        "missing": 30000,
+        "displaced": 2100000,
+        "sheltered": 500000,
+        "households_without_power": 4000000,
+        "households_without_water": null,
+        "economic_loss_usd": 480000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 12000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.51,
+        "lon": -0.13
+      },
+      "severity": 0.8,
+      "description": "Markets worldwide suspend trading after the attack in New York.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 52000,
+        "injuries": 110000,
+        "missing": 30000,
+        "displaced": 2100000,
+        "sheltered": 500000,
+        "households_without_power": 4000000,
+        "households_without_water": null,
+        "economic_loss_usd": 3100000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 12000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "civil_unrest",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "Cairo",
+        "country": "Egypt",
+        "country_code": "EGY",
+        "lat": 30.04,
+        "lon": 31.24
+      },
+      "severity": 0.6,
+      "description": "Panic buying and clashes spread through Cairo under the third craft.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 52000,
+        "injuries": 118000,
+        "missing": 30000,
+        "displaced": 3400000,
+        "sheltered": 500000,
+        "households_without_power": 4000000,
+        "households_without_water": null,
+        "economic_loss_usd": 3100000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 12000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 5760,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.6,
+      "description": "World leaders agree a joint command and a ban on further attacks while contact is attempted.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "ceasefire",
+      "sim_time_minutes": 8640,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.5,
+      "description": "After a signal is answered, the three craft rise and hold position in orbit.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 52000,
+        "injuries": 118000,
+        "missing": 12000,
+        "displaced": 3400000,
+        "sheltered": 500000,
+        "households_without_power": 4000000,
+        "households_without_water": null,
+        "economic_loss_usd": 3100000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 12000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 14400,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.4,
+      "description": "Manhattan's power is back and residents start to return; the craft remain overhead.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 52000,
+        "injuries": 118000,
+        "missing": 12000,
+        "displaced": 1200000,
+        "sheltered": 200000,
+        "households_without_power": 600000,
+        "households_without_water": null,
+        "economic_loss_usd": 3100000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 12000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

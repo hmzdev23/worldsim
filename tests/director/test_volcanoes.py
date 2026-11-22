@@ -1,5 +1,6 @@
-"""Eruptions happen only at real volcanoes, and the hazard sample scenarios load offline."""
+"""Eruptions happen only at real volcanoes, and every sample scenario in the chooser loads offline."""
 
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -18,6 +19,12 @@ SAMPLES = {
     "vesuvius-eruption": "volcanic_eruption",
     "iceland-eruption": "volcanic_eruption",
     "global-pandemic": "disease_outbreak",
+    "nuclear-war": "conflict_escalation",
+    "zombie-outbreak": "disease_outbreak",
+    "alien-invasion": "alien_contact",
+    "sun-disappears": "other_hazard",
+    "insect-mutation": "other_hazard",
+    "ai-takeover": "cyber_attack",
 }
 
 
@@ -61,6 +68,14 @@ class EruptionPlacementTests(unittest.TestCase):
 
 
 class SampleScenarioTests(unittest.TestCase):
+    def test_every_sample_can_start_a_run(self):
+        from worlddirector import RUN_FIXTURES
+        self.assertTrue(set(SAMPLES) <= set(RUN_FIXTURES), sorted(set(SAMPLES) - set(RUN_FIXTURES)))
+
+    def test_samples_match_the_web_chooser(self):
+        chooser = (ROOT / "apps" / "web" / "lib" / "samples.ts").read_text(encoding="utf-8")
+        self.assertEqual(sorted(set(re.findall(r'fixture: "([a-z0-9-]+)"', chooser))), sorted(set(SAMPLES) - {"iceland-eruption"}))
+
     def test_every_sample_loads_and_opens_with_its_hazard(self):
         for name, hazard in SAMPLES.items():
             batch = generate(fixture=name)

@@ -1,6 +1,8 @@
 "use client";
 
-import { ArrowRight, Fire, GlobeHemisphereWest, Pulse, Virus, Waves } from "@phosphor-icons/react";
+import {
+  Alien, ArrowRight, Biohazard, Bug, Fire, GlobeHemisphereWest, Pulse, Radioactive, Robot, SunDim, Virus, Waves,
+} from "@phosphor-icons/react";
 import { motion, MotionConfig } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { japanDemo } from "../lib/earthquake";
@@ -13,7 +15,10 @@ import { RunConsole } from "./run-console";
 type LaunchState = { status: "idle" | "generating" | "ready" } | { status: "failed"; message: string };
 type Mode = "default" | "decide";
 
-const hazardIcons = { earthquake: Pulse, tsunami: Waves, eruption: Fire, pandemic: Virus } as const;
+const hazardIcons = {
+  earthquake: Pulse, tsunami: Waves, eruption: Fire, pandemic: Virus, nuclear: Radioactive,
+  zombie: Biohazard, alien: Alien, sun: SunDim, insect: Bug, ai: Robot,
+} as const;
 
 export function Simulation() {
   return <MotionConfig reducedMotion="user"><ScenarioWorkspace /></MotionConfig>;

@@ -212,6 +212,8 @@ class ReadImpactsTests(unittest.TestCase):
         self.assertEqual(fmt_count(1_000_000), "1 million")
         self.assertEqual(fmt_count(1_850_000), "1.9 million")
         self.assertEqual(fmt_usd(38_000_000_000), "$38 billion")
+        self.assertEqual(fmt_usd(4_800_000_000_000), "$4.8 trillion")
+        self.assertEqual(fmt_count(1_400_000_000), "1.4 billion")
 
 
 if __name__ == "__main__":

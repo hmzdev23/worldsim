@@ -8,8 +8,11 @@ sample again.
 **Simulate** starts one of four offline sample runs: **Earthquake** (Japan),
 **Tsunami** (an M9.0 quake off Chile and waves across the Pacific),
 **Volcanic eruption** (a VEI 5 eruption of Vesuvius) and **Pandemic**
-(a virus spreading from Singapore). They use the checked-in Director
-fixtures, so they need no model credentials.
+(a virus spreading from Singapore), plus six special scenarios: **Nuclear war**,
+**Zombie outbreak**, **Alien invasion**, **The Sun disappears**, **Giant insects**
+and **AI takeover**. They use the checked-in Director fixtures, so they need
+no model credentials. **You decide** is available for a scenario once it has a
+player spec in `services/director/fixtures/player/`.
 
 Playback moves in steps of 5% of the run:
 

@@ -1,0 +1,441 @@
+{
+  "events": [
+    {
+      "type": "other_hazard",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Greenwich",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.48,
+        "lon": 0.0
+      },
+      "severity": 1.0,
+      "description": "The Sun vanishes. Eight minutes and twenty seconds later, daylight ends across half the planet.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 20000,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Loss of sunlight",
+      "impacts": {
+        "deaths": null,
+        "injuries": 40000,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": 500000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 760,
+      "location": {
+        "name": "Berlin",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 52.52,
+        "lon": 13.4
+      },
+      "severity": 0.8,
+      "description": "Solar power drops to zero and grids across Europe fail under emergency demand.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "power grid",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": null,
+        "injuries": 40000,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 60000000,
+        "households_without_water": null,
+        "economic_loss_usd": 500000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "civil_unrest",
+      "sim_time_minutes": 900,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.7,
+      "description": "Panic grips New York as the morning never comes.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 3000,
+        "injuries": 95000,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 60000000,
+        "households_without_water": null,
+        "economic_loss_usd": 500000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 2160,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.7,
+      "description": "The UN coordinates a global emergency plan: ration fuel and gather people near heat.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "extreme_weather",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "Moscow",
+        "country": "Russia",
+        "country_code": "RUS",
+        "lat": 55.76,
+        "lon": 37.62
+      },
+      "severity": 0.8,
+      "description": "Temperatures in Moscow fall to −40 °C as the cold deepens everywhere.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 3000,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210000,
+        "injuries": 600000,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 140000000,
+        "households_without_water": null,
+        "economic_loss_usd": 500000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 7200,
+      "location": {
+        "name": "Chicago",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 41.88,
+        "lon": -87.63
+      },
+      "severity": 0.8,
+      "description": "Water mains freeze and burst across North America.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "water supply",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210000,
+        "injuries": 600000,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 140000000,
+        "households_without_water": 48000000,
+        "economic_loss_usd": 500000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 10080,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
+      "severity": 0.9,
+      "description": "Global trade stops; food and fuel are all that matter now.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210000,
+        "injuries": 600000,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 140000000,
+        "households_without_water": 48000000,
+        "economic_loss_usd": 40000000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1,
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 14400,
+      "location": {
+        "name": "Reykjavik",
+        "country": "Iceland",
+        "country_code": "ISL",
+        "lat": 64.15,
+        "lon": -21.94
+      },
+      "severity": 0.7,
+      "description": "Iceland's geothermal plants keep homes warm; it opens its doors to refugees.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210000,
+        "injuries": 600000,
+        "missing": null,
+        "displaced": 180000000,
+        "sheltered": 40000000,
+        "households_without_power": 140000000,
+        "households_without_water": 48000000,
+        "economic_loss_usd": 40000000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 20160,
+      "location": {
+        "name": "Nairobi",
+        "country": "Kenya",
+        "country_code": "KEN",
+        "lat": -1.29,
+        "lon": 36.82
+      },
+      "severity": 0.6,
+      "description": "Countries near the equator and with geothermal power take in millions more.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210000,
+        "injuries": 600000,
+        "missing": null,
+        "displaced": 420000000,
+        "sheltered": 95000000,
+        "households_without_power": 140000000,
+        "households_without_water": 48000000,
+        "economic_loss_usd": 40000000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "other_hazard",
+      "sim_time_minutes": 43200,
+      "location": {
+        "name": "Kansas City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 39.1,
+        "lon": -94.58
+      },
+      "severity": 0.95,
+      "description": "Without sunlight, every outdoor crop has failed. Food is grown only in heated greenhouses.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 20000,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Global crop failure",
+      "impacts": {
+        "deaths": 95000000,
+        "injuries": 300000000,
+        "missing": null,
+        "displaced": 420000000,
+        "sheltered": 95000000,
+        "households_without_power": 140000000,
+        "households_without_water": 48000000,
+        "economic_loss_usd": 40000000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "extreme_weather",
+      "sim_time_minutes": 129600,
+      "location": {
+        "name": "Halifax",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 44.65,
+        "lon": -63.58
+      },
+      "severity": 0.9,
+      "description": "Three months on, the ocean surface is freezing and surface temperatures average −70 °C.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 5000,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1400000000,
+        "injuries": 300000000,
+        "missing": null,
+        "displaced": 420000000,
+        "sheltered": 95000000,
+        "households_without_power": 140000000,
+        "households_without_water": 48000000,
+        "economic_loss_usd": 40000000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

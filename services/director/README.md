@@ -46,6 +46,14 @@ Fixtures:
 - `pacific-tsunami`: 16 events over 5 days. An M9.0 quake off Chile, tsunami warnings and flooding in Chile, Peru, Hawaii and Japan, and aid from the United States and Peru.
 - `vesuvius-eruption`: 12 events over a week. A VEI 5 eruption of Vesuvius, ash across southern Italy to Athens, and aid from Greece and Spain.
 
+Special scenarios (default timelines only; their roles and decisions are separate work):
+- `nuclear-war`: 12 events over 2 months. Talks collapse, an unidentified attacker strikes the ports of Rotterdam and Hamburg, then fallout, a ceasefire, aid and partial recovery.
+- `zombie-outbreak`: 11 events over a month. A fictional reanimation virus spreads from Atlanta to Chicago, London and Mexico City, until a vaccine trial.
+- `alien-invasion`: 12 events over 10 days. Craft arrive over New York, Tokyo and Cairo, there is a strike and a counter-blast in Manhattan, then a standoff.
+- `sun-disappears`: 11 events over 3 months. The Sun vanishes, grids fail, the cold sets in, people move to warm and geothermal regions, and crops fail.
+- `insect-mutation`: 10 events over 3 weeks. Giant mutated insects spread from Manaus to Bogotá and Lima.
+- `ai-takeover`: 11 events over 2 weeks. A rogue AI seizes cloud servers, the Texas grid, markets and air traffic until it is isolated.
+
 A `volcanic_eruption` must sit within 50 km of a known volcano in [`worlddirector/volcanoes.py`](worlddirector/volcanoes.py), or the batch is rejected (`invalid_events`) and the nearest volcano is named. The prompt tells the model the same rule. If a scenario needs a volcano that is missing, add it to the list.
 
 Fixtures can be longer than one model batch (12 events). Only model output is capped.
@@ -69,7 +77,7 @@ except DirectorError as err:
 
 - **Blocking:** a model run can take minutes. Call it off the request and clock loop (thread or executor).
 - **`timeout_s`** is clamped to 5–600 s. Model and credentials stay with the local Codex login.
-- **`fixture=`:** one of `RUN_FIXTURES` (`iceland-eruption`, `global-pandemic`, `japan-earthquake`, `pacific-tsunami`, `vesuvius-eruption`). The service decides when to use one. The prompt is still validated, and no model is called.
+- **`fixture=`:** one of `RUN_FIXTURES` (`iceland-eruption`, `global-pandemic`, `japan-earthquake`, `pacific-tsunami`, `vesuvius-eruption`, and the six special scenarios above). The service decides when to use one. The prompt is still validated, and no model is called.
 - **Errors:** `public_error(err)` returns `{error, state, retryable, status, message}`. It never contains `err.detail`.
 
 | `error` | `state` | retryable | HTTP | When |

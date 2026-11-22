@@ -1,0 +1,504 @@
+{
+  "events": [
+    {
+      "type": "conflict_escalation",
+      "sim_time_minutes": 360,
+      "location": {
+        "name": "The Hague",
+        "country": "Netherlands",
+        "country_code": "NLD",
+        "lat": 52.08,
+        "lon": 4.3
+      },
+      "severity": 0.7,
+      "description": "Crisis talks in The Hague collapse and an unnamed state puts its nuclear forces on high alert.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "unknown",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": null,
+        "injuries": null,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": 40000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "nuclear_detonation",
+      "sim_time_minutes": 420,
+      "location": {
+        "name": "Port of Rotterdam",
+        "country": "Netherlands",
+        "country_code": "NLD",
+        "lat": 51.95,
+        "lon": 4.14
+      },
+      "severity": 1.0,
+      "description": "A nuclear warhead from an unidentified attacker detonates over the Port of Rotterdam.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": 300,
+      "radius_km": 25,
+      "origin": "unknown",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 180000,
+        "injuries": 420000,
+        "missing": 60000,
+        "displaced": 900000,
+        "sheltered": null,
+        "households_without_power": 2100000,
+        "households_without_water": null,
+        "economic_loss_usd": 600000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 40000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "nuclear_detonation",
+      "sim_time_minutes": 440,
+      "location": {
+        "name": "Port of Hamburg",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 53.54,
+        "lon": 9.97
+      },
+      "severity": 1.0,
+      "description": "A second detonation strikes the Port of Hamburg twenty minutes later.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": 300,
+      "radius_km": 25,
+      "origin": "unknown",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 390000,
+        "injuries": 880000,
+        "missing": 140000,
+        "displaced": 2000000,
+        "sheltered": null,
+        "households_without_power": 4600000,
+        "households_without_water": null,
+        "economic_loss_usd": 1300000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 85000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 465,
+      "location": {
+        "name": "Frankfurt",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 50.11,
+        "lon": 8.68
+      },
+      "severity": 0.8,
+      "description": "Power and communications fail across northern Europe as grids trip and data links go dark.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "power grid and communications",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 390000,
+        "injuries": 880000,
+        "missing": 140000,
+        "displaced": 2000000,
+        "sheltered": null,
+        "households_without_power": 19000000,
+        "households_without_water": 6000000,
+        "economic_loss_usd": 1300000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 85000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1,
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 540,
+      "location": {
+        "name": "Amsterdam",
+        "country": "Netherlands",
+        "country_code": "NLD",
+        "lat": 52.37,
+        "lon": 4.9
+      },
+      "severity": 0.8,
+      "description": "The Netherlands orders millions east and south, away from the expected fallout.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 390000,
+        "injuries": 880000,
+        "missing": 140000,
+        "displaced": 5500000,
+        "sheltered": 1800000,
+        "households_without_power": 19000000,
+        "households_without_water": 6000000,
+        "economic_loss_usd": 1300000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 85000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "contamination",
+      "sim_time_minutes": 840,
+      "location": {
+        "name": "Groningen",
+        "country": "Netherlands",
+        "country_code": "NLD",
+        "lat": 53.22,
+        "lon": 6.57
+      },
+      "severity": 0.85,
+      "description": "Wind carries radioactive fallout north-east over Groningen and the German coast.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 150,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 390000,
+        "injuries": 880000,
+        "missing": 140000,
+        "displaced": 5500000,
+        "sheltered": 1800000,
+        "households_without_power": 19000000,
+        "households_without_water": 6000000,
+        "economic_loss_usd": 1300000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 38000,
+        "debris_tonnes": 85000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1,
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 1200,
+      "location": {
+        "name": "New York City",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.71,
+        "lon": -74.01
+      },
+      "severity": 0.8,
+      "description": "Global markets halt trading as shipping insurers suspend cover worldwide.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 390000,
+        "injuries": 880000,
+        "missing": 140000,
+        "displaced": 5500000,
+        "sheltered": 1800000,
+        "households_without_power": 19000000,
+        "households_without_water": 6000000,
+        "economic_loss_usd": 4800000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 38000,
+        "debris_tonnes": 85000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1,
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 1680,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.7,
+      "description": "The UN Security Council meets in emergency session in Geneva and demands an immediate halt.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "ceasefire",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.6,
+      "description": "A ceasefire takes hold after three days; no further launches are detected.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 5760,
+      "location": {
+        "name": "Bremen",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 53.08,
+        "lon": 8.8
+      },
+      "severity": 0.6,
+      "description": "France sends burn-care teams and radiation monitoring units to northern Germany.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "France",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 390000,
+        "injuries": 880000,
+        "missing": 140000,
+        "displaced": 5500000,
+        "sheltered": 1800000,
+        "households_without_power": 19000000,
+        "households_without_water": 6000000,
+        "economic_loss_usd": 4800000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 38000,
+        "debris_tonnes": 85000000,
+        "aid_contributors": [
+          {
+            "country": "France",
+            "personnel": 2400,
+            "cargo_tonnes": 900,
+            "cargo": "burn care and radiation monitors"
+          }
+        ]
+      },
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 8640,
+      "location": {
+        "name": "Utrecht",
+        "country": "Netherlands",
+        "country_code": "NLD",
+        "lat": 52.09,
+        "lon": 5.12
+      },
+      "severity": 0.55,
+      "description": "Norway flies in field hospitals and iodine tablets for the evacuees.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Norway",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 520000,
+        "injuries": 1050000,
+        "missing": 90000,
+        "displaced": 5500000,
+        "sheltered": 1800000,
+        "households_without_power": 19000000,
+        "households_without_water": 6000000,
+        "economic_loss_usd": 4800000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 38000,
+        "debris_tonnes": 85000000,
+        "aid_contributors": [
+          {
+            "country": "France",
+            "personnel": 2400,
+            "cargo_tonnes": 900,
+            "cargo": "burn care and radiation monitors"
+          },
+          {
+            "country": "Norway",
+            "personnel": 1100,
+            "cargo_tonnes": 650,
+            "cargo": "field hospitals"
+          }
+        ]
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 86400,
+      "location": {
+        "name": "Amsterdam",
+        "country": "Netherlands",
+        "country_code": "NLD",
+        "lat": 52.37,
+        "lon": 4.9
+      },
+      "severity": 0.4,
+      "description": "Two months on, power returns outside the exclusion zones; the ports stay closed.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 520000,
+        "injuries": 1050000,
+        "missing": 40000,
+        "displaced": 2400000,
+        "sheltered": 700000,
+        "households_without_power": 3000000,
+        "households_without_water": 900000,
+        "economic_loss_usd": 4800000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 38000,
+        "debris_tonnes": 85000000,
+        "aid_contributors": [
+          {
+            "country": "France",
+            "personnel": 2400,
+            "cargo_tonnes": 900,
+            "cargo": "burn care and radiation monitors"
+          },
+          {
+            "country": "Norway",
+            "personnel": 1100,
+            "cargo_tonnes": 650,
+            "cargo": "field hospitals"
+          }
+        ]
+      },
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    }
+  ]
+}
