@@ -11,8 +11,8 @@ const config: NextConfig = {
     return [
       { source: "/api/simulation/scenarios/:path*", destination: `${simulationUrl}/scenarios/:path*` },
       { source: "/api/simulation/stream", destination: `${simulationUrl}/stream` },
-      // Player mode (prototype): the role picker's catalogue.
-      { source: "/api/simulation/player/:path*", destination: `${simulationUrl}/player/:path*` },
+      { source: "/api/simulation/satire", destination: `${simulationUrl}/satire` },
+      { source: "/api/simulation/starters", destination: `${simulationUrl}/starters` },
     ];
   },
 };

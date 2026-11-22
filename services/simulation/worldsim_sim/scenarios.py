@@ -31,6 +31,9 @@ log = logging.getLogger("worldsim_sim")
 ROOT = Path(__file__).resolve().parents[3]
 BRANCH_ID = "main"
 MAX_PROMPT_CHARS = 2000
+# Presentation tone of a run (satire layer). "straight" is the original experience.
+TONES = ("straight", "satirical", "unhinged")
+DEFAULT_TONE = "straight"
 
 # generator(prompt, *, fixture, simulation_id, branch_id, timeout_s) -> proposed batch.
 # Raise an exception with a `code` attribute (worlddirector.DirectorError) to fail.
@@ -70,6 +73,8 @@ def director_generator(
     branch_id: str,
     timeout_s: float,
     on_stage: Callable[[str], None] | None = None,
+    tone: str = DEFAULT_TONE,
+    seed: int | None = None,
 ) -> dict:
     """The real Director: `prepare_scenario` (#50) when present, else `generate`.
 
@@ -83,6 +88,10 @@ def director_generator(
     stages = getattr(worlddirector, "Stages", None)
     if on_stage is not None and stages is not None and _accepts(call, "stages"):
         kwargs["stages"] = stages(on_stage=on_stage)
+    if tone != DEFAULT_TONE and _accepts(call, "tone"):
+        kwargs["tone"] = tone  # same model call also writes the optional payload.satire layer
+    if seed is not None and _accepts(call, "seed"):
+        kwargs["seed"] = seed  # this run's variation (worlddirector.variation)
     return call(prompt, fixture=fixture, simulation_id=simulation_id, branch_id=branch_id, timeout_s=timeout_s, **kwargs)
 
 
@@ -122,6 +131,17 @@ def news_response(snapshot: Message) -> dict[str, Any]:
     }
 
 
+def starters() -> list[dict[str, Any]]:
+    """Starter scenarios from the Director (worlddirector.list_starters)."""
+    return _import("worlddirector", "director").list_starters()
+
+
+def satire_response(snapshot: Message, tone: str) -> dict[str, Any]:
+    """Satire layer (headlines, fictional posts, absurdity index) for a released snapshot."""
+    worldwire = _import("worldwire", "newsroom")
+    return worldwire.satire_response(snapshot, tone)
+
+
 class GenerationError(Exception):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
@@ -138,9 +158,6 @@ class Channel:
 
     sim: Simulation
     clients: set = field(default_factory=set)
-    # Player mode: a PlayerSession that arms breakpoints before each tick,
-    # reacts after it, and swaps `sim` when a decision forks a branch.
-    controller: Any = None
 
     async def broadcast(self, messages: list[Message]) -> None:
         for ws in list(self.clients):
@@ -162,6 +179,7 @@ class Run:
     id: str
     prompt: str
     fixture: str | None
+    tone: str = DEFAULT_TONE
     status: str = "generating"
     title: str = ""
     channel: Channel | None = None
@@ -172,17 +190,34 @@ class Run:
     stage: str = "queued"
     stage_started: float = field(default_factory=time.monotonic)
     finished: float | None = None
-    # Player mode (prototype): "watch" (default) or "player", with the chosen role.
-    mode: str = "watch"
-    role: str | None = None
-
-    @property
-    def player(self):
-        return self.channel.controller if self.channel is not None else None
+    # Variation seed (worlddirector.variation): new for every run, so no two runs repeat.
+    seed: int | None = None
 
     def enter(self, stage: str) -> None:
         """Record the stage that just started. Called from the generation thread."""
         self.stage, self.stage_started = stage, time.monotonic()
+
+    def result(self, sim: Simulation) -> dict[str, Any]:
+        """The run's canonical result: what the map plays and the recap film follows.
+
+        Every applied event in canonical (sim_time_minutes, sequence) order,
+        including ones the clock hasn't reached, plus the seed that made this
+        run different from every other run of the same prompt.
+        """
+        view = sim.timeline_view()
+        return {
+            "schema_version": view["schema_version"],
+            "simulation_id": view["simulation_id"],
+            "branch_id": view["branch_id"],
+            "seed": self.seed,
+            "prompt": self.prompt,
+            "title": self.title,
+            "fixture": self.fixture,
+            "tone": self.tone,
+            "start_minutes": self.start_minutes,
+            "end_minutes": view["end_minutes"],
+            "events": view["events"],
+        }
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -190,11 +225,10 @@ class Run:
             "status": self.status,
             "title": self.title,
             "simulation_id": self.id,
-            "branch_id": self.channel.sim.branch_id if self.channel is not None else BRANCH_ID,
-            "mode": self.mode,
+            "branch_id": BRANCH_ID,
+            "tone": self.tone,
+            "seed": self.seed,
         }
-        if self.mode == "player":
-            out["role"] = self.role
         now = time.monotonic()
         if self.status == "generating":
             out.update(stage=self.stage, elapsed_s=round(now - self.created, 1),
@@ -216,42 +250,12 @@ class Run:
         return out
 
 
-class Catalogue:
-    """The Director's player catalogue (worlddirector.player), as the session uses it."""
-
-    def __init__(self) -> None:
-        director = _import("worlddirector", "director")
-        from worlddirector import player as module  # noqa: PLC0415 - after _import fixes sys.path
-
-        self.module = module
-        self.visuals_map = dict(director.VISUALS)
-
-    def spec(self, fixture: str | None) -> dict:
-        return self.module.load_player_spec(fixture)
-
-    def has_spec(self, fixture: str | None) -> bool:
-        return fixture is None or self.module.has_player_spec(fixture)
-
-    def list(self) -> list[dict]:
-        return self.module.list_player_specs()
-
-    def options_for(self, spec: dict, role: str, event_type: str) -> list[dict]:
-        return self.module.options_for(spec, role, event_type)
-
-    def action(self, spec: dict, action_id: str) -> dict:
-        return self.module.action(spec, action_id)
-
-    def check_free_text(self, text: str) -> str:
-        return self.module.check_free_text(text)
-
-    def intervention_visual(self, event_type: str) -> str:
-        return self.visuals_map[event_type]
-
-    def visuals(self) -> dict[str, str]:
-        return self.visuals_map
-
-    def continuer(self, text: str, **kwargs: Any) -> dict:
-        return self.module.continue_with_decision(text, **kwargs)
+def new_seed() -> int:
+    """A fresh variation seed: worlddirector.new_seed when present."""
+    try:
+        return _import("worlddirector", "director").new_seed()
+    except (ImportError, AttributeError):  # pragma: no cover - the Director ships in this repo
+        return secrets.randbelow(2**31 - 1) + 1
 
 
 def _title(prompt: str) -> str:
@@ -283,6 +287,7 @@ class ScenarioRegistry:
         max_runs: int = 16,
         fixture: str | None = None,
         pace: float = PACE_FRACTION,
+        seeds: Callable[[], int | None] | None = None,
     ) -> None:
         Simulation(simulation_id="pace-check", pace=pace)  # same validation as the engine
         self.generator = generator
@@ -292,9 +297,11 @@ class ScenarioRegistry:
         self.max_runs = max_runs
         self.fixture = fixture  # when set, every run uses this Director fixture (offline demo/E2E)
         self.pace = pace  # fraction of each run's span per clock tick at 1x (SIM-005)
+        # A fresh variation seed per run (worlddirector.new_seed). Pass `seeds=lambda: None`
+        # to replay fixtures exactly, e.g. for deterministic browser tests.
+        self.seeds = seeds or new_seed
         self._runs: dict[str, Run] = {}
         self._tasks: set[asyncio.Task] = set()
-        self._catalogue: Catalogue | None = None
 
     # ---- reads ----------------------------------------------------------
 
@@ -306,16 +313,13 @@ class ScenarioRegistry:
 
     # ---- lifecycle --------------------------------------------------------
 
-    async def create(self, prompt: str, fixture: str | None = None, *, mode: str = "watch",
-                     role: str | None = None) -> Run:
-        fixture = self.fixture or fixture
-        if mode == "player":
-            self._check_player(fixture, role)
+    async def create(self, prompt: str, fixture: str | None = None, tone: str = DEFAULT_TONE) -> Run:
         if sum(r.status == "generating" for r in self._runs.values()) >= self.max_generating:
             raise RegistryFull("Another scenario is still being prepared. Try again shortly.")
         await self._evict()
         run_id = f"run-{secrets.token_hex(5)}"
-        run = Run(id=run_id, prompt=prompt, fixture=fixture, title=_title(prompt), mode=mode, role=role)
+        fixture = self.fixture or fixture
+        run = Run(id=run_id, prompt=prompt, fixture=fixture, tone=tone, title=_title(prompt), seed=self.seeds())
         self._runs[run_id] = run
         task = asyncio.create_task(self._generate(run))
         self._tasks.add(task)
@@ -324,6 +328,10 @@ class ScenarioRegistry:
 
     async def _generate(self, run: Run) -> None:
         kwargs: dict[str, Any] = {"on_stage": run.enter} if _accepts(self.generator, "on_stage") else {}
+        if run.tone != DEFAULT_TONE and _accepts(self.generator, "tone"):
+            kwargs["tone"] = run.tone
+        if run.seed is not None and _accepts(self.generator, "seed"):
+            kwargs["seed"] = run.seed
         call = lambda: self.generator(  # noqa: E731
             run.prompt, fixture=run.fixture, simulation_id=run.id, branch_id=BRANCH_ID, timeout_s=self.timeout_s,
             **kwargs,
@@ -345,53 +353,10 @@ class ScenarioRegistry:
         first = sim.timeline[0]["sim_time_minutes"]
         run.start_minutes = max(0, first - 1)
         sim.start_minutes = run.start_minutes
-        sim.pace = (1 / self.catalogue.spec(run.fixture).get("presentation", {}).get("steps", 20)
-                    if run.mode == "player" else self.pace)
+        sim.pace = self.pace
         sim.seek(run.start_minutes)
-        channel = Channel(sim)
-        if run.mode == "player":
-            try:
-                channel.controller = self._session(run, sim, channel)
-            except Exception as exc:  # noqa: BLE001 - a bad spec fails the run, never the server
-                run.finished = time.monotonic()
-                self._fail(run, exc)
-                return
-        run.channel = channel
+        run.channel = Channel(sim)
         run.status = "ready"
-
-    # ---- player mode (prototype) ------------------------------------------
-
-    @property
-    def catalogue(self) -> Catalogue:
-        if self._catalogue is None:
-            self._catalogue = Catalogue()
-        return self._catalogue
-
-    def _check_player(self, fixture: str | None, role: str | None) -> None:
-        from .player import PlayerError  # noqa: PLC0415
-
-        if not self.catalogue.has_spec(fixture):
-            raise PlayerError(422, f"Player mode isn't available for {fixture!r} yet.")
-        spec = self.catalogue.spec(fixture)
-        if role not in {r["id"] for r in spec["roles"]}:
-            raise PlayerError(422, f"Choose a role: {', '.join(r['id'] for r in spec['roles'])}")
-
-    def _session(self, run: Run, sim: Simulation, channel: Channel):
-        from .player import PlayerSession  # noqa: PLC0415
-
-        catalogue = self.catalogue
-
-        def headline(snapshot: dict, event_id: str) -> str:
-            items = news_response(snapshot).get("items", [])
-            return next((i["headline"] for i in items if i.get("event_id") == event_id), "")
-
-        def switch(new_sim: Simulation) -> None:
-            channel.sim = new_sim
-
-        return PlayerSession(
-            run_id=run.id, spec=catalogue.spec(run.fixture), role=run.role, sim=sim, catalogue=catalogue,
-            headline=headline, continuer=catalogue.continuer, offline=run.fixture is not None, on_switch=switch,
-        )
 
     def _fail(self, run: Run, exc: BaseException) -> None:
         if isinstance(exc, (asyncio.TimeoutError, TimeoutError)):

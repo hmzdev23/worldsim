@@ -50,22 +50,28 @@ export type Pacing =
   | { mode: "relative"; fraction_per_tick: number; span_minutes: number; minutes_per_tick: number; tick_seconds: number }
   | { mode: "fixed"; minutes_per_tick: number; tick_seconds: number };
 
+// Presentation tone (satire layer). "straight" is the original, serious experience.
+export type Tone = "straight" | "satirical" | "unhinged";
+export const tones: { value: Tone; label: string }[] = [
+  { value: "straight", label: "Straight-faced" },
+  { value: "satirical", label: "Satirical" },
+  { value: "unhinged", label: "Unhinged" },
+];
+
+/** A starter scenario from GET /starters. */
+export type Starter = { fixture: string; title: string; category: string; icon: string; prompt: string; summary: string };
+
 export type ScenarioRun = RunIdentity & {
   id: string;
+  tone?: Tone;
   title: string;
   startMinute: number;
   endMinute: number;
   firstEvent: ScenarioEvent;
   pacing?: Pacing;
-  // Player mode (prototype): the run branches when the player decides, so its
-  // branch_id changes; match it by simulation_id only.
-  player?: { fixture: string; role: string; roleTitle: string; scenarioTitle: string };
+  // This run's variation seed: every run gets a new one, so no two runs repeat.
+  seed?: number;
 };
-
-/** Whether a stream message or news response belongs to this run (any branch in player mode). */
-export function sameRunOrBranch(run: ScenarioRun, other: RunIdentity) {
-  return run.player ? run.simulation_id === other.simulation_id : sameRun(run, other);
-}
 
 // What the scenario service is doing while a run generates (GET /scenarios/{id}).
 export type GenerationProgress = { stage?: string; elapsedSeconds?: number };
@@ -120,6 +126,29 @@ export type NewsItem = {
   dek: string;
   sim_time_label: string;
   focus: MapLocation & { event_id: string };
+};
+
+// Satire layer from GET /satire or /scenarios/{id}/satire. Presentation only:
+// it never replaces event facts or impact estimates.
+export type SatireItem = NewsItem & { original_headline: string };
+export type SatirePost = {
+  id: string;
+  event_id: string;
+  author: string;
+  handle: string;
+  kind: string;
+  text: string;
+  label: string;
+  tags: string[];
+  sim_time_minutes: number;
+  sim_time_label: string;
+};
+export type AbsurdityMetric = { key: string; label: string; value: number };
+export type SatireReport = RunIdentity & {
+  tone: Tone;
+  items: SatireItem[];
+  posts: SatirePost[];
+  absurdity: AbsurdityMetric[];
 };
 
 export function formatSimTime(minutes: number) {

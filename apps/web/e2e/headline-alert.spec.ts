@@ -13,7 +13,7 @@ test.beforeEach(({}, testInfo) => {
 
 test("live headlines stay in order while playback and the wire advance", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   const map = page.getByRole("region", { name: "Interactive world map" });
   const alert = map.locator(".headline-alert");
   const headline = alert.getByRole("heading");
@@ -59,7 +59,7 @@ test("live headlines stay in order while playback and the wire advance", async (
     const y = target.y + target.height / 2;
     return Math.abs(x - (canvas.x + canvas.width / 2)) < 6
       && Math.abs(y - (canvas.y + canvas.height / 2)) < 6
-      && y < overlay.y;
+      && (y < overlay.y || x < overlay.x);  // never hidden behind the compact card at the right
   }).toBe(true);
   await expect(headline).toHaveText(secondReport.headline);
 
@@ -70,7 +70,7 @@ test("live headlines stay in order while playback and the wire advance", async (
 
 test("seek and reset clear queued headlines, then replay can show them again", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   const alert = page.locator(".headline-alert");
   const wire = page.getByRole("region", { name: "WORLD//WIRE" });
   const playback = page.getByRole("region", { name: "Simulation playback" });
@@ -143,7 +143,7 @@ test("an event from a different scenario can be dismissed and duplicate frames s
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   const alert = page.locator(".headline-alert");
   const play = page.getByRole("button", { name: "Play", exact: true });
   await play.click();
@@ -181,7 +181,7 @@ test("an applied event delivered late after a seek does not create a headline", 
   });
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   const alert = page.locator(".headline-alert");
   await expect(alert).toHaveCount(0);
   await page.getByRole("button", { name: "Play", exact: true }).click();

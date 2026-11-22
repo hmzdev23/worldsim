@@ -7,23 +7,21 @@ Fixture demo (the simulation the server was started with):
   POST /events     ingest a Director batch; returns it with statuses set
   POST /control    playback control (same body as a WebSocket control message)
   WS   /stream     snapshot on connect, then event and clock messages
+  GET  /satire     satire layer (?tone=satirical|unhinged|straight) for released events
+  GET  /starters   starter scenarios (a prompt and an offline fixture each)
 
 Scenario runs created from a prompt, each fully isolated (see scenarios.py):
-  POST /scenarios                 {"prompt": "..."} -> 202, run in `generating`
+  POST /scenarios                 {"prompt", "fixture"?, "tone"?} -> 202, run in `generating`.
+                                  Every run gets a new random `seed`, so no two runs repeat.
   GET  /scenarios/{id}            status: generating | ready | failed
   GET  /scenarios/{id}/snapshot   like /snapshot, for this run
   GET  /scenarios/{id}/timeline   like /timeline, for this run
+  GET  /scenarios/{id}/result     the run's canonical result: seed, prompt and every event.
+                                  The map and the recap film both read this.
   GET  /scenarios/{id}/news       WORLD//WIRE items for this run's released events
+  GET  /scenarios/{id}/satire     satire layer (?tone=, default the run's tone) for released events
   POST /scenarios/{id}/control    like /control, for this run
   WS   /scenarios/{id}/stream     like /stream, for this run
-
-Player mode (prototype, docs/plans/player-mode.md):
-  GET  /player/scenarios                 playable fixtures and their roles
-  POST /scenarios                        {"prompt", "fixture", "mode": "player", "role"}
-  GET  /scenarios/{id}/player            the open decision card, decision log, variables
-  POST /scenarios/{id}/decisions         {decision_id, option_id | free_text, at_minutes}
-  POST /scenarios/{id}/decisions/{d}/branch   re-open decision d (voids it and later ones)
-  GET  /scenarios/{id}/summary           score, decision timeline, baseline comparison
 
 Each engine owns its state. A background task advances every simulation once
 per tick and broadcasts the resulting messages to that simulation's clients.
@@ -35,15 +33,17 @@ import asyncio
 import contextlib
 import logging
 import math
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import Body, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .engine import Message, Simulation
-from .player import PlayerError
-from .scenarios import MAX_PROMPT_CHARS, Channel, RegistryFull, Run, ScenarioRegistry, news_response
+from .scenarios import (
+    DEFAULT_TONE, MAX_PROMPT_CHARS, TONES, Channel, RegistryFull, Run, ScenarioRegistry, news_response, satire_response,
+    starters,
+)
 
 log = logging.getLogger("worldsim_sim")
 
@@ -51,7 +51,7 @@ log = logging.getLogger("worldsim_sim")
 def apply_control(sim: Simulation, control: Any) -> Message:
     """Apply one control message and return the message to broadcast.
 
-    {"action": "play"} | {"action": "pause"} | {"action": "speed", "speed": 4}
+    {"action": "play", "until_next_event"?: true} | {"action": "pause"} | {"action": "speed", "speed": 4}
     | {"action": "seek", "sim_time_minutes": 400} | {"action": "replay"}
     Raises ValueError for anything else.
     """
@@ -59,7 +59,8 @@ def apply_control(sim: Simulation, control: Any) -> Message:
         raise ValueError("control must be a JSON object")
     action = control.get("action")
     if action == "play":
-        return sim.play()
+        # Optional: stop at the next event (story playback). Not a stream-contract message field.
+        return sim.play(until_next_event=control.get("until_next_event") is True)
     if action == "pause":
         return sim.pause()
     if action == "speed":
@@ -106,13 +107,7 @@ def create_app(
             ticks = (now - last) / tick_seconds
             last = now
             for channel in [demo, *registry.channels()]:
-                player = channel.controller
-                if player is not None:
-                    player.arm()
-                messages = channel.sim.tick(ticks)
-                if player is not None:
-                    messages += player.after_advance()
-                await channel.broadcast(messages)
+                await channel.broadcast(channel.sim.tick(ticks))
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -135,23 +130,13 @@ def create_app(
             body["pacing"] = {**body["pacing"], "tick_seconds": tick_seconds}
         return body
 
-    def player_control(channel: Channel, body: Any) -> list[Message]:
-        """Apply a control, with player-mode rules first (seek voids, play waits). Raises PlayerError/ValueError."""
-        if channel.controller is not None:
-            messages = channel.controller.control(body)
-            if messages is not None:
-                return messages
-        return [apply_control(channel.sim, body)]
-
-    async def control(channel: Channel, body: Any) -> Any:
+    async def control(channel: Channel, body: Any) -> Message:
         try:
-            messages = player_control(channel, body)
-        except PlayerError as exc:
-            return JSONResponse(status_code=exc.status, content=exc.to_json())
+            message = apply_control(channel.sim, body)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
-        await channel.broadcast(messages)
-        return messages[-1]
+        await channel.broadcast([message])
+        return message
 
     async def serve(ws: WebSocket, channel: Channel) -> None:
         await ws.accept()
@@ -161,13 +146,12 @@ def create_app(
             while True:
                 body = await ws.receive_json()
                 try:
-                    messages = player_control(channel, body)
-                except (ValueError, PlayerError) as exc:
+                    message = apply_control(channel.sim, body)
+                except ValueError as exc:
                     # The stream contract has no error message kind; log and ignore.
-                    # Player seeks that void decisions go through POST .../control.
                     log.warning("ignored control %r: %s", body, exc)
                     continue
-                await channel.broadcast(messages)
+                await channel.broadcast([message])
         except WebSocketDisconnect:
             pass
         finally:
@@ -197,6 +181,21 @@ def create_app(
             "rejections": [r.to_json() for r in rejections],
         }
 
+    def tone_of(value: Optional[str], default: str) -> str:
+        tone = value or default
+        if tone not in TONES:
+            raise HTTPException(status_code=422, detail=f"tone must be one of {', '.join(TONES)}")
+        return tone
+
+    @app.get("/satire")
+    async def satire(tone: Optional[str] = None) -> dict[str, Any]:
+        # Released events only, so it always matches the clock (pause, seek, replay, reset).
+        return satire_response(sim.snapshot(), tone_of(tone, "satirical"))
+
+    @app.get("/starters")
+    async def starter_list() -> dict[str, Any]:
+        return {"label": "FICTIONAL SIMULATION", "starters": starters()}
+
     @app.post("/control")
     async def demo_control(body: dict[str, Any] = Body(...)) -> Message:
         return await control(demo, body)
@@ -223,12 +222,9 @@ def create_app(
     async def create_scenario(body: dict[str, Any] = Body(...)) -> Any:
         prompt = body.get("prompt", "")
         fixture = body.get("fixture")
-        mode = body.get("mode", "watch")
-        role = body.get("role")
-        if mode not in ("watch", "player"):
-            raise HTTPException(status_code=422, detail="mode must be watch or player")
-        if mode == "player" and not isinstance(role, str):
-            raise HTTPException(status_code=422, detail="player mode needs a role")
+        tone = body.get("tone", DEFAULT_TONE)
+        if tone not in TONES:
+            raise HTTPException(status_code=422, detail=f"tone must be one of {', '.join(TONES)}")
         if not isinstance(prompt, str) or len(prompt) > MAX_PROMPT_CHARS:
             raise HTTPException(status_code=422, detail=f"prompt must be text of at most {MAX_PROMPT_CHARS} characters")
         if fixture is not None and not isinstance(fixture, str):
@@ -236,11 +232,9 @@ def create_app(
         if not prompt.strip():
             raise HTTPException(status_code=422, detail="Describe a scenario to simulate")
         try:
-            run = await registry.create(prompt.strip(), fixture, mode=mode, role=role)
+            run = await registry.create(prompt.strip(), fixture, tone)
         except RegistryFull as exc:
             return JSONResponse(status_code=429, content={"detail": str(exc)})
-        except PlayerError as exc:
-            return JSONResponse(status_code=exc.status, content=exc.to_json())
         return with_tick(run.to_json())
 
     @app.get("/scenarios/{run_id}")
@@ -255,65 +249,25 @@ def create_app(
     async def scenario_timeline(run_id: str) -> dict[str, Any]:
         return with_tick(ready(run_id).sim.timeline_view())
 
+    @app.get("/scenarios/{run_id}/result")
+    async def scenario_result(run_id: str) -> dict[str, Any]:
+        run = find(run_id)
+        return run.result(ready(run_id).sim)
+
     @app.get("/scenarios/{run_id}/news")
     async def scenario_news(run_id: str) -> dict[str, Any]:
         # Released events only (a snapshot), never the future.
         return news_response(ready(run_id).sim.snapshot())
 
+    @app.get("/scenarios/{run_id}/satire")
+    async def scenario_satire(run_id: str, tone: Optional[str] = None) -> dict[str, Any]:
+        run = find(run_id)
+        channel = ready(run_id)
+        return satire_response(channel.sim.snapshot(), tone_of(tone, run.tone))
+
     @app.post("/scenarios/{run_id}/control")
     async def scenario_control(run_id: str, body: dict[str, Any] = Body(...)) -> Message:
         return await control(ready(run_id), body)
-
-    # ---- player mode (prototype) ------------------------------------------
-
-    def session(run_id: str):
-        channel = ready(run_id)
-        if channel.controller is None:
-            raise HTTPException(status_code=404, detail=f"Scenario {run_id} is not in player mode")
-        return channel, channel.controller
-
-    @app.get("/player/scenarios")
-    async def player_scenarios() -> dict[str, Any]:
-        return {"label": "SIMULATED", "scenarios": registry.catalogue.list()}
-
-    @app.get("/scenarios/{run_id}/player")
-    async def player_state(run_id: str) -> dict[str, Any]:
-        return session(run_id)[1].state_json()
-
-    @app.post("/scenarios/{run_id}/decisions")
-    async def decide(run_id: str, body: dict[str, Any] = Body(...)) -> Any:
-        channel, player = session(run_id)
-        free_text = body.get("free_text")
-        try:
-            batch = None
-            if player.needs_model(free_text):
-                cleaned = registry.catalogue.check_free_text(free_text)
-                batch = await asyncio.to_thread(player.model_batch, cleaned)
-            messages = player.decide(body.get("decision_id"), option_id=body.get("option_id"), free_text=free_text,
-                                     at_minutes=body.get("at_minutes"), model_batch=batch)
-        except PlayerError as exc:
-            return JSONResponse(status_code=exc.status, content=exc.to_json())
-        except Exception as exc:  # noqa: BLE001 - Director failures on the model path
-            code = getattr(exc, "code", None)
-            if code is None:
-                raise
-            return JSONResponse(status_code=422 if code == "invalid_scenario" else 502, content={"detail": str(exc)})
-        await channel.broadcast(messages)
-        return player.state_json()
-
-    @app.post("/scenarios/{run_id}/decisions/{decision_id}/branch")
-    async def branch_from(run_id: str, decision_id: str) -> Any:
-        channel, player = session(run_id)
-        try:
-            messages = player.branch_from(decision_id)
-        except PlayerError as exc:
-            return JSONResponse(status_code=exc.status, content=exc.to_json())
-        await channel.broadcast(messages)
-        return player.state_json()
-
-    @app.get("/scenarios/{run_id}/summary")
-    async def player_summary(run_id: str) -> dict[str, Any]:
-        return session(run_id)[1].summary()
 
     @app.websocket("/scenarios/{run_id}/stream")
     async def scenario_stream(ws: WebSocket, run_id: str) -> None:

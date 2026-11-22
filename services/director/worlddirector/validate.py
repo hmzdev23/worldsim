@@ -22,6 +22,9 @@ from .contract import (
     MAX_SIM_MINUTES,
     PAYLOAD_FIELDS,
     REQUIRED_PAYLOAD,
+    SATIRE_HANDLE_PATTERN,
+    SATIRE_LIMITS,
+    SATIRE_POST_KINDS,
     SCHEMA_VERSION,
     SLUG_PATTERN,
     VISUALS,
@@ -35,6 +38,9 @@ _EVENT_KEYS = {
 _IMPACT_KEYS = {*IMPACT_FIELDS, "aid_contributors"}
 _CONTRIBUTOR_KEYS = {"country", *CONTRIBUTOR_FIELDS, "cargo"}
 _LOCATION_KEYS = {"name", "country", "country_code", "lat", "lon"}
+_OPTIONAL_EVENT_KEYS = {"satire"}  # satirical presentation layer: optional, so older fixtures stay valid
+_SATIRE_KEYS = {"headline", "dek", "posts"}
+_POST_KEYS = {"author", "handle", "kind", "text"}
 
 
 def _num(value: Any) -> bool:
@@ -54,12 +60,12 @@ def _check_event(i: int, ev: Any, events: list, prior: dict, now: int) -> list:
     if not isinstance(ev, dict):
         return [f"{where} is not an object"]
     keys = set(ev)
-    if keys != _EVENT_KEYS:
+    if not _EVENT_KEYS <= keys <= _EVENT_KEYS | _OPTIONAL_EVENT_KEYS:
         errs = []
         if _EVENT_KEYS - keys:
             errs.append(f"{where} missing {sorted(_EVENT_KEYS - keys)}")
-        if keys - _EVENT_KEYS:
-            errs.append(f"{where} has unknown keys {sorted(keys - _EVENT_KEYS)}")
+        if keys - _EVENT_KEYS - _OPTIONAL_EVENT_KEYS:
+            errs.append(f"{where} has unknown keys {sorted(keys - _EVENT_KEYS - _OPTIONAL_EVENT_KEYS)}")
         return errs
 
     errs = []
@@ -98,6 +104,7 @@ def _check_event(i: int, ev: Any, events: list, prior: dict, now: int) -> list:
             errs.append(f"{where}.{key} must be null or a {kind} in {lo}..{hi}")
 
     errs.extend(_check_impacts(where, ev["impacts"]))
+    errs.extend(_check_satire(where, ev.get("satire")))
 
     causes = ev["caused_by"]
     if not isinstance(causes, list) or len(causes) > MAX_EVENTS:
@@ -119,6 +126,48 @@ def _check_event(i: int, ev: Any, events: list, prior: dict, now: int) -> list:
             elif _int(t) and prior[pid] > t:
                 errs.append(f"{where}.caused_by_events {pid!r} happens after the event it caused")
     return errs
+
+
+def _check_satire(where: str, sat: Any) -> list:
+    """Satire is presentation only, but it is still checked: shape, lengths, invented handles."""
+    if sat is None:
+        return []
+    where = f"{where}.satire"
+    if not isinstance(sat, dict) or not set(sat) <= _SATIRE_KEYS or "headline" not in sat:
+        return [f"{where} must be null or an object with headline, dek, posts"]
+    errs = []
+    if not _text(sat["headline"], SATIRE_LIMITS["headline"]):
+        errs.append(f"{where}.headline must be 1-{SATIRE_LIMITS['headline']} characters")
+    if sat.get("dek") is not None and not _text(sat["dek"], SATIRE_LIMITS["dek"]):
+        errs.append(f"{where}.dek must be null or 1-{SATIRE_LIMITS['dek']} characters")
+    posts = sat.get("posts") or []
+    if not isinstance(posts, list) or len(posts) > SATIRE_LIMITS["posts"]:
+        return errs + [f"{where}.posts must be a list of at most {SATIRE_LIMITS['posts']}"]
+    for j, post in enumerate(posts):
+        here = f"{where}.posts[{j}]"
+        if not isinstance(post, dict) or set(post) != _POST_KEYS:
+            errs.append(f"{here} must have exactly {sorted(_POST_KEYS)}")
+            continue
+        if not _text(post["author"], SATIRE_LIMITS["author"]):
+            errs.append(f"{here}.author must be 1-{SATIRE_LIMITS['author']} characters")
+        if not isinstance(post["handle"], str) or not re.fullmatch(SATIRE_HANDLE_PATTERN, post["handle"]):
+            errs.append(f"{here}.handle must match {SATIRE_HANDLE_PATTERN}")
+        if post["kind"] not in SATIRE_POST_KINDS:
+            errs.append(f"{here}.kind must be one of {list(SATIRE_POST_KINDS)}")
+        if not _text(post["text"], SATIRE_LIMITS["text"]):
+            errs.append(f"{here}.text must be 1-{SATIRE_LIMITS['text']} characters")
+    return errs
+
+
+def _satire_payload(sat: Optional[dict]) -> Optional[dict]:
+    if not sat:
+        return None
+    out: dict = {"headline": sat["headline"].strip()}
+    if sat.get("dek"):
+        out["dek"] = sat["dek"].strip()
+    if sat.get("posts"):
+        out["posts"] = [{k: p[k].strip() for k in ("author", "handle", "kind", "text")} for p in sat["posts"]]
+    return out
 
 
 def _check_impacts(where: str, imp: Any) -> list:
@@ -278,6 +327,9 @@ def build_batch(
         impacts = _impacts_payload(ev["impacts"])
         if impacts:
             payload["impacts"] = impacts
+        satire = _satire_payload(ev.get("satire"))
+        if satire:
+            payload["satire"] = satire
         loc = ev["location"]
         out.append(
             {

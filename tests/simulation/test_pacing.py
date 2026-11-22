@@ -318,7 +318,7 @@ class ServerPacingTests(unittest.TestCase):
         app, _ = build(["--scenario-pace", "10"])
         self.assertEqual(app.state.scenarios.pace, 0.1)
         app, _ = build([])
-        self.assertEqual(app.state.scenarios.pace, 0.005)
+        self.assertEqual(app.state.scenarios.pace, 0.06)
         for bad in ("0", "150"):
             with self.subTest(bad=bad), self.assertRaises(SystemExit),                     contextlib.redirect_stderr(io.StringIO()):
                 build(["--scenario-pace", bad])

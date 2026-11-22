@@ -94,7 +94,7 @@ test.use({ reducedMotion: "reduce" });
 test("prompted playback keeps headlines, map focus, and seeks scoped to each run", async ({ page }) => {
   await mockScenarioService(page);
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   const prompt = page.getByLabel("Scenario prompt");
   const playback = page.getByRole("region", { name: "Simulation playback" });
   const archive = page.getByRole("region", { name: "WORLD//WIRE" });
@@ -104,13 +104,13 @@ test("prompted playback keeps headlines, map focus, and seeks scoped to each run
 
   await prompt.fill("An Iceland eruption interrupts power on the Reykjanes Peninsula.");
   await prompt.press("Tab");
-  await expect(page.getByRole("button", { name: "Generate scenario" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Simulate", exact: true })).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(page.getByText("Preparing a scenario.")).toBeVisible();
+  await expect(page.getByText("Preparing a new run")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Iceland eruption" })).toBeVisible();
   await expect(slider).toHaveAttribute("min", String(start));
   await expect(slider).toHaveAttribute("max", String(end));
-  await playback.getByRole("button", { name: "Play", exact: true }).click();
+  // A new run plays by itself; nothing waits for the viewer.
 
   await expect(overlay.getByRole("heading")).toHaveText(runs[0].reports[0].headline);
   await expect(archive.getByText(runs[0].reports[0].headline, { exact: true })).toBeVisible();
@@ -124,7 +124,8 @@ test("prompted playback keeps headlines, map focus, and seeks scoped to each run
     if (!feature || !canvas || !headline) return false;
     const x = feature.x + feature.width / 2;
     const y = feature.y + feature.height / 2;
-    return Math.abs(x - (canvas.x + canvas.width / 2)) < 6 && y < headline.y;
+    // Centred on the map and not hidden behind the headline card (now a compact card at the right).
+    return Math.abs(x - (canvas.x + canvas.width / 2)) < 6 && (y < headline.y || x < headline.x);
   }).toBe(true);
 
   await playback.getByRole("button", { name: "Pause", exact: true }).click();
@@ -135,11 +136,8 @@ test("prompted playback keeps headlines, map focus, and seeks scoped to each run
   await expect(overlay.getByRole("heading")).toHaveText(runs[0].reports[0].headline);
 
   await prompt.fill("An outage shuts down part of Laval's power grid.");
-  await page.getByRole("button", { name: "Generate scenario" }).click();
+  await page.getByRole("button", { name: "Simulate", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Québec power outage" })).toBeVisible();
-  await expect(overlay).toHaveCount(0);
-  await expect(archive).toContainText("No reports yet");
-  await playback.getByRole("button", { name: "Play", exact: true }).click();
   await expect(overlay.getByRole("heading")).toHaveText(runs[1].reports[0].headline);
   await expect(archive).not.toContainText(runs[0].reports[0].headline);
 });
@@ -147,10 +145,10 @@ test("prompted playback keeps headlines, map focus, and seeks scoped to each run
 test("a failed generation can be retried without leaving the demo workspace", async ({ page }) => {
   await mockScenarioService(page, { failFirst: true });
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   const prompt = page.getByLabel("Scenario prompt");
   await prompt.fill("A power outage on the Reykjanes Peninsula.");
-  await page.getByRole("button", { name: "Generate scenario" }).click();
+  await page.getByRole("button", { name: "Simulate", exact: true }).click();
   await expect(page.getByText("The Director took too long.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Earthquake off Japan" })).toBeVisible();
   await expect(prompt).toHaveValue("A power outage on the Reykjanes Peninsula.");

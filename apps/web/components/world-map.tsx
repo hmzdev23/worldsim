@@ -10,6 +10,8 @@ import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNo
 import type { MapLocation, ScenarioEvent } from "../lib/scenario";
 import { along, deriveMapEffects, describeEffects, type AidRoute, type MapEffects } from "./map-effects";
 import effectStyles from "./map-effects.module.css";
+import { deriveMotion, describeMotion } from "./map-motion";
+import { MotionLayer } from "./map-motion-layer";
 
 export type WorldMapHandle = {
   focusLocation: (location: MapLocation, instant?: boolean) => void;
@@ -279,8 +281,10 @@ export function WorldMap({
   initialFocus,
   events,
   focusCountry,
-  ref, selectedEventId, onManualInteraction,
+  ref, selectedEventId, onManualInteraction, follow = false,
 }: {
+  /** Ride along with each new journey (story mode with auto-follow on). */
+  follow?: boolean;
   selectedEventId?: string;
   onManualInteraction?: () => void;
   children?: ReactNode;
@@ -306,11 +310,20 @@ export function WorldMap({
   const volcanoMarkers = useRef<Marker[]>([]);
   const quake = events.findLast((event) => event.type === "earthquake");
   const effects = useMemo(() => deriveMapEffects(events), [events]);
-  const effectList = useMemo(() => describeEffects(effects), [effects]);
+  const motion = useMemo(() => deriveMotion(events), [events]);
+  const effectList = useMemo(() => [...describeEffects(effects), ...describeMotion(motion)], [effects, motion]);
+  const motionLayer = useRef<MotionLayer | null>(null);
+  const flashRef = useRef<HTMLDivElement>(null);
+  const seenIds = useRef<Set<string> | null>(null);
 
   useImperativeHandle(ref, () => ({
     focusLocation(location, instant) {
-      if (mapRef.current) focusMapLocation(mapRef.current, location, instant);
+      // While the camera rides along with a journey, it lands on the destination itself.
+      if (motionLayer.current?.isFollowing()) return;
+      // Inside an ash cloud or fallout plume, stay pulled back so the whole cloud stays in view.
+      const wide = motionLayer.current?.contextZoom([location.lon, location.lat]);
+      const zoom = wide === undefined ? location.zoom : Math.min(wide, location.zoom ?? 4.65);
+      if (mapRef.current) focusMapLocation(mapRef.current, { ...location, zoom }, instant);
     },
     stopMotion() { mapRef.current?.stop(); },
   }), []);
@@ -362,6 +375,7 @@ export function WorldMap({
         setCountry(String(feature.properties.name));
       });
       map.on("mouseleave", "land", clearHover);
+      if (flashRef.current) motionLayer.current = new MotionLayer(map, flashRef.current);
       setMapReady(true);
       if (initialFocus && validLocation(initialFocus)) focusMapLocation(map, initialFocus, true);
     });
@@ -386,6 +400,8 @@ export function WorldMap({
       eventMarkers.current.clear();
       aidMarkers.current.forEach(({ marker, label }) => { marker.remove(); label.remove(); });
       aidMarkers.current.clear();
+      motionLayer.current?.dispose();
+      motionLayer.current = null;
       map.remove();
       mapRef.current = null;
     };
@@ -573,6 +589,24 @@ export function WorldMap({
     }
   }, [effects, elapsedSeconds, mapReady]);
 
+  // Motion: events that arrive one or two at a time animate; a batch (first load, seek,
+  // replay) is drawn in its final state, so old events never replay their animation.
+  useEffect(() => {
+    const layer = motionLayer.current;
+    if (!mapReady || !layer) return;
+    const ids = new Set(events.map((event) => event.id));
+    const previous = seenIds.current;
+    const added = previous ? [...ids].filter((id) => !previous.has(id)).length : ids.size;
+    const removed = previous ? [...previous].some((id) => !ids.has(id)) : false;
+    layer.reduced = reducedMotion();
+    layer.update(motion, previous === null || removed || added > 3);
+    seenIds.current = ids;
+  }, [motion, events, mapReady]);
+
+  useEffect(() => {
+    if (motionLayer.current) motionLayer.current.follow = follow && !reducedMotion();
+  }, [follow, mapReady]);
+
   useEffect(() => {
     for (const [id, marker] of eventMarkers.current) marker.getElement().dataset.selected = String(id === selectedEventId);
   }, [selectedEventId, events, mapReady]);
@@ -580,6 +614,7 @@ export function WorldMap({
   return (
     <section className="map-panel" aria-label="Interactive world map">
       <div className="map-canvas" ref={containerRef} />
+      <div className="map-flash" ref={flashRef} aria-hidden="true" />
       <div className="map-caption">
         <h2>World map</h2>
         <span>{country || "Drag to pan · Scroll to zoom"}</span>
@@ -613,6 +648,9 @@ export function WorldMap({
             <p className={effectStyles.note}>Outbreak circles mark reported places only.</p>
           )}
           {effects.water.length > 0 && <p className={effectStyles.note}>Water effects illustrate reported locations, not a predicted flood boundary.</p>}
+          {(motion.journeys.length > 0 || motion.clouds.length > 0) && (
+            <p className={effectStyles.note}>Flights follow the run&apos;s cause links; clouds and paths are illustrations, not forecasts.</p>
+          )}
         </div>
       )}
       <div className="map-credit">

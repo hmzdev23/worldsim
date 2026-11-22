@@ -82,10 +82,9 @@ class Simulation:
     pace: float | None = None
     minutes_per_tick: float = 1.0
     start_minutes: int = 0
-    # A one-shot breakpoint (player mode): playing stops on this minute, like
-    # the end clamp, and `halted` records that it was reached. None = no stop.
-    stop_minute: int | None = None
-    halted: bool = False
+    # Story playback: when set (play with until_next_event), the clock stops exactly at
+    # the next event's minute and pauses once it is released, so a viewer can read it.
+    hold_at_events: bool = False
     _timeline: list[Event] = field(default_factory=list)  # applied, canonical order
     _released: int = 0  # how many timeline events the stream has seen
 
@@ -215,17 +214,19 @@ class Simulation:
             raise ValueError("advance takes a non-negative number of minutes")
         if self.state == "playing":
             end = self.end_minutes
-            stop = self.stop_minute if self.stop_minute is not None and self.stop_minute > self.sim_time else None
-            limit = min(end, stop) if stop is not None else end
+            limit = end
+            if self.hold_at_events and self._released < len(self._timeline):
+                limit = min(end, max(self.sim_time, self._timeline[self._released]["sim_time_minutes"]))
             if self.sim_time < limit:
                 # Rounding to a microminute keeps float drift (20 × 5% of a
                 # span summing to 419.99999…) from holding an event back a tick.
                 self.sim_time = min(round(self.sim_time + minutes * self.speed, 6), float(limit))
-            if stop is not None and self.sim_time >= stop:
-                self.state, self.stop_minute, self.halted = "paused", None, True
             if self.sim_time >= end:
                 self.state = "paused"
-        messages = [self._event_message(e) for e in self._release_due()]
+        released = self._release_due()
+        if self.hold_at_events and released:
+            self.state = "paused"  # hold on what just happened; the viewer plays on
+        messages = [self._event_message(e) for e in released]
         messages.append(self.clock())
         return messages
 
@@ -273,7 +274,9 @@ class Simulation:
             "minutes_per_tick": self.step_minutes,
         }
 
-    def play(self) -> Message:
+    def play(self, until_next_event: bool = False) -> Message:
+        """Start the clock. With until_next_event, it stops at the next event and pauses there."""
+        self.hold_at_events = until_next_event
         self.state = "playing"
         return self.clock()
 

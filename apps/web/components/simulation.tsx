@@ -1,137 +1,170 @@
 "use client";
 
-import { ArrowRight, GlobeHemisphereWest } from "@phosphor-icons/react";
+import { ArrowClockwise, ArrowRight, GlobeHemisphereWest } from "@phosphor-icons/react";
 import { MotionConfig } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { japanDemo } from "../lib/earthquake";
-import { controlRun, listPlayableScenarios, type PlayableScenario } from "../lib/player-api";
-import { prepareScenario } from "../lib/scenario-api";
-import { generationStageLabel, type ScenarioRun } from "../lib/scenario";
+import { listStarters, pauseRun, prepareScenario } from "../lib/scenario-api";
+import { generationStageLabel, tones, type ScenarioRun, type Starter, type Tone } from "../lib/scenario";
 import { RunConsole } from "./run-console";
-import { ScenarioOnboarding, type SetupStep, type GamePace } from "./scenario-onboarding";
+import { ScenarioStarters, type StarterLaunch } from "./scenario-starters";
+import { ToneSelector } from "./tone-selector";
 
-type View = "welcome" | "setup" | "game" | "watch";
-type LaunchState = {status: "idle" | "generating" | "ready"} | {status: "failed"; message: string};
-export function Simulation() { return <MotionConfig reducedMotion="user"><ScenarioWorkspace/></MotionConfig>; }
+const toneKey = "worldsim:tone";
+function storedTone(): Tone | undefined {
+  try {
+    const value = window.localStorage.getItem(toneKey);
+    return tones.some((tone) => tone.value === value) ? value as Tone : undefined;
+  } catch {
+    return undefined;
+  }
+}
+function storeTone(tone: Tone) {
+  try { window.localStorage.setItem(toneKey, tone); } catch { /* private mode: not remembered */ }
+}
+
+type View = "home" | "watch";
+type LaunchState = { status: "idle" | "generating" | "ready" } | { status: "failed"; message: string };
+// What started the current run, so "Run again" can roll a new seed for the same situation.
+type Request = StarterLaunch & { tone: Tone };
+
+export function Simulation() { return <MotionConfig reducedMotion="user"><ScenarioWorkspace /></MotionConfig>; }
 
 function ScenarioWorkspace() {
-  const [view,setView] = useState<View>("welcome");
-  const [step,setStep] = useState<SetupStep>(1);
-  const [prompt,setPrompt] = useState("");
-  const [run,setRun] = useState<ScenarioRun>(japanDemo);
-  const [launch,setLaunch] = useState<LaunchState>({status:"idle"});
-  const [playable,setPlayable] = useState<PlayableScenario[]>([]);
-  const [catalogueError,setCatalogueError] = useState<string>();
-  const [catalogueLoading,setCatalogueLoading] = useState(true);
-  const [reload,setReload] = useState(0);
-  const [fixture,setFixture] = useState("");
-  const [roleId,setRoleId] = useState("");
-  const [pace,setPace] = useState<GamePace>("demo");
-  const [runPace,setRunPace] = useState<GamePace>("demo");
-  const [autoStart,setAutoStart] = useState(false);
-  const [coach,setCoach] = useState(true);
-  const [elapsedSeconds,setElapsedSeconds] = useState(0);
-  const [stage,setStage] = useState<string>();
+  const [view, setView] = useState<View>("home");
+  const [prompt, setPrompt] = useState("");
+  const [run, setRun] = useState<ScenarioRun>(japanDemo);
+  const [launch, setLaunch] = useState<LaunchState>({ status: "idle" });
+  const [starters, setStarters] = useState<Starter[]>([]);
+  const [startersError, setStartersError] = useState<string>();
+  const [startersLoading, setStartersLoading] = useState(true);
+  const [reload, setReload] = useState(0);
+  const [autoStart, setAutoStart] = useState(false);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [stage, setStage] = useState<string>();
+  // The tone for the next run, and the tone each run is watched in.
+  const [nextTone, setNextTone] = useState<Tone>("straight");
+  const [toneByRun, setToneByRun] = useState<Record<string, Tone>>({});
   const request = useRef<AbortController | null>(null);
+  const lastRequest = useRef<Request | null>(null);
   const preparingSince = useRef<number | undefined>(undefined);
   const busy = launch.status === "generating";
   const isDemo = run === japanDemo;
-  const selected = playable.find(s=>s.fixture===fixture);
-  useEffect(()=>()=>request.current?.abort(),[]);
-  useEffect(()=>{
-    const controller=new AbortController(); setCatalogueLoading(true); setCatalogueError(undefined);
-    listPlayableScenarios(controller.signal).then(scenarios=>{
-      if(controller.signal.aborted)return;
-      const order=["tsunami","iceland-eruption","japan-earthquake","nuclear-war","global-pandemic","zombie-outbreak","alien-invasion","sun-disappearing","giant-insect-mutation","ai-takeover"];
-      setPlayable(scenarios.sort((a,b)=>order.indexOf(a.fixture)-order.indexOf(b.fixture))); setCatalogueLoading(false);
-    },()=>{if(!controller.signal.aborted){setCatalogueError("We couldn’t connect to the simulation. Check that the local server is running, then try again.");setCatalogueLoading(false);}});
-    return ()=>controller.abort();
-  },[reload]);
-  useEffect(()=>{
-    if(!busy)return;
-    const timer=setInterval(()=>setElapsedSeconds(Math.floor((Date.now()-(preparingSince.current ?? Date.now()))/1000)),1000);
-    return ()=>clearInterval(timer);
-  },[busy]);
+  const runTone: Tone = toneByRun[run.id] ?? (isDemo ? nextTone : run.tone ?? "straight");
+  // On the home screen the selector sets the next run's tone; while watching, the current run's.
+  const shownTone: Tone = view === "home" ? nextTone : runTone;
 
+  useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => {
+    const remembered = storedTone();
+    if (remembered) setNextTone(remembered);
+  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    setStartersLoading(true); setStartersError(undefined);
+    listStarters(controller.signal).then((list) => {
+      if (!controller.signal.aborted) { setStarters(list); setStartersLoading(false); }
+    }, () => {
+      if (!controller.signal.aborted) {
+        setStartersError("We couldn’t connect to the simulation. Check that the local server is running, then try again.");
+        setStartersLoading(false);
+      }
+    });
+    return () => controller.abort();
+  }, [reload]);
+  useEffect(() => {
+    if (!busy) return;
+    const timer = setInterval(() => setElapsedSeconds(Math.floor((Date.now() - (preparingSince.current ?? Date.now())) / 1000)), 1000);
+    return () => clearInterval(timer);
+  }, [busy]);
+
+  function chooseTone(tone: Tone) {
+    setNextTone(tone);
+    setToneByRun((previous) => ({ ...previous, [run.id]: tone }));
+    storeTone(tone);
+  }
   function pauseCurrent() {
-    if(view!=="game" && view!=="watch")return;
-    if(!isDemo) void controlRun(run.id,{action:"pause"}).catch(()=>{});
+    if (view === "watch" && !isDemo) void pauseRun(run.id).catch(() => {});
   }
-  function setup(target:SetupStep=1) {
-    pauseCurrent(); setAutoStart(false); setLaunch({status:"idle"});
-    if(run.player && target===2){setFixture(run.player.fixture);setRoleId(run.player.role);}
-    setStep(target);setView("setup");window.scrollTo({top:0,behavior:"instant"});
+  function goHome() {
+    pauseCurrent(); setLaunch({ status: "idle" }); setView("home");
+    window.scrollTo({ top: 0, behavior: "instant" });
   }
-  async function start(text:string, player?:ScenarioRun["player"], fixtureId?:string, watchNow=false) {
-    if(!text || request.current)return;
-    const controller=new AbortController();request.current=controller;preparingSince.current=Date.now();
-    setLaunch({status:"generating"});setElapsedSeconds(0);setStage(undefined);
+  async function start(next: Request) {
+    if (!next.prompt || request.current) return;
+    const controller = new AbortController();
+    request.current = controller; preparingSince.current = Date.now(); lastRequest.current = next;
+    setLaunch({ status: "generating" }); setElapsedSeconds(0); setStage(undefined);
     try {
-      const next=await prepareScenario(text,controller.signal,p=>{if(!controller.signal.aborted)setStage(p.stage);},player,fixtureId);
-      if(controller.signal.aborted)return;
-      setRun(next);setRunPace(pace);setAutoStart(!!player || watchNow);setCoach(true);setView(player ? "game" : "watch");setLaunch({status:"ready"});
-    } catch(error) {
-      if(!controller.signal.aborted)setLaunch({status:"failed",message:error instanceof Error ? error.message : "We couldn’t prepare this world. Please try again."});
-    } finally {if(request.current===controller)request.current=null;}
+      const scenario = await prepareScenario(next.prompt, controller.signal,
+        (p) => { if (!controller.signal.aborted) setStage(p.stage); }, next.tone, next.fixture);
+      if (controller.signal.aborted) return;
+      pauseCurrent();
+      setToneByRun((previous) => ({ ...previous, [scenario.id]: scenario.tone ?? next.tone }));
+      setRun(scenario); setAutoStart(true); setView("watch"); setLaunch({ status: "ready" });
+    } catch (error) {
+      if (!controller.signal.aborted) {
+        setLaunch({ status: "failed", message: error instanceof Error ? error.message : "We couldn’t prepare this world. Please try again." });
+      }
+    } finally {
+      if (request.current === controller) request.current = null;
+    }
   }
-  function playAsRole(scenario=selected, id=roleId) {
-    const role=scenario?.roles.find(r=>r.id===id);if(!scenario || !role)return;
-    void start(`Player mode: ${scenario.title} as ${role.title}`,{fixture:scenario.fixture,role:role.id,roleTitle:role.title,scenarioTitle:scenario.title});
+  function runAgain() {
+    if (lastRequest.current) void start({ ...lastRequest.current, tone: runTone });
   }
   function loadDemo() {
-    pauseCurrent();request.current?.abort();request.current=null;
-    setRun(japanDemo);setAutoStart(false);setLaunch({status:"idle"});setView("watch");
+    pauseCurrent(); request.current?.abort(); request.current = null; lastRequest.current = null;
+    setRun(japanDemo); setAutoStart(false); setLaunch({ status: "idle" }); setView("watch");
   }
-  function submit(event:FormEvent<HTMLFormElement>) {event.preventDefault();void start(prompt.trim());}
-  const launchMessage=launch.status==="failed" ? launch.message : busy
-    ? `Preparing a scenario${stage ? ` · ${generationStageLabel(stage)}` : ""}. Elapsed: ${elapsedSeconds}s. The current run stays open.`
-    : launch.status==="ready" ? "Scenario ready." : "Describe a hypothetical crisis to watch it unfold.";
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void start({ prompt: prompt.trim(), tone: nextTone });
+  }
+
+  const launchMessage = launch.status === "failed" ? launch.message : busy
+    ? `Preparing a new run${stage ? ` · ${generationStageLabel(stage)}` : ""}. Elapsed: ${elapsedSeconds}s.`
+    : "Describe any situation. Every run rolls a new seed, so it never plays out the same way twice.";
 
   return <main className={`simulation-shell view-${view}`}>
-    <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone"/></span><span>WORLD<span className="wordmark-slashes">//</span>SIM</span></h1>
-      <div className="masthead-actions"><span className="mode-label">Fictional simulation</span>{view!=="welcome" && <button type="button" className="demo-button" disabled={busy} onClick={()=>{pauseCurrent();setView("welcome");}}>Home</button>}</div>
+    <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span><span>WORLD<span className="wordmark-slashes">//</span>SIM</span></h1>
+      <div className="masthead-actions">
+        <span className="mode-label">{runTone === "straight" ? "Fictional simulation" : "Fictional simulation · satire"}</span>
+        {view !== "home" && <button type="button" className="demo-button" disabled={busy} onClick={goHome}>New scenario</button>}
+      </div>
     </header>
 
-    {view==="welcome" && <section className="game-welcome" aria-labelledby="welcome-title">
-      <div className="welcome-copy"><p className="alt-kicker">An interactive crisis game</p><h2 id="welcome-title">One crisis.<br/><span>Your decisions.</span></h2>
-        <p className="welcome-description">Step into a role. Follow the news.<br/>Decide what happens next.</p>
-        <button type="button" className="setup-primary welcome-start" onClick={()=>setup(1)}>Start playing<ArrowRight size={20} aria-hidden="true"/></button>
-        <button type="button" className="welcome-demo" disabled={!playable.some(s=>s.fixture==="alien-invasion")} onClick={()=>{setFixture("alien-invasion");setRoleId("diplomat");setPace("demo");setLaunch({status:"idle"});setStep(3);setView("setup");}}>Quick demo: first contact <ArrowRight size={15} aria-hidden="true"/></button>
-        <p className="welcome-facts">10 scenarios <span>·</span> 50 roles <span>·</span> Your choices shape the story</p>
-      </div>
-      <div className="welcome-art" aria-hidden="true"><div className="welcome-globe"><GlobeHemisphereWest weight="thin"/></div>
-        <div className="welcome-signal signal-news"><i/>BREAKING NEWS<span>An unfamiliar world unfolds.</span></div>
-        <div className="welcome-signal signal-decision"><span className="signal-number">?</span>DECISION REQUIRED<span>What will you do?</span></div>
-        <div className="welcome-orbit orbit-one"/><div className="welcome-orbit orbit-two"/>
-      </div>
-      <footer className="welcome-alternatives"><span>Prefer to explore?</span><button type="button" onClick={loadDemo}>Watch a simulation</button><button type="button" onClick={()=>{loadDemo();requestAnimationFrame(()=>document.getElementById("scenario-prompt")?.focus());}}>Create your own scenario</button></footer>
+    {view === "home" && <section className="sim-intro" aria-labelledby="intro-title">
+      <p className="alt-kicker">An open-ended world simulation</p>
+      <h2 id="intro-title">What if…?</h2>
+      <p>Describe a situation and watch the world respond on the map. Run it again and a different, plausible future unfolds.</p>
     </section>}
-
-    {view==="setup" && <ScenarioOnboarding scenarios={playable} fixture={fixture} roleId={roleId} step={step} pace={pace}
-      busy={busy} loading={catalogueLoading} error={launch.status==="failed" ? launch.message : catalogueError}
-      onRetry={()=>setReload(n=>n+1)} onScenario={id=>{if(id!==fixture)setRoleId("");setFixture(id);}}
-      onWatch={(text, fixtureId)=>void start(text,undefined,fixtureId,true)}
-      onRole={setRoleId} onStep={next=>{setLaunch({status:"idle"});setStep(next);}} onPace={setPace} onStart={()=>playAsRole()}
-      onBack={()=>{setLaunch({status:"idle"});step===1 ? setView("welcome") : setStep((step-1) as SetupStep);}}/>}
-
-    {view==="watch" && <>
-      <div className="watch-heading"><h2>Explore a simulation</h2><button type="button" className="demo-button" onClick={()=>setup(1)}>Play a role instead</button></div>
-      <form className="scenario-launch" onSubmit={submit}><label htmlFor="scenario-prompt">Scenario prompt</label>
-        <div className="scenario-input-row"><textarea id="scenario-prompt" rows={2} maxLength={2000} required value={prompt} disabled={busy}
-          placeholder="What if a volcanic eruption closed Iceland’s main airport for two days?" onChange={e=>{setPrompt(e.currentTarget.value);if(launch.status!=="idle")setLaunch({status:"idle"});}}/>
-          <button className="generate-button" type="submit" disabled={busy || !prompt.trim()}>{busy ? "Preparing…" : launch.status==="failed" ? "Try again" : "Generate scenario"}<ArrowRight size={16} aria-hidden="true"/></button></div>
-        <div className="scenario-launch-footer"><p className={launch.status==="failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
-          <button className="demo-button" type="button" onClick={loadDemo} disabled={isDemo && launch.status==="idle"}>Japan demo</button></div>
+    <form className="scenario-launch" onSubmit={submit}><label htmlFor="scenario-prompt">Scenario prompt</label>
+      <div className="scenario-input-row"><textarea id="scenario-prompt" rows={2} maxLength={2000} required value={prompt} disabled={busy}
+          placeholder="What if a volcanic eruption closed Iceland’s main airport for two days?"
+          onChange={(e) => { setPrompt(e.currentTarget.value); if (launch.status !== "idle") setLaunch({ status: "idle" }); }} />
+          <button className="generate-button" type="submit" disabled={busy || !prompt.trim()}>{busy ? "Preparing…" : launch.status === "failed" ? "Try again" : "Simulate"}<ArrowRight size={16} aria-hidden="true" /></button></div>
+        <div className="scenario-tone-row">
+          <span id="tone-label">Tone</span>
+          <ToneSelector value={shownTone} onChange={chooseTone} />
+          <span className="tone-hint">{shownTone === "straight" ? "Serious presentation." : "Satire is a fictional presentation layer. Facts and impact estimates stay unchanged."}</span>
+        </div>
+        <div className="scenario-launch-footer"><p className={launch.status === "failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
+          <button className="demo-button" type="button" onClick={loadDemo}>Japan demo</button></div>
       </form>
-    </>}
+    {view === "home" && <ScenarioStarters starters={starters} loading={startersLoading} error={startersError} busy={busy}
+      onRetry={() => setReload((n) => n + 1)} onLaunch={(s) => void start({ ...s, tone: nextTone })} />}
 
-    {view==="game" && run.player && <>
-      <section className="mission-strip" aria-label="Your mission"><div><span>{run.player.scenarioTitle}</span><h2>{run.player.roleTitle}</h2></div><button type="button" className="demo-button" onClick={()=>setup(1)}>New game</button></section>
-      {coach && <div className="game-coach" role="status"><p><strong>You’re in charge.</strong> Follow the news. When it’s time to decide, the clock pauses for you.</p><button type="button" onClick={()=>setCoach(false)}>Got it</button></div>}
+    {view === "watch" && <>
+      <section className="run-bar" aria-label="Current run">
+        <div><span>{isDemo ? "Reference demo · fixed timeline" : run.seed !== undefined ? `Seed ${run.seed}` : "Prompted scenario"}</span><p className="run-bar-title">{run.title}</p></div>
+        <div className="run-bar-actions">
+          {!isDemo && lastRequest.current && <button type="button" className="demo-button" disabled={busy} onClick={runAgain}>
+            <ArrowClockwise size={15} aria-hidden="true" />{busy ? "Preparing…" : "Run again (new seed)"}</button>}
+        </div>
+      </section>
+      <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo} tone={runTone}
+        autoStart={autoStart} onRunAgain={!isDemo && lastRequest.current ? runAgain : undefined} />
     </>}
-    {(view==="game" || view==="watch") && <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo}
-      autoStart={autoStart} initialSpeed={run.player && runPace==="demo" ? 4 : 1}
-      onSelectRole={()=>setup(2)} onSelectScenario={()=>setup(1)}
-      onRestart={run.player ? ()=>playAsRole(playable.find(s=>s.fixture===run.player?.fixture),run.player?.role) : undefined}/>}
   </main>;
 }

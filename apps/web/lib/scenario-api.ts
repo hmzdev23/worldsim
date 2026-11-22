@@ -1,5 +1,6 @@
 import {
-  sameRunOrBranch, type GenerationProgress, type NewsItem, type Pacing, type RunIdentity, type ScenarioEvent, type ScenarioRun,
+  sameRun, type GenerationProgress, type NewsItem, type Pacing, type RunIdentity, type SatireReport, type ScenarioEvent,
+  type ScenarioRun, type Starter, type Tone,
 } from "./scenario";
 
 const proxy = "/api/simulation";
@@ -9,6 +10,8 @@ type ScenarioJob = {
   simulation_id: string;
   status: "generating" | "ready" | "failed";
   title?: string;
+  tone?: Tone;
+  seed?: number;
   start_minutes?: number;
   error?: { message: string };
   stage?: string;
@@ -37,14 +40,15 @@ export async function prepareScenario(
   prompt: string,
   signal: AbortSignal,
   onProgress?: (progress: GenerationProgress) => void,
-  player?: ScenarioRun["player"],
+  tone: Tone = "straight",
   fixture?: string,
 ): Promise<ScenarioRun> {
-  const extra = player ? { fixture: player.fixture, mode: "player", role: player.role } : fixture ? { fixture } : {};
+  // No seed is sent: the server rolls a new one for every run, so no two runs repeat.
+  const extra = fixture ? { fixture } : {};
   let job = await requestJson<ScenarioJob>("/scenarios", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, ...extra }),
+    body: JSON.stringify({ prompt, tone, ...extra }),
     signal,
   });
   if (!job.id || !job.simulation_id) throw new Error("The scenario service did not return a run.");
@@ -76,11 +80,12 @@ export async function prepareScenario(
     simulation_id,
     branch_id: timeline.branch_id,
     title: job.title?.trim() || prompt,
+    tone: job.tone ?? tone,
+    seed: job.seed,
     startMinute,
     endMinute: timeline.end_minutes,
     firstEvent,
     pacing: timeline.pacing,
-    ...(player ? { player, title: `${player.scenarioTitle} · ${player.roleTitle}` } : {}),
   };
 }
 
@@ -89,7 +94,34 @@ export async function readScenarioNews(run: ScenarioRun, signal: AbortSignal) {
     `${scenarioPath(run.id)}/news`,
     { signal },
   );
-  return sameRunOrBranch(run, report) ? report.items : [];
+  return sameRun(run, report) ? report.items : [];
+}
+
+/** Starter scenarios: a prompt plus an offline fixture each. Every run of one is still unique. */
+export async function listStarters(signal: AbortSignal): Promise<Starter[]> {
+  const body = await requestJson<{ starters: Starter[] }>("/starters", { signal });
+  return Array.isArray(body.starters) ? body.starters : [];
+}
+
+/** The run's canonical result (seed, prompt, every event): what the map plays and the recap film follows. */
+export async function readRunResult(run: ScenarioRun, signal?: AbortSignal) {
+  return requestJson<RunIdentity & { seed?: number; prompt: string; events: ScenarioEvent[] }>(
+    `${scenarioPath(run.id)}/result`, { signal },
+  );
+}
+
+/** Pause a run over HTTP (when leaving it without a socket). */
+export async function pauseRun(runId: string) {
+  await requestJson(`${scenarioPath(runId)}/control`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "pause" }),
+  });
+}
+
+/** The satire layer for the run's released events (the demo uses the fixture server's /satire). */
+export async function readSatire(run: ScenarioRun, isDemo: boolean, tone: Tone, signal: AbortSignal) {
+  const path = isDemo ? "/satire" : `${scenarioPath(run.id)}/satire`;
+  const report = await requestJson<SatireReport>(`${path}?tone=${encodeURIComponent(tone)}`, { signal });
+  return sameRun(run, report) && report.tone === tone ? report : undefined;
 }
 
 export function streamUrl(runId?: string) {

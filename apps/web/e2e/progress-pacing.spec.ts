@@ -56,9 +56,9 @@ test.beforeEach(({}, testInfo) => {
 test("generation shows the service's actual stage, then the run's relative pacing", async ({ page }) => {
   await mockService(page, ["model", "model", "validate"]);
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   await page.getByLabel("Scenario prompt").fill("A river floods Delta Town.");
-  await page.getByRole("button", { name: "Generate scenario" }).click();
+  await page.getByRole("button", { name: "Simulate", exact: true }).click();
 
   const status = page.locator(".scenario-launch-footer p");
   await expect(status).toContainText("The Director is predicting events");
@@ -70,15 +70,15 @@ test("generation shows the service's actual stage, then the run's relative pacin
   const playback = page.getByRole("region", { name: "Simulation playback" });
   const pacingNote = playback.getByLabel("Playback pacing");
   await expect(pacingNote).toContainText("≈5% of the scenario per second");
-  await expect(pacingNote).toContainText("about 20s left");
+  // Runs play as a story: brief holds on each development, so no fixed time left is promised.
+  await expect(pacingNote).toContainText("Story pace controls reading time");
   await playback.getByRole("button", { name: "4×" }).click();
   await expect(pacingNote).toContainText("≈20% of the scenario per second");
-  await expect(pacingNote).toContainText("about 5s left");
 });
 
 test("the Japan demo keeps its fixed rate and shows no pacing note", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Earthquake off Japan" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Simulation playback" }).getByLabel("Playback pacing")).toHaveCount(0);
 });

@@ -319,41 +319,8 @@ CAUSE_NOUNS = {
 }
 
 
-def player_decision(event: Event) -> dict | None:
-    """The player's decision behind a player-mode event (provenance "user"), or None. Prototype."""
-    decision = (event.get("payload") or {}).get("decision")
-    source = (event.get("provenance") or {}).get("source")
-    if source != "user" or not isinstance(decision, dict) or not _text(decision.get("label")):
-        return None
-    return decision
-
-
-def _text(value: Any) -> str:
-    return value.strip() if isinstance(value, str) else ""
-
-
-def _lower_first(text: str) -> str:
-    return text[:1].lower() + text[1:]
-
-
-def _decision_item(event: Event, decision: dict) -> tuple[str, str]:
-    """One clearly fictional story that names the player's decision."""
-    role = _text(decision.get("role_title")) or "The decision-maker"
-    label = _text(decision["label"]).rstrip(".")
-    headline = f"{role} decides: {_lower_first(label)}"
-    if len(headline) > HEADLINE_MAX:
-        headline = f"Decision: {_lower_first(label)}"
-    dek = (f"Simulated player decision in {_where(event) or 'the scenario'}. "
-           f"What follows on this branch is a fictional model, not a forecast.")
-    return headline, dek[:DEK_MAX]
-
-
 def _cause(event: Event, ctx: Context) -> str:
     """'Follows the eruption in Reykjanes Peninsula.' when a parent is a different kind of event, or ''."""
-    for parent in reversed(ctx.parents(event)):
-        decision = player_decision(parent)
-        if decision is not None:
-            return f"Follows the decision to {_lower_first(_text(decision['label']).rstrip('.'))}."
     parents = [p for p in ctx.parents(event) if p["type"] != event["type"] and p["type"] in CAUSE_NOUNS]
     if not parents:
         return ""
@@ -413,14 +380,9 @@ def news_for_event(event: Event, context: Context | None = None) -> NewsItem | N
     if event["status"] != "applied":
         return None
     ctx = context or Context(read_impacts(event))
-    decision = player_decision(event)
-    if decision is not None:
-        headline, dek = _decision_item(event, decision)
-    else:
-        build, fallback = TEMPLATES.get(event["type"], (_generic, GENERIC_DEK))
-        copy = build(event, ctx)
-        headline, lead = copy if isinstance(copy, tuple) else (copy, "")
-        dek = _dek(event, ctx, lead, fallback)
+    build, fallback = TEMPLATES.get(event["type"], (_generic, GENERIC_DEK))
+    copy = build(event, ctx)
+    headline, lead = copy if isinstance(copy, tuple) else (copy, "")
     loc = event["location"]
     return {
         "id": f"news-{event['id']}",
@@ -429,7 +391,7 @@ def news_for_event(event: Event, context: Context | None = None) -> NewsItem | N
         "severity": event.get("severity"),
         "label": SIMULATED_LABEL,
         "headline": headline,
-        "dek": dek,
+        "dek": _dek(event, ctx, lead, fallback),
         "sim_time_minutes": event["sim_time_minutes"],
         "sequence": event.get("sequence", 0),
         "sim_time_label": format_sim_time(event["sim_time_minutes"]),
@@ -460,8 +422,7 @@ def derive_news(events: Iterable[Event]) -> list[NewsItem]:
         if item is not None:
             item["headline"] = _distinct(item["headline"], headlines)
             items.append(item)
-        if player_decision(event) is None:  # a player's decision isn't a repeat of the event type
-            _remember(seen, event)
+        _remember(seen, event)
         earlier[event["id"]] = event
         if impacts:
             previous = impacts

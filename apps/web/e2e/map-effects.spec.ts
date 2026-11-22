@@ -105,7 +105,7 @@ async function mockScenarioService(page: Page, special = false) {
 
 async function generate(page: Page, prompt: string, title: string) {
   await page.getByLabel("Scenario prompt").fill(prompt);
-  await page.getByRole("button", { name: "Generate scenario" }).click();
+  await page.getByRole("button", { name: "Simulate", exact: true }).click();
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
 }
 
@@ -116,11 +116,11 @@ test.beforeEach(({}, testInfo) => {
 test("special effects appear on the map and clear on rewind", async ({ page }) => {
   await mockScenarioService(page, true);
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   await generate(page, "A hypothetical chain of events", "Special effects");
   const map = page.getByRole("region", { name: "Interactive world map" });
   const playback = page.getByRole("region", { name: "Simulation playback" });
-  await playback.getByRole("button", { name: "Play", exact: true }).click();
+  // A new run plays by itself.
   await expect(map.getByRole("group", { name: "Map effects" })).toContainText("Tsunami warning");
   await expect(map.locator('[data-effect="alien"]')).toHaveCount(1);
   await expect(map.locator('[data-effect="tornado"]')).toHaveCount(1);
@@ -180,21 +180,25 @@ test("special scenarios get identifiable cues at their reported locations", () =
 test("outbreaks accumulate, disasters ring, and only a supported aid route is drawn", async ({ page }) => {
   await mockScenarioService(page);
   await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
   const map = page.getByRole("region", { name: "Interactive world map" });
   const effects = map.getByRole("group", { name: "Map effects" });
   const playback = page.getByRole("region", { name: "Simulation playback" });
 
   await generate(page, "A new virus spreads from Singapore while aid moves.", "Pandemic and aid");
-  await expect(effects).toHaveCount(0);
-  await playback.getByRole("button", { name: "Play", exact: true }).click();
+  // A new run plays by itself.
 
   await expect(effects.getByRole("listitem")).toHaveText([
     "novel respiratory virus reported · Singapore",
     "novel respiratory virus reported · London",
     "Eruption · Reykjanes Peninsula",
     "Inferred aid route · Germany (Frankfurt) → Lagos",
+    // Map motion: a flight along the run's own cause link, and the eruption's ash cloud.
+    "Infected traveller · Singapore → London",
+    "Ash cloud · Reykjanes Peninsula",
   ]);
+  await expect(effects).toContainText("clouds and paths are illustrations, not forecasts");
+  await expect(map.locator('[data-effect="plane"][data-journey="journey-evt-0002"]')).toHaveCount(1);
   await expect(effects).toContainText("Routes are inferred");
   await expect(effects).toContainText("Outbreak circles mark reported places only.");
   await expect(map.locator('[data-effect="volcano"]')).toHaveCount(1);
@@ -223,7 +227,7 @@ test("outbreaks accumulate, disasters ring, and only a supported aid route is dr
 
   // Replaying brings them back, and switching runs clears them.
   await playback.getByRole("button", { name: "Play", exact: true }).click();
-  await expect(effects.getByRole("listitem")).toHaveCount(4);
+  await expect(effects.getByRole("listitem")).toHaveCount(6);
   await generate(page, "Power returns to Laval.", "Quiet recovery");
   await expect(effects).toHaveCount(0);
   await expect(map.locator('[data-effect="aid-marker"]')).toHaveCount(0);
@@ -235,10 +239,10 @@ test.describe("with reduced motion", () => {
   test("the aid marker rests at the destination instead of moving", async ({ page }) => {
     await mockScenarioService(page);
     await page.goto("/");
-  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
     const map = page.getByRole("region", { name: "Interactive world map" });
     await generate(page, "A new virus spreads from Singapore while aid moves.", "Pandemic and aid");
-    await page.getByRole("region", { name: "Simulation playback" }).getByRole("button", { name: "Play", exact: true }).click();
+    // A new run plays by itself.
     await expect(map.locator('[data-effect="aid-marker"]')).toHaveAttribute("data-moving", "false");
     await expectAnchored(map.locator('[data-effect="aid-marker"]'), map.locator('[title="international aid · Lagos"]'));
   });

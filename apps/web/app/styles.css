@@ -822,3 +822,113 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 @media (prefers-reduced-motion:reduce) { .setup-primary:hover:enabled, .setup-primary:active:enabled { transform: none; } }
 
 @media (max-width:680px) { .onboarding:has(.setup-briefing) .setup-footer { position: static; } }
+/* ---- Satire layer (local experiment) ------------------------------------ */
+.scenario-tone-row { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: 8px; color: var(--muted); font-size: 12px; }
+.tone-selector { display: inline-flex; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+.tone-selector button { border: 0; border-right: 1px solid var(--line); background: transparent; color: var(--muted); font: inherit; font-size: 12px; padding: 6px 10px; cursor: pointer; }
+.tone-selector button:last-child { border-right: 0; }
+.tone-selector button[aria-checked="true"] { background: var(--raised); color: var(--text); }
+.tone-selector button[aria-checked="true"][data-tone="satirical"] { background: #3a1416; color: #ffd23f; }
+.tone-selector button[aria-checked="true"][data-tone="unhinged"] { background: #d7262e; color: #fff; }
+.tone-selector button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tone-hint { flex-basis: 100%; font-size: 11px; }
+.satire-stamp { color: #ffd23f; letter-spacing: .04em; text-transform: uppercase; }
+.workspace:not([data-tone="straight"]) .wire-meta > span:first-child { color: #ff5a5f; font-weight: 700; }
+.workspace:not([data-tone="straight"]) .wire-headline { text-transform: uppercase; letter-spacing: .01em; }
+.workspace:not([data-tone="straight"]) .headline-alert { box-shadow: 0 0 0 2px #d7262e, 0 14px 40px #000a; }
+.workspace[data-tone="unhinged"] .headline-alert { transform: rotate(-0.6deg); }
+.wire-original { color: var(--muted); font-size: 11px; font-style: italic; opacity: .8; }
+.absurdity-index, .social-feed { padding: 13px 14px; border-top: 1px solid var(--line); }
+.absurdity-index { background: repeating-linear-gradient(-45deg, transparent 0 10px, #ffd23f08 10px 20px); }
+.absurdity-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 6px; margin: 8px 0 0; }
+.absurdity-grid div { border: 1px dashed #ffd23f55; border-radius: var(--radius); padding: 7px 9px; }
+.absurdity-grid div[data-zero="true"] { opacity: .5; }
+.absurdity-grid dt { color: var(--muted); font-size: 11px; line-height: 1.3; }
+.absurdity-grid dd { margin: 2px 0 0; color: #ffd23f; font-size: 20px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.social-list { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+.social-post { display: grid; grid-template-columns: 30px 1fr; gap: 8px; padding: 8px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
+.social-post p { margin: 0; }
+.social-avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #0f1a33; color: #ffd23f; font-weight: 800; font-size: 13px; }
+.social-post[data-kind="airline"] .social-avatar, .social-post[data-kind="company"] .social-avatar, .social-post[data-kind="insurer"] .social-avatar { background: #3a1416; }
+.social-who { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 6px; font-size: 12px; }
+.social-who span { color: var(--muted); font-size: 11px; }
+.social-who .social-label { margin-left: auto; color: #fff; background: #d7262e; border-radius: 4px; padding: 1px 5px; font-size: 9px; font-weight: 800; letter-spacing: .08em; }
+.social-text { font-size: 12.5px; line-height: 1.4; margin-top: 3px !important; }
+.social-time { color: var(--muted); font-size: 10px; margin-top: 3px !important; font-variant-numeric: tabular-nums; }
+
+/* Open-ended simulation: home, starters and the current run's bar. */
+.sim-intro { display: grid; gap: 8px; padding: 26px 0 18px; }
+.sim-intro h2 { margin: 0; font-size: clamp(34px, 6vw, 54px); line-height: 1.05; letter-spacing: -0.03em; }
+.sim-intro p:last-child { margin: 0; max-width: 62ch; color: var(--muted); font-size: 15px; line-height: 1.55; }
+.starters { display: grid; gap: 14px; margin: 26px 0 40px; }
+.starters-heading h2 { margin: 0; font-size: 18px; }
+.starters-heading p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
+.starting-conditions summary { cursor: pointer; color: var(--accent); font-size: 13px; font-weight: 600; }
+.starting-conditions[open] summary { margin-bottom: 12px; }
+.run-bar { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 0 16px; }
+.run-bar span { color: var(--accent); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+.run-bar-title { margin: 5px 0 0; font-size: 20px; font-weight: 650; letter-spacing: -0.025em; }
+.run-bar-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.run-bar-actions .demo-button { display: inline-flex; align-items: center; gap: 6px; }
+.run-bar > p { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 12px; }
+@media (max-width: 680px) {
+  .run-bar-actions { width: 100%; }
+  .run-bar-actions .demo-button { flex: 1; justify-content: center; }
+  .starters .setup-scenarios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .watch-inputs { grid-template-columns: 1fr; }
+}
+
+/* Map motion (components/map-motion*.ts): vehicles, storms, the detonation flash, quake shake. */
+.map-flash { position: absolute; inset: 0; z-index: 1; background: #fff8e6; opacity: 0; pointer-events: none; mix-blend-mode: screen; }
+.motion-vehicle { display: grid; justify-items: center; gap: 2px; pointer-events: none; }
+.motion-glyph { width: 30px; height: 30px; filter: drop-shadow(0 2px 4px #000c); }
+.motion-glyph svg { width: 100%; height: 100%; display: block; }
+.motion-pulse { width: 12px; height: 12px; border-radius: 50%; }
+.motion-label { padding: 1px 6px; border-radius: 4px; background: #10131bdd; color: #f1f2f4; font-size: 10px; font-weight: 650; white-space: nowrap; }
+.motion-label:empty { display: none; }
+.motion-storm { pointer-events: none; }
+.motion-storm svg { width: 100%; height: 100%; display: block; opacity: .85; filter: drop-shadow(0 0 6px #0008); }
+.map-shake { animation: map-shake .9s cubic-bezier(.36,.07,.19,.97); }
+@keyframes map-shake {
+  10%, 90% { transform: translate(-2px, 1px); } 20%, 80% { transform: translate(4px, -2px); }
+  30%, 50%, 70% { transform: translate(-6px, 2px); } 40%, 60% { transform: translate(6px, -1px); }
+}
+@media (prefers-reduced-motion: reduce) { .map-shake { animation: none; } }
+.motion-ufo { position: relative; width: 64px; height: 90px; pointer-events: none; transition: opacity .3s; }
+.motion-saucer { position: absolute; left: 0; top: 0; width: 64px; height: 44px; translate: 0 var(--ufo-y, 0); filter: drop-shadow(0 6px 8px #000a); color: #9fe8ff; }
+.motion-saucer svg { width: 100%; height: 100%; display: block; }
+.motion-beam { position: absolute; left: 14px; top: 30px; width: 36px; height: 60px; translate: 0 var(--ufo-y, 0);
+  background: linear-gradient(#bff4ffcc, #9fe8ff22); clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%); opacity: var(--ufo-beam, 0); }
+
+/* Headline pop-up: a compact card at the right of the map, not a panel across it.
+   It slides in, the story waits while it is up (thin bar = time left; hover holds it), then it goes. */
+.headline-alert {
+  inset: auto 58px 18px auto;
+  width: min(350px, calc(100% - 82px));
+  max-height: min(62%, 330px);
+  border-radius: 9px;
+  background: #111316f2;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 28px #000a;
+}
+.headline-alert-bar { padding: 5px 10px; font-size: 10px; }
+.headline-alert-story { padding: 9px 12px 10px; }
+.headline-alert-meta { margin-bottom: 5px; font-size: 10px; }
+.headline-alert h2 { font-size: 18px; font-weight: 650; line-height: 1.18; letter-spacing: -0.02em; }
+.headline-alert-dek { margin-top: 6px; font-size: 12.5px; line-height: 1.42; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+.headline-alert-actions { padding: 3px 6px; }
+.headline-alert-actions button { min-height: 26px; padding: 2px 6px; font-size: 11px; }
+.headline-alert-queue > span { font-size: 10px; }
+.headline-alert-timer { position: relative; flex: none; height: 3px; background: #ffffff10; }
+.headline-alert-timer span { position: absolute; inset: 0; background: var(--accent); transform-origin: left; animation: headline-dwell var(--dwell) linear forwards; }
+.headline-alert-timer[data-held="true"] span { animation-play-state: paused; }
+@keyframes headline-dwell { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@media (min-width: 681px) and (max-height: 780px) {
+  .headline-alert { bottom: 14px; width: min(330px, calc(100% - 82px)); max-height: min(64%, 300px); }
+  .headline-alert h2 { font-size: 16px; }
+}
+@media (max-width: 680px) {
+  .headline-alert { inset: auto 52px 10px 10px; width: auto; max-height: 55%; }
+  .headline-alert h2 { font-size: 15px; }
+  .headline-alert-dek { -webkit-line-clamp: 2; }
+}

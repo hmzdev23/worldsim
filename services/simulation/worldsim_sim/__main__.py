@@ -38,8 +38,8 @@ def build(argv: list[str] | None = None):
     parser.add_argument("--scenario-fixture", metavar="NAME",
                         help="serve every POST /scenarios run from this Director fixture (e.g. global-pandemic)")
     parser.add_argument("--director-timeout", type=float, default=180.0, help="seconds per scenario generation")
-    parser.add_argument("--scenario-pace", type=float, default=0.5, metavar="PERCENT",
-                        help="percent of a scenario run's length per tick at 1x (default 0.5)")
+    parser.add_argument("--scenario-pace", type=float, default=6, metavar="PERCENT",
+                        help="percent of a scenario run's length per tick at 1x (default 6: the clock crosses a run in about 17 s, plus a stop on each event)")
     args = parser.parse_args(argv)
 
     from .scenarios import ScenarioRegistry

@@ -1,0 +1,353 @@
+{
+  "events": [
+    {
+      "type": "cyber_attack",
+      "sim_time_minutes": 600,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.507,
+        "lon": -0.128
+      },
+      "severity": 0.5,
+      "description": "A cyberattack blamed on France takes down the UK's national broadcaster and payment systems.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "France",
+      "target": "national broadcaster",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 0,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 40000,
+        "households_without_water": null,
+        "economic_loss_usd": 300000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "conflict_escalation",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Paris",
+        "country": "France",
+        "country_code": "FRA",
+        "lat": 48.857,
+        "lon": 2.352
+      },
+      "severity": 0.7,
+      "description": "France mobilises its armed forces and places its nuclear forces on high alert.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 0,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 40000,
+        "households_without_water": null,
+        "economic_loss_usd": 900000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 780,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.507,
+        "lon": -0.128
+      },
+      "severity": 0.7,
+      "description": "UK civil defence opens public shelters and orders Londoners underground.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 12,
+        "missing": null,
+        "displaced": 310000,
+        "sheltered": 290000,
+        "households_without_power": 40000,
+        "households_without_water": null,
+        "economic_loss_usd": 1200000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "nuclear_detonation",
+      "sim_time_minutes": 850,
+      "location": {
+        "name": "Celtic Sea",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 48.9,
+        "lon": -7.6
+      },
+      "severity": 1.0,
+      "description": "A French warning shot: a nuclear weapon detonates high over the Celtic Sea, far from any city.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": 15,
+      "radius_km": 8,
+      "origin": "France",
+      "target": "open sea",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 6,
+        "injuries": 140,
+        "missing": 15,
+        "displaced": 360000,
+        "sheltered": 330000,
+        "households_without_power": 120000,
+        "households_without_water": 60000,
+        "economic_loss_usd": 24000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 900000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "contamination",
+      "sim_time_minutes": 930,
+      "location": {
+        "name": "Isles of Scilly",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 49.93,
+        "lon": -6.3
+      },
+      "severity": 0.8,
+      "description": "Fallout drifts toward the Isles of Scilly; a 40-kilometre maritime exclusion zone is declared.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 40,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 6,
+        "injuries": 140,
+        "missing": 10,
+        "displaced": 380000,
+        "sheltered": 340000,
+        "households_without_power": 120000,
+        "households_without_water": 70000,
+        "economic_loss_usd": 26000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 2400,
+        "debris_tonnes": 900000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 1500,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.507,
+        "lon": -0.128
+      },
+      "severity": 0.4,
+      "description": "Radiation monitors, medical teams and water arrive from Ireland.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Ireland",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 6,
+        "injuries": 140,
+        "missing": 5,
+        "displaced": 380000,
+        "sheltered": 330000,
+        "households_without_power": 90000,
+        "households_without_water": 60000,
+        "economic_loss_usd": 26500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 2400,
+        "debris_tonnes": 900000,
+        "aid_contributors": [
+          {
+            "country": "Ireland",
+            "personnel": 260,
+            "cargo_tonnes": 140,
+            "cargo": "radiation monitors, medical teams and water"
+          }
+        ]
+      },
+      "caused_by": [
+        3,
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "ceasefire",
+      "sim_time_minutes": 1980,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.204,
+        "lon": 6.143
+      },
+      "severity": 0.5,
+      "description": "France and the United Kingdom sign a ceasefire in Geneva.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 6,
+        "injuries": 140,
+        "missing": 0,
+        "displaced": 360000,
+        "sheltered": 300000,
+        "households_without_power": 70000,
+        "households_without_water": 50000,
+        "economic_loss_usd": 27000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 2400,
+        "debris_tonnes": 900000,
+        "aid_contributors": [
+          {
+            "country": "Ireland",
+            "personnel": 300,
+            "cargo_tonnes": 190,
+            "cargo": "radiation monitors, medical teams and water"
+          }
+        ]
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 3300,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.507,
+        "lon": -0.128
+      },
+      "severity": 0.3,
+      "description": "Londoners leave the shelters as power and broadcasts return.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 6,
+        "injuries": 140,
+        "missing": 0,
+        "displaced": 90000,
+        "sheltered": 40000,
+        "households_without_power": 8000,
+        "households_without_water": 6000,
+        "economic_loss_usd": 27500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 2400,
+        "debris_tonnes": 900000,
+        "aid_contributors": [
+          {
+            "country": "Ireland",
+            "personnel": 320,
+            "cargo_tonnes": 230,
+            "cargo": "radiation monitors, medical teams and water"
+          }
+        ]
+      },
+      "caused_by": [
+        6,
+        5
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

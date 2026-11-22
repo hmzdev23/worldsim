@@ -1,5 +1,6 @@
 import { Broadcast, CaretRight, Crosshair, X } from "@phosphor-icons/react";
-import { motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import type { CSSProperties } from "react";
 import { focusNewsItem, type NewsItem } from "../lib/scenario";
 
 export function HeadlineAlert({
@@ -7,8 +8,15 @@ export function HeadlineAlert({
   queuedCount,
   onAdvance,
   onDismiss,
+  dwellMs,
+  held = false,
+  onHold,
 }: {
   item: NewsItem | undefined;
+  /** While the story waits on this headline: how long until it moves on (drives the timer bar). */
+  dwellMs?: number;
+  held?: boolean;
+  onHold?: (held: boolean) => void;
   queuedCount: number;
   onAdvance: () => void;
   onDismiss: () => void;
@@ -21,19 +29,20 @@ export function HeadlineAlert({
       <div className="headline-alert-announcement" aria-live="polite" aria-atomic="true">
         {item && `Simulated headline. ${item.headline}. ${item.dek}`}
       </div>
+      <AnimatePresence mode="wait">
       {item && (
-        <section data-event-id={item.event_id} data-minute={item.sim_time_minutes} className="headline-alert" data-severity={item.severity >= 0.75 ? "high" : item.severity >= 0.4 ? "moderate" : "low"} aria-labelledby="map-headline-title">
+        <motion.section key={item.event_id}
+          initial={reducedMotion ? false : { opacity: 0, x: 28 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, x: 28, transition: { duration: 0.18 } }}
+          transition={{ duration: 0.22, ease: "easeOut" }}
+          onPointerEnter={() => onHold?.(true)} onPointerLeave={() => onHold?.(false)}
+          data-event-id={item.event_id} data-minute={item.sim_time_minutes} className="headline-alert" data-severity={item.severity >= 0.75 ? "high" : item.severity >= 0.4 ? "moderate" : "low"} aria-labelledby="map-headline-title">
           <header className="headline-alert-bar">
             <span><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE <span className="headline-alert-live">LIVE</span></span>
             <span>{item.severity >= .6 ? "BREAKING NEWS · " : "UPDATE · "}{item.label}</span>
           </header>
-          <motion.div
-            className="headline-alert-story"
-            key={item.event_id}
-            initial={reducedMotion ? false : { opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.16 }}
-          >
+          <div className="headline-alert-story">
             <div className="headline-alert-meta">
               <time>{item.sim_time_label}</time>
               <span>{item.event_type.replaceAll("_", " ")}</span>
@@ -43,7 +52,7 @@ export function HeadlineAlert({
             </div>
             <h2 id="map-headline-title">{item.headline}</h2>
             <p className="headline-alert-dek">{item.dek}</p>
-          </motion.div>
+          </div>
           <footer className="headline-alert-actions">
             <button className="headline-alert-focus" type="button" onClick={() => focusNewsItem(item)}>
               <Crosshair size={17} aria-hidden="true" /> Focus map
@@ -58,8 +67,13 @@ export function HeadlineAlert({
               </button>
             </div>
           </footer>
-        </section>
+          {dwellMs !== undefined && (
+            <div className="headline-alert-timer" data-held={held} aria-hidden="true"
+              style={{ "--dwell": `${dwellMs}ms` } as CSSProperties}><span key={item.event_id} /></div>
+          )}
+        </motion.section>
       )}
+      </AnimatePresence>
     </>
   );
 }

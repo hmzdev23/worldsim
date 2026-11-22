@@ -1,0 +1,6 @@
+# Generated per run by make-script.py / make-audio.py / the renderer.
+script.json
+timing.json
+audio/voice-*
+audio/narration-lines.json
+output/
