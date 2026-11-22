@@ -55,7 +55,7 @@ class DirectorPipelineTest(unittest.TestCase):
         details = {
             "disease_outbreak": {"pathogen": "novel influenza", "radius_km": 400},
             "nuclear_detonation": {"yield_kt": 15, "origin": "unknown"},
-            "volcanic_eruption": {"vei": 6},
+            "volcanic_eruption": {"vei": 6, "location": {**base["location"], "name": "Zao", "lat": 38.14, "lon": 140.44}},
             "meteor_impact": {"diameter_m": 150},
             "cyber_attack": {"target": "power grid"},
             "alien_contact": {},

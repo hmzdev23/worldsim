@@ -145,7 +145,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 .demo-button:hover:enabled { color: var(--text); background: var(--raised); }
 
 .workspace {
-  --map-height: clamp(408px, calc(100svh - 304px), 780px);
+  --map-height: clamp(408px, calc(100svh - 344px), 780px);
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(272px, 26vw, 350px);
   grid-template-areas: "map inspector" "timeline inspector";
@@ -445,9 +445,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 .timeline-meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 2px 8px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
 .timeline-meta > span, .timeline-meta label { white-space: nowrap; }
 .time-divider { color: #737d8b; }
-.reset-button, .speed-control button { min-height: 34px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: transparent; }
-.reset-button { display: grid; place-items: center; min-width: 34px; }
-.reset-button:hover:enabled, .speed-control button:hover:enabled { background: var(--raised); color: var(--text); }
+.reset-button, .step-button, .speed-control button { min-height: 34px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: transparent; }
+.reset-button, .step-button { display: grid; place-items: center; min-width: 34px; }
+.reset-button:hover:enabled, .step-button:hover:enabled, .speed-control button:hover:enabled { background: var(--raised); color: var(--text); }
 .speed-control { gap: 2px; padding: 2px; border: 1px solid var(--line); border-radius: 6px; }
 .speed-control button { min-height: 28px; border-color: transparent; font-size: 12px; font-variant-numeric: tabular-nums; }
 .speed-control button[aria-pressed="true"] { border-color: #5c4533; background: #2a211a; color: var(--accent); }
@@ -497,3 +497,32 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 
 /* Relative pacing note under the timeline (SIM-005). */
 .timeline-pacing { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 10px; margin: 4px 0 0; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+
+/* Sample hazard scenarios. */
+.sample-scenarios { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: -6px 0 14px; }
+.sample-scenarios-label { margin-right: 2px; color: var(--muted); font-size: 12px; }
+.sample-button { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); font-size: 13px; }
+.sample-button:hover:enabled { background: var(--raised); }
+.sample-button:disabled { opacity: 0.55; }
+.sample-button svg { color: var(--hazard, var(--accent)); }
+.sample-button[data-hazard="earthquake"] { --hazard: #ff8f5c; }
+.sample-button[data-hazard="tsunami"] { --hazard: #6fb7e8; }
+.sample-button[data-hazard="eruption"] { --hazard: #ffb35c; }
+.sample-button[data-hazard="pandemic"] { --hazard: #78b9b5; }
+.sample-button[aria-pressed="true"] { border-color: var(--hazard); background: #22262b; }
+
+/* Step playback: 5% step marks, event pins and the step counter. */
+.timeline-rail { position: relative; padding-bottom: 10px; }
+.timeline-steps, .timeline-events { position: absolute; inset: auto 6px 0; height: 8px; pointer-events: none; }
+.timeline-steps i { position: absolute; top: 0; width: 1px; height: 5px; background: #4a515a; transform: translateX(-0.5px); }
+.timeline-steps i[data-passed="true"] { background: #8a6a4f; }
+.timeline-steps i:first-child, .timeline-steps i:last-child { height: 7px; }
+.timeline-events { inset: auto 6px 7px; height: 0; }
+.timeline-events button { position: absolute; top: -3px; width: 8px; height: 8px; padding: 0; border: 1px solid var(--surface); border-radius: 50%; background: var(--accent); transform: translateX(-4px); pointer-events: auto; cursor: pointer; }
+.timeline-events button[data-type="tsunami_warning"], .timeline-events button[data-type="flooding"] { background: #6fb7e8; }
+.timeline-events button[data-type="disease_outbreak"] { background: #78b9b5; }
+.timeline-events button[data-type="international_aid"], .timeline-events button[data-type="recovery"] { background: #83c9ae; }
+.timeline-events button:hover:enabled, .timeline-events button:focus-visible { transform: translateX(-4px) scale(1.5); }
+.timeline-stepper { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 2px 10px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.stop-each-step { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+.stop-each-step input { margin: 0; accent-color: var(--accent); }

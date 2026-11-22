@@ -42,6 +42,8 @@ How to predict:
 - Cover the time span the scenario needs: hours for the first shock, days to
   weeks for spread and response, months for pandemics or wars.
 - Spread events geographically when the crisis would spread. Use real places.
+- A volcanic_eruption happens only at a real, known volcano: use the
+  volcano's own name and summit coordinates.
 - Be plausible rather than dramatic. Keep it high level: no casualty counts,
   no precise predictions about real people or real governments' decisions.
 {history_rules}

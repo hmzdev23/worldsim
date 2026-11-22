@@ -37,11 +37,13 @@ export async function prepareScenario(
   prompt: string,
   signal: AbortSignal,
   onProgress?: (progress: GenerationProgress) => void,
+  fixture?: string,
 ): Promise<ScenarioRun> {
+  // `fixture` replays a checked-in Director scenario (offline, no model call).
   let job = await requestJson<ScenarioJob>("/scenarios", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify(fixture ? { prompt, fixture } : { prompt }),
     signal,
   });
   if (!job.id || !job.simulation_id) throw new Error("The scenario service did not return a run.");

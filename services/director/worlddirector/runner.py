@@ -25,7 +25,9 @@ MAX_TIMEOUT_S = 600.0
 
 # Fixtures a service may request for deterministic, model-free runs.
 # Japan continuation needs history, so it is not a standalone run.
-RUN_FIXTURES = ("iceland-eruption", "global-pandemic", "japan-earthquake")
+RUN_FIXTURES = (
+    "iceland-eruption", "global-pandemic", "japan-earthquake", "pacific-tsunami", "vesuvius-eruption",
+)
 
 # code -> (UI state, retryable, HTTP status, message shown to the user)
 _PUBLIC = {

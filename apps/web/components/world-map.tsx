@@ -1,19 +1,32 @@
 "use client";
 
-import { CornersOut, Minus, Plus } from "@phosphor-icons/react";
+import { CornersOut, MapPin, Minus, Plus } from "@phosphor-icons/react";
 import type { FeatureCollection, LineString } from "geojson";
 import {
   Map as MapLibreMap, Marker, setWorkerUrl,
   type ExpressionSpecification, type GeoJSONSource, type StyleSpecification,
 } from "maplibre-gl";
 import { useEffect, useImperativeHandle, useMemo, useRef, useState, type ReactNode, type Ref } from "react";
+import { eventBounds } from "../lib/playback";
 import type { MapLocation, ScenarioEvent } from "../lib/scenario";
 import { along, deriveMapEffects, describeEffects, type AidRoute, type MapEffects } from "./map-effects";
 import effectStyles from "./map-effects.module.css";
 
 export type WorldMapHandle = {
   focusLocation: (location: MapLocation) => void;
+  fitEvents: (events: ScenarioEvent[]) => void;
 };
+
+function fitMapToEvents(map: MapLibreMap, events: ScenarioEvent[]) {
+  const bounds = eventBounds(events);
+  if (!bounds) return;
+  const [[west, south], [east, north]] = bounds;
+  if (east - west < 0.5 && north - south < 0.5) {
+    focusMapLocation(map, { lat: south, lon: west, zoom: 6 });
+    return;
+  }
+  map.fitBounds(bounds, { padding: { top: 70, bottom: 90, left: 60, right: 60 }, maxZoom: 6.5, duration: transitionDuration(1200) });
+}
 
 const accent = "#ffa96b";
 const worldBounds: [[number, number], [number, number]] = [
@@ -24,6 +37,8 @@ const pulseLayers = ["pulse-first", "pulse-second", "pulse-third"];
 const outbreakColor = "#78b9b5";
 const shockwaveColor = "#ff8f5c";
 const routeColor = "#83c9ae";
+const waveColor = "#6fb7e8";
+const waveLayers = ["effect-wave-first", "effect-wave-second", "effect-wave-third"];
 const emptyCollection = { type: "FeatureCollection" as const, features: [] };
 
 // Circle radius in pixels for a radius in km, at any zoom (512px world at zoom 0,
@@ -47,6 +62,7 @@ function effectData(effects: MapEffects) {
     })),
   });
   return {
+    waves: points(effects.waves),
     outbreaks: points(effects.outbreaks),
     shockwaves: points(effects.shockwaves),
     routes: {
@@ -101,6 +117,7 @@ const mapStyle: StyleSpecification = {
     "effect-outbreaks": { type: "geojson", data: emptyCollection },
     "effect-shockwaves": { type: "geojson", data: emptyCollection },
     "effect-routes": { type: "geojson", data: emptyCollection },
+    "effect-waves": { type: "geojson", data: emptyCollection },
   },
   layers: [
     { id: "ocean", type: "background", paint: { "background-color": "#111719" } },
@@ -202,6 +219,21 @@ const mapStyle: StyleSpecification = {
       },
     },
     {
+      id: "effect-wave-core",
+      type: "circle",
+      source: "effect-waves",
+      paint: { "circle-color": waveColor, "circle-opacity": 0.18, "circle-radius": 8 },
+    },
+    ...waveLayers.map((id, index) => ({
+      id,
+      type: "circle" as const,
+      source: "effect-waves",
+      paint: {
+        "circle-opacity": 0, "circle-radius": kmRadius(0.4 + index * 0.3, 12 + index * 8),
+        "circle-stroke-color": waveColor, "circle-stroke-width": 1.6, "circle-stroke-opacity": 0.55 - index * 0.15,
+      },
+    })),
+    {
       id: "effect-route-line",
       type: "line",
       source: "effect-routes",
@@ -250,6 +282,9 @@ export function WorldMap({
   useImperativeHandle(ref, () => ({
     focusLocation(location) {
       if (mapRef.current) focusMapLocation(mapRef.current, location);
+    },
+    fitEvents(items) {
+      if (mapRef.current) fitMapToEvents(mapRef.current, items);
     },
   }), []);
 
@@ -386,6 +421,7 @@ export function WorldMap({
     map.getSource<GeoJSONSource>("effect-outbreaks")?.setData(data.outbreaks);
     map.getSource<GeoJSONSource>("effect-shockwaves")?.setData(data.shockwaves);
     map.getSource<GeoJSONSource>("effect-routes")?.setData(data.routes);
+    map.getSource<GeoJSONSource>("effect-waves")?.setData(data.waves);
 
     const current = new Set(effects.routes.map((route) => route.id));
     for (const [id, entry] of aidMarkers.current) {
@@ -425,6 +461,11 @@ export function WorldMap({
     map.setPaintProperty("effect-outbreak-pulse", "circle-stroke-opacity", still ? 0 : 0.8 * (1 - phase));
     map.setPaintProperty("effect-shockwave-ring", "circle-radius", kmRadius(still ? 1 : 0.3 + phase * 1.4, 10));
     map.setPaintProperty("effect-shockwave-ring", "circle-stroke-opacity", still ? 0.5 : 0.85 * (1 - phase));
+    waveLayers.forEach((id, index) => {
+      const wave = still ? index / waveLayers.length : ((elapsedSeconds / 2.5) + index / waveLayers.length) % 1;
+      map.setPaintProperty(id, "circle-radius", kmRadius(0.25 + wave, 12 + wave * 30));
+      map.setPaintProperty(id, "circle-stroke-opacity", still ? 0.55 - index * 0.15 : 0.8 * (1 - wave));
+    });
     let index = 0;
     for (const { route, marker } of aidMarkers.current.values()) {
       marker.setLngLat(along(route, still ? 1 : ((elapsedSeconds / 5) + index * 0.37) % 1));
@@ -449,6 +490,10 @@ export function WorldMap({
           onClick={() => mapRef.current?.zoomOut({ duration: transitionDuration(240) })}>
           <Minus size={19} />
         </button>
+        <button type="button" title="Fit scenario" aria-label="Fit scenario" disabled={!mapReady || events.length === 0}
+          onClick={() => mapRef.current && fitMapToEvents(mapRef.current, events)}>
+          <MapPin size={18} />
+        </button>
         <button type="button" title="Fit world view" aria-label="Fit world view" disabled={!mapReady}
           onClick={() => mapRef.current?.fitBounds(worldBounds, { padding: 24, duration: transitionDuration(800) })}>
           <CornersOut size={18} />
@@ -467,6 +512,9 @@ export function WorldMap({
           )}
           {effects.outbreaks.length > 0 && (
             <p className={effectStyles.note}>Outbreak circles mark reported places only.</p>
+          )}
+          {effects.waves.length > 0 && (
+            <p className={effectStyles.note}>Wave rings mark warned coasts. They are an illustration, not a wave model.</p>
           )}
         </div>
       )}

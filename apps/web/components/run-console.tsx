@@ -1,10 +1,11 @@
-import { ArrowCounterClockwise, Crosshair, Pause, Play } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, Crosshair, Pause, Play, SkipBack, SkipForward } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import feed from "../../../services/newsroom/feeds/japan-earthquake.json";
 import { japanDemo } from "../lib/earthquake";
 import { readScenarioNews, streamUrl } from "../lib/scenario-api";
 import { fallbackNewsItem, formatSimTime, pacingSummary, sameRun, type NewsItem, type Playback, type RunIdentity, type ScenarioEvent, type ScenarioRun, type StreamMessage } from "../lib/scenario";
+import { eventPins, stepBoundaries } from "../lib/playback";
 import { HeadlineAlert } from "./headline-alert";
 import { ImpactDashboard } from "./impact-dashboard";
 import { WorldMap, type WorldMapHandle } from "./world-map";
@@ -75,6 +76,18 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
   const reportedHeadline = events.queue[0] && reports.get(events.queue[0].id);
   const pacing = pacingSummary(run.pacing, playback.speed, run.endMinute - simTime);
   const progress = Math.max(0, Math.min(1, (simTime - run.startMinute) / Math.max(1, run.endMinute - run.startMinute)));
+  const steps = useMemo(() => stepBoundaries(run), [run]);
+  const currentStep = steps.findLastIndex((minute) => minute <= simTime);
+  const [stopEachStep, setStopEachStep] = useState(false);
+  const stopAtRef = useRef<number | undefined>(undefined);
+  const pins = useMemo(() => eventPins(events.applied, run), [events.applied, run]);
+  const wasAtEnd = useRef(atEnd);
+
+  // When a run plays to its end, frame every place it touched.
+  useEffect(() => {
+    if (atEnd && !wasAtEnd.current && events.applied.length > 1) mapRef.current?.fitEvents(events.applied);
+    wasAtEnd.current = atEnd;
+  }, [atEnd, events.applied]);
 
   useEffect(() => {
     let stopped = false;
@@ -167,13 +180,66 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
 
   function togglePlayback() {
     if (playback.state === "playing") {
+      stopAtRef.current = undefined;
       sendControl({ action: "pause" });
       return;
     }
     if (atEnd) seek(run.startMinute);
     if (simTime <= run.startMinute || atEnd) focusFirstEvent();
+    stopAtRef.current = stopEachStep ? nextBoundary(atEnd ? run.startMinute : simTime) : undefined;
     sendControl({ action: "play" });
   }
+
+  function nextBoundary(minute: number) {
+    return steps.find((boundary) => boundary > minute) ?? run.endMinute;
+  }
+
+  /** Pause and move one step (5% of the run) forward or back. */
+  function step(direction: 1 | -1) {
+    stopAtRef.current = undefined;
+    if (playback.state === "playing") sendControl({ action: "pause" });
+    const target = direction > 0 ? nextBoundary(simTime) : steps.findLast((boundary) => boundary < simTime) ?? run.startMinute;
+    if (simTime <= run.startMinute && direction > 0) focusFirstEvent();
+    seek(target);
+  }
+
+  function jumpTo(minute: number) {
+    stopAtRef.current = undefined;
+    if (playback.state === "playing") sendControl({ action: "pause" });
+    seek(minute);
+  }
+
+  // "Stop at each step": pause as soon as the clock reaches the next step,
+  // snapping back to the step if a fast tick went past it.
+  useEffect(() => {
+    const target = stopAtRef.current;
+    if (target === undefined || playback.state !== "playing" || simTime < target) return;
+    stopAtRef.current = undefined;
+    sendControl({ action: "pause" });
+    if (simTime > target && target < run.endMinute) seek(target);
+  }, [playback.state, run.endMinute, simTime]);
+
+  // Keyboard: Space plays or pauses; the arrow keys (or , and .) step. The
+  // listener reads the latest render's handlers, updated before paint.
+  const keyHandlers = useRef({ connected, step, togglePlayback });
+  useLayoutEffect(() => {
+    keyHandlers.current = { connected, step, togglePlayback };
+  });
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      const handlers = keyHandlers.current;
+      if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey || !handlers.connected) return;
+      const target = event.target as HTMLElement | null;
+      const typing = target?.closest("input, textarea, select, button, a, [contenteditable], canvas");
+      if (event.key === "," || (!typing && event.key === "ArrowLeft")) handlers.step(-1);
+      else if (event.key === "." || (!typing && event.key === "ArrowRight")) handlers.step(1);
+      else if (!typing && event.key === " ") handlers.togglePlayback();
+      else return;
+      event.preventDefault();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   const playbackLabel = playback.state === "playing" ? "Pause" : atEnd ? "Replay" : "Play";
   const status = {
@@ -239,10 +305,19 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
           <button className="reset-button" type="button" aria-label="Reset playback" title="Reset playback"
             disabled={!connected}
             onClick={() => {
+              stopAtRef.current = undefined;
               sendControl({ action: "pause" });
               seek(run.startMinute);
             }}>
             <ArrowCounterClockwise size={17} aria-hidden="true" />
+          </button>
+          <button className="step-button" type="button" aria-label="Previous step" title="Previous step (← or ,)"
+            disabled={!connected || simTime <= run.startMinute} onClick={() => step(-1)}>
+            <SkipBack size={16} weight="fill" aria-hidden="true" />
+          </button>
+          <button className="step-button" type="button" aria-label="Next step" title="Next step (→ or .)"
+            disabled={!connected || atEnd} onClick={() => step(1)}>
+            <SkipForward size={16} weight="fill" aria-hidden="true" />
           </button>
         </div>
         <div className="timeline-track">
@@ -250,6 +325,7 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
             <label htmlFor="playback-position">Simulation timeline</label>
             <span>{formatSimTime(simTime)} <span className="time-divider">/</span> {formatSimTime(run.endMinute)}</span>
           </div>
+          <div className="timeline-rail">
           <input
             id="playback-position"
             className="position-input"
@@ -263,6 +339,35 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
             onChange={(event) => seek(event.currentTarget.valueAsNumber)}
             style={{ "--elapsed": `${progress * 100}%` } as CSSProperties}
           />
+            <div className="timeline-steps" aria-hidden="true">
+              {steps.map((minute, index) => (
+                <i key={index} data-passed={minute <= simTime}
+                  style={{ left: `${((minute - run.startMinute) / Math.max(1, run.endMinute - run.startMinute)) * 100}%` }} />
+              ))}
+            </div>
+            <div className="timeline-events" role="group" aria-label="Jump to event">
+              {pins.map((pin) => (
+                <button key={pin.events[0].id} type="button" data-type={pin.events[0].type} data-count={pin.events.length}
+                  style={{ left: `${pin.left * 100}%` }}
+                  aria-label={`Jump to ${pin.label}`}
+                  title={pin.label}
+                  disabled={!connected}
+                  onClick={() => jumpTo(pin.events[0].sim_time_minutes)} />
+              ))}
+            </div>
+          </div>
+          <div className="timeline-stepper">
+            <span className="step-count">Step {Math.max(0, currentStep)} / {steps.length - 1} · {Math.round(progress * 100)}%</span>
+            <label className="stop-each-step">
+              <input type="checkbox" checked={stopEachStep} disabled={!connected}
+                onChange={(event) => {
+                  const on = event.currentTarget.checked;
+                  setStopEachStep(on);
+                  stopAtRef.current = on && playback.state === "playing" ? nextBoundary(simTime) : undefined;
+                }} />
+              Stop at each step
+            </label>
+          </div>
           {pacing && (
             <p className="timeline-pacing" aria-label="Playback pacing">
               <span>{pacing.rate}</span>

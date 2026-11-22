@@ -27,6 +27,7 @@ from .contract import (
     VISUALS,
 )
 from .errors import DirectorError
+from .volcanoes import MAX_DISTANCE_KM, nearest_volcano
 
 _EVENT_KEYS = {
     "type", "sim_time_minutes", "location", "severity", "description",
@@ -85,6 +86,13 @@ def _check_event(i: int, ev: Any, events: list, prior: dict, now: int) -> list:
             errs.append(f"{where}.location.lat out of range")
         if not _num(loc["lon"]) or not -180 <= loc["lon"] <= 180:
             errs.append(f"{where}.location.lon out of range")
+        elif ev["type"] == "volcanic_eruption" and _num(loc["lat"]) and -90 <= loc["lat"] <= 90:
+            volcano, km = nearest_volcano(loc["lat"], loc["lon"])
+            if km > MAX_DISTANCE_KM:
+                errs.append(
+                    f"{where}.location must be a known volcano (within {MAX_DISTANCE_KM:.0f} km); "
+                    f"the nearest is {volcano.name}, {volcano.country}, {km:.0f} km away"
+                )
 
     for key, (kind, lo, hi, _) in PAYLOAD_FIELDS.items():
         v = ev[key]

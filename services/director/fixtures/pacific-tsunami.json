@@ -1,0 +1,706 @@
+{
+  "events": [
+    {
+      "type": "earthquake",
+      "sim_time_minutes": 300,
+      "location": {
+        "name": "off the coast of Maule",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -35.85,
+        "lon": -73.25
+      },
+      "severity": 0.95,
+      "description": "A magnitude 9.0 megathrust earthquake ruptures off central Chile, shaking Concepción and Santiago.",
+      "magnitude": 9.0,
+      "depth_km": 25,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 300,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 95,
+        "injuries": 820,
+        "missing": null,
+        "displaced": 40000,
+        "sheltered": null,
+        "households_without_power": 1200000,
+        "households_without_water": null,
+        "economic_loss_usd": 4000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "tsunami_warning",
+      "sim_time_minutes": 312,
+      "location": {
+        "name": "Talcahuano",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -36.72,
+        "lon": -73.12
+      },
+      "severity": 0.9,
+      "description": "Chile issues a tsunami warning for its whole coast; sirens sound in Talcahuano as the sea draws back.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 400,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 95,
+        "injuries": 820,
+        "missing": null,
+        "displaced": 260000,
+        "sheltered": 90000,
+        "households_without_power": 1200000,
+        "households_without_water": null,
+        "economic_loss_usd": 4000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "flooding",
+      "sim_time_minutes": 335,
+      "location": {
+        "name": "Talcahuano",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -36.72,
+        "lon": -73.12
+      },
+      "severity": 0.9,
+      "description": "Tsunami waves up to 8 metres flood Talcahuano's port and low-lying streets.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 40,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 410,
+        "injuries": 2100,
+        "missing": 650,
+        "displaced": 310000,
+        "sheltered": 90000,
+        "households_without_power": 1200000,
+        "households_without_water": null,
+        "economic_loss_usd": 9500000000,
+        "flooded_area_km2": 85,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 380,
+      "location": {
+        "name": "Valparaíso",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -33.05,
+        "lon": -71.62
+      },
+      "severity": 0.7,
+      "description": "Coastal Valparaíso empties as residents climb to higher ground ahead of further waves.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 410,
+        "injuries": 2100,
+        "missing": 650,
+        "displaced": 520000,
+        "sheltered": 210000,
+        "households_without_power": 1200000,
+        "households_without_water": null,
+        "economic_loss_usd": 9500000000,
+        "flooded_area_km2": 85,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 450,
+      "location": {
+        "name": "Concepción",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -36.83,
+        "lon": -73.05
+      },
+      "severity": 0.75,
+      "description": "Substations and water mains fail across greater Concepción.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "power and water network",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 410,
+        "injuries": 2100,
+        "missing": 650,
+        "displaced": 520000,
+        "sheltered": 210000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 9500000000,
+        "flooded_area_km2": 85,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0,
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "tsunami_warning",
+      "sim_time_minutes": 520,
+      "location": {
+        "name": "Callao",
+        "country": "Peru",
+        "country_code": "PER",
+        "lat": -12.05,
+        "lon": -77.15
+      },
+      "severity": 0.65,
+      "description": "Peru orders its coast evacuated as the tsunami crosses the Pacific northward.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 300,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 410,
+        "injuries": 2100,
+        "missing": 650,
+        "displaced": 600000,
+        "sheltered": 240000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 9500000000,
+        "flooded_area_km2": 85,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "flooding",
+      "sim_time_minutes": 565,
+      "location": {
+        "name": "Callao",
+        "country": "Peru",
+        "country_code": "PER",
+        "lat": -12.05,
+        "lon": -77.15
+      },
+      "severity": 0.55,
+      "description": "Two-metre waves flood Callao's port, damaging cranes and fishing fleets.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 20,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2350,
+        "missing": 650,
+        "displaced": 600000,
+        "sheltered": 240000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 11000000000,
+        "flooded_area_km2": 97,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "tsunami_warning",
+      "sim_time_minutes": 700,
+      "location": {
+        "name": "Hilo",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 19.72,
+        "lon": -155.08
+      },
+      "severity": 0.6,
+      "description": "Hawaii sounds tsunami sirens hours before the waves are due; Hilo's waterfront is cleared.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 200,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2350,
+        "missing": 650,
+        "displaced": 640000,
+        "sheltered": 262000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 11000000000,
+        "flooded_area_km2": 97,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "flooding",
+      "sim_time_minutes": 1200,
+      "location": {
+        "name": "Hilo",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 19.72,
+        "lon": -155.08
+      },
+      "severity": 0.5,
+      "description": "The tsunami reaches Hawaii after 15 hours, flooding Hilo Bay's shoreline.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 10,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2390,
+        "missing": 650,
+        "displaced": 640000,
+        "sheltered": 262000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 11800000000,
+        "flooded_area_km2": 101,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "tsunami_warning",
+      "sim_time_minutes": 1450,
+      "location": {
+        "name": "Kamaishi",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 39.27,
+        "lon": 141.89
+      },
+      "severity": 0.45,
+      "description": "Japan issues a tsunami advisory for the Sanriku coast as the waves near the far side of the Pacific.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 250,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2390,
+        "missing": 650,
+        "displaced": 660000,
+        "sheltered": 270000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 11800000000,
+        "flooded_area_km2": 101,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "flooding",
+      "sim_time_minutes": 1640,
+      "location": {
+        "name": "Kamaishi",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 39.27,
+        "lon": 141.89
+      },
+      "severity": 0.35,
+      "description": "Waves just over a metre wash into Kamaishi harbour; the sea walls hold.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 8,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2390,
+        "missing": 650,
+        "displaced": 660000,
+        "sheltered": 270000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 12100000000,
+        "flooded_area_km2": 103,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 2200,
+      "location": {
+        "name": "Santiago",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -33.45,
+        "lon": -70.67
+      },
+      "severity": 0.6,
+      "description": "Chile declares a state of catastrophe for three coastal regions and deploys the armed forces.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2390,
+        "missing": 420,
+        "displaced": 660000,
+        "sheltered": 300000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 12100000000,
+        "flooded_area_km2": 103,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        2,
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 3000,
+      "location": {
+        "name": "Concepción",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -36.83,
+        "lon": -73.05
+      },
+      "severity": 0.5,
+      "description": "United States aircraft land in Concepción with water purification units and engineers.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "United States",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2390,
+        "missing": 420,
+        "displaced": 660000,
+        "sheltered": 300000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 12100000000,
+        "flooded_area_km2": 103,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 320,
+            "cargo_tonnes": 140,
+            "cargo": "water purification units"
+          }
+        ]
+      },
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 3600,
+      "location": {
+        "name": "Talcahuano",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -36.72,
+        "lon": -73.12
+      },
+      "severity": 0.45,
+      "description": "Peru sends a navy ship with rescue teams and field kitchens to Talcahuano.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Peru",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2390,
+        "missing": 420,
+        "displaced": 660000,
+        "sheltered": 300000,
+        "households_without_power": 1600000,
+        "households_without_water": 700000,
+        "economic_loss_usd": 12100000000,
+        "flooded_area_km2": 103,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 320,
+            "cargo_tonnes": 140,
+            "cargo": "water purification units"
+          },
+          {
+            "country": "Peru",
+            "personnel": 180,
+            "cargo_tonnes": 60,
+            "cargo": "field kitchens"
+          }
+        ]
+      },
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 4300,
+      "location": {
+        "name": "Valparaíso",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -33.05,
+        "lon": -71.62
+      },
+      "severity": 0.55,
+      "description": "Chile's main ports stay shut for a week, delaying copper exports and fruit shipments.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 440,
+        "injuries": 2390,
+        "missing": 420,
+        "displaced": 660000,
+        "sheltered": 300000,
+        "households_without_power": 900000,
+        "households_without_water": 420000,
+        "economic_loss_usd": 16000000000,
+        "flooded_area_km2": 103,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 320,
+            "cargo_tonnes": 140,
+            "cargo": "water purification units"
+          },
+          {
+            "country": "Peru",
+            "personnel": 180,
+            "cargo_tonnes": 60,
+            "cargo": "field kitchens"
+          }
+        ]
+      },
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 7200,
+      "location": {
+        "name": "Talcahuano",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -36.72,
+        "lon": -73.12
+      },
+      "severity": 0.4,
+      "description": "Talcahuano's port reopens and most homes have power again; debris clearance continues.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 455,
+        "injuries": 2390,
+        "missing": 180,
+        "displaced": 210000,
+        "sheltered": 80000,
+        "households_without_power": 120000,
+        "households_without_water": 60000,
+        "economic_loss_usd": 16000000000,
+        "flooded_area_km2": 103,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 1400000,
+        "aid_contributors": [
+          {
+            "country": "United States",
+            "personnel": 320,
+            "cargo_tonnes": 140,
+            "cargo": "water purification units"
+          },
+          {
+            "country": "Peru",
+            "personnel": 180,
+            "cargo_tonnes": 60,
+            "cargo": "field kitchens"
+          }
+        ]
+      },
+      "caused_by": [
+        14
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

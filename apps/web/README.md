@@ -5,6 +5,22 @@ then press **Play** once the run is ready. The playhead, map, impacts, and
 WORLD//WIRE follow the selected run. **Japan demo** opens the deterministic
 sample again.
 
+**Simulate** starts one of four offline sample runs: **Earthquake** (Japan),
+**Tsunami** (an M9.0 quake off Chile and waves across the Pacific),
+**Volcanic eruption** (a VEI 5 eruption of Vesuvius) and **Pandemic**
+(a virus spreading from Singapore). They use the checked-in Director
+fixtures, so they need no model credentials.
+
+Playback moves in steps of 5% of the run:
+
+- **Previous step** and **Next step** pause and move one step back or forward.
+  The keyboard does the same with ← and → (or `,` and `.`), and Space plays or pauses.
+- **Stop at each step** makes **Play** pause at the next step.
+- The dots under the timeline are the events so far. Click one to jump back to it.
+- Each impact figure counts up to a new report in 20 increments of 5%.
+- At the end of a run the map frames every place it touched. **Fit scenario**
+  on the map does the same at any time.
+
 Prompted scenarios need the local scenario service from [#53](https://github.com/hmzdev23/worldsim/pull/53).
 The browser uses its local run, playback, and news routes. Hamza's local
 Codex CLI runner owns model execution and configuration. Fixture mode is

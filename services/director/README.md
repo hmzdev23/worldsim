@@ -43,6 +43,10 @@ Fixtures:
 - `japan-earthquake-continued`: days 5 to 8, which needs the Japan chain as history.
 - `global-pandemic`: 10 events, 7 countries, 3 months.
 - `iceland-eruption`: 8 events over about 2.5 days in Iceland and the UK, aid from Norway and Denmark, with `impacts`. The deterministic non-Japan scenario for prompt-to-play tests.
+- `pacific-tsunami`: 16 events over 5 days. An M9.0 quake off Chile, tsunami warnings and flooding in Chile, Peru, Hawaii and Japan, and aid from the United States and Peru.
+- `vesuvius-eruption`: 12 events over a week. A VEI 5 eruption of Vesuvius, ash across southern Italy to Athens, and aid from Greece and Spain.
+
+A `volcanic_eruption` must sit within 50 km of a known volcano in [`worlddirector/volcanoes.py`](worlddirector/volcanoes.py), or the batch is rejected (`invalid_events`) and the nearest volcano is named. The prompt tells the model the same rule. If a scenario needs a volcano that is missing, add it to the list.
 
 Fixtures can be longer than one model batch (12 events). Only model output is capped.
 
@@ -65,7 +69,7 @@ except DirectorError as err:
 
 - **Blocking:** a model run can take minutes. Call it off the request and clock loop (thread or executor).
 - **`timeout_s`** is clamped to 5–600 s. Model and credentials stay with the local Codex login.
-- **`fixture=`:** one of `RUN_FIXTURES` (`iceland-eruption`, `global-pandemic`, `japan-earthquake`). The service decides when to use one. The prompt is still validated, and no model is called.
+- **`fixture=`:** one of `RUN_FIXTURES` (`iceland-eruption`, `global-pandemic`, `japan-earthquake`, `pacific-tsunami`, `vesuvius-eruption`). The service decides when to use one. The prompt is still validated, and no model is called.
 - **Errors:** `public_error(err)` returns `{error, state, retryable, status, message}`. It never contains `err.detail`.
 
 | `error` | `state` | retryable | HTTP | When |

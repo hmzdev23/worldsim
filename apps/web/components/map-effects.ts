@@ -25,7 +25,8 @@ export type AidRoute = {
   origin: string;
   inferred: true;
 };
-export type MapEffects = { outbreaks: Outbreak[]; shockwaves: Shockwave[]; routes: AidRoute[] };
+export type Wave = EffectPoint & { id: string; radiusKm: number };
+export type MapEffects = { outbreaks: Outbreak[]; shockwaves: Shockwave[]; routes: AidRoute[]; waves: Wave[] };
 
 // Disaster visuals that get a shockwave. Earthquakes keep the map's existing
 // epicenter pulse, so they are left out here.
@@ -36,6 +37,11 @@ const shockwaveLabels: Record<string, string> = {
   missile_strike: "Strike",
   nuclear_blast: "Detonation",
   weather_disaster: "Severe weather",
+};
+// Some event types share a visual; name them by type so the list reads right.
+const typeLabels: Record<string, string> = {
+  flooding: "Flooding",
+  volcanic_eruption: "Eruption",
 };
 function canonical(a: ScenarioEvent, b: ScenarioEvent) {
   return a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence;
@@ -68,15 +74,19 @@ export function routeStart(events: ScenarioEvent[], aid: ScenarioEvent) {
 
 export function deriveMapEffects(applied: ScenarioEvent[]): MapEffects {
   const events = applied.filter((event) => event.status === "applied").sort(canonical);
-  const effects: MapEffects = { outbreaks: [], shockwaves: [], routes: [] };
+  const effects: MapEffects = { outbreaks: [], shockwaves: [], routes: [], waves: [] };
   for (const event of events) {
-    if (event.visual === "contagion_spread") {
+    if (event.type === "tsunami_warning") {
+      // Wave rings at the warned coast only: an illustration, not a modelled wave.
+      effects.waves.push({ ...point(event), id: event.id, radiusKm: radius(event) });
+    } else if (event.visual === "contagion_spread") {
       effects.outbreaks.push({
         ...point(event), id: event.id, radiusKm: radius(event), pathogen: text(event.payload?.pathogen) || "Outbreak",
       });
     } else if (event.visual in shockwaveLabels && event.type !== "earthquake") {
       effects.shockwaves.push({
-        ...point(event), id: event.id, radiusKm: radius(event), visual: event.visual, label: shockwaveLabels[event.visual],
+        ...point(event), id: event.id, radiusKm: radius(event), visual: event.visual,
+        label: typeLabels[event.type] ?? shockwaveLabels[event.visual],
       });
     } else if (event.type === "international_aid") {
       const start = routeStart(events, event);
@@ -109,6 +119,7 @@ export function describeEffects(effects: MapEffects) {
   return [
     ...effects.outbreaks.map((item) => ({ id: item.id, kind: "outbreak", text: `${item.pathogen} reported · ${item.place}` })),
     ...effects.shockwaves.map((item) => ({ id: item.id, kind: "shockwave", text: `${item.label} · ${item.place}` })),
+    ...effects.waves.map((item) => ({ id: item.id, kind: "wave", text: `Tsunami warning · ${item.place}` })),
     ...effects.routes.map((item) => ({
       id: item.id, kind: "route", text: `Inferred aid route · ${item.origin} (${item.from.place}) → ${item.to.place}`,
     })),

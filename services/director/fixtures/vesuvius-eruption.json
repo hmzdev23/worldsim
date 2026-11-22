@@ -1,0 +1,542 @@
+{
+  "events": [
+    {
+      "type": "volcanic_eruption",
+      "sim_time_minutes": 600,
+      "location": {
+        "name": "Vesuvius",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 40.82,
+        "lon": 14.43
+      },
+      "severity": 0.95,
+      "description": "Vesuvius erupts in a Plinian blast, sending an ash column more than 20 km above the Bay of Naples.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": 5,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 30,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 40,
+        "injuries": 320,
+        "missing": null,
+        "displaced": 150000,
+        "sheltered": null,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": 5000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 640,
+      "location": {
+        "name": "Naples",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 40.85,
+        "lon": 14.27
+      },
+      "severity": 0.85,
+      "description": "Italy orders the full evacuation of the red zone around Vesuvius; trains and ferries run nonstop.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 40,
+        "injuries": 320,
+        "missing": null,
+        "displaced": 600000,
+        "sheltered": 180000,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": 5000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "contamination",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Torre Annunziata",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 40.75,
+        "lon": 14.45
+      },
+      "severity": 0.8,
+      "description": "Ash and pumice bury towns on the volcano's southern slopes; roofs collapse under the weight.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 25,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210,
+        "injuries": 1400,
+        "missing": null,
+        "displaced": 600000,
+        "sheltered": 180000,
+        "households_without_power": null,
+        "households_without_water": null,
+        "economic_loss_usd": 5000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 900,
+        "debris_tonnes": 3000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 820,
+      "location": {
+        "name": "Naples International Airport",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 40.88,
+        "lon": 14.29
+      },
+      "severity": 0.7,
+      "description": "Ash closes Naples airport and cuts power lines across Campania.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "airport and power grid",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210,
+        "injuries": 1400,
+        "missing": null,
+        "displaced": 600000,
+        "sheltered": 180000,
+        "households_without_power": 380000,
+        "households_without_water": 150000,
+        "economic_loss_usd": 9000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 900,
+        "debris_tonnes": 3000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "economic_shock",
+      "sim_time_minutes": 1100,
+      "location": {
+        "name": "Rome",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.9,
+        "lon": 12.5
+      },
+      "severity": 0.55,
+      "description": "European airlines cancel thousands of flights as the ash cloud spreads east across southern Italy.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210,
+        "injuries": 1400,
+        "missing": null,
+        "displaced": 600000,
+        "sheltered": 180000,
+        "households_without_power": 380000,
+        "households_without_water": 150000,
+        "economic_loss_usd": 14000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 900,
+        "debris_tonnes": 3000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0,
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "contamination",
+      "sim_time_minutes": 1500,
+      "location": {
+        "name": "Bari",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.12,
+        "lon": 16.87
+      },
+      "severity": 0.5,
+      "description": "Fine ash falls on Bari and Puglia's farmland, 250 km downwind.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 120,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210,
+        "injuries": 1400,
+        "missing": null,
+        "displaced": 600000,
+        "sheltered": 180000,
+        "households_without_power": 380000,
+        "households_without_water": 150000,
+        "economic_loss_usd": 14000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 7800,
+        "debris_tonnes": 3000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 2000,
+      "location": {
+        "name": "Athens International Airport",
+        "country": "Greece",
+        "country_code": "GRC",
+        "lat": 37.94,
+        "lon": 23.94
+      },
+      "severity": 0.45,
+      "description": "The drifting ash plume grounds flights at Athens for a day.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": "air traffic",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210,
+        "injuries": 1400,
+        "missing": null,
+        "displaced": 600000,
+        "sheltered": 180000,
+        "households_without_power": 380000,
+        "households_without_water": 150000,
+        "economic_loss_usd": 15500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 7800,
+        "debris_tonnes": 3000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "government_response",
+      "sim_time_minutes": 2400,
+      "location": {
+        "name": "Rome",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.9,
+        "lon": 12.5
+      },
+      "severity": 0.6,
+      "description": "Italy declares a national emergency and opens 400 shelters across the south.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210,
+        "injuries": 1400,
+        "missing": 300,
+        "displaced": 600000,
+        "sheltered": 240000,
+        "households_without_power": 380000,
+        "households_without_water": 150000,
+        "economic_loss_usd": 15500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 7800,
+        "debris_tonnes": 3000000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1,
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 2900,
+      "location": {
+        "name": "Naples",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 40.85,
+        "lon": 14.27
+      },
+      "severity": 0.45,
+      "description": "Greece flies in civil protection teams and roof-clearing equipment.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Greece",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210,
+        "injuries": 1400,
+        "missing": 300,
+        "displaced": 600000,
+        "sheltered": 240000,
+        "households_without_power": 380000,
+        "households_without_water": 150000,
+        "economic_loss_usd": 15500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 7800,
+        "debris_tonnes": 3000000,
+        "aid_contributors": [
+          {
+            "country": "Greece",
+            "personnel": 150,
+            "cargo_tonnes": 40,
+            "cargo": "roof-clearing equipment"
+          }
+        ]
+      },
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 3600,
+      "location": {
+        "name": "Naples",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 40.85,
+        "lon": 14.27
+      },
+      "severity": 0.45,
+      "description": "Spain sends firefighting crews and respiratory masks for the ash zone.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Spain",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 210,
+        "injuries": 1400,
+        "missing": 300,
+        "displaced": 600000,
+        "sheltered": 240000,
+        "households_without_power": 380000,
+        "households_without_water": 150000,
+        "economic_loss_usd": 15500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 7800,
+        "debris_tonnes": 3000000,
+        "aid_contributors": [
+          {
+            "country": "Greece",
+            "personnel": 150,
+            "cargo_tonnes": 40,
+            "cargo": "roof-clearing equipment"
+          },
+          {
+            "country": "Spain",
+            "personnel": 220,
+            "cargo_tonnes": 55,
+            "cargo": "respiratory masks"
+          }
+        ]
+      },
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "volcanic_eruption",
+      "sim_time_minutes": 5800,
+      "location": {
+        "name": "Vesuvius",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 40.82,
+        "lon": 14.43
+      },
+      "severity": 0.5,
+      "description": "A smaller explosion reopens the crater; the exclusion zone stays in force.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": 3,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 12,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 236,
+        "injuries": 1520,
+        "missing": 300,
+        "displaced": 600000,
+        "sheltered": 240000,
+        "households_without_power": 380000,
+        "households_without_water": 150000,
+        "economic_loss_usd": 15500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 8100,
+        "debris_tonnes": 3000000,
+        "aid_contributors": [
+          {
+            "country": "Greece",
+            "personnel": 150,
+            "cargo_tonnes": 40,
+            "cargo": "roof-clearing equipment"
+          },
+          {
+            "country": "Spain",
+            "personnel": 220,
+            "cargo_tonnes": 55,
+            "cargo": "respiratory masks"
+          }
+        ]
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 10080,
+      "location": {
+        "name": "Naples",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 40.85,
+        "lon": 14.27
+      },
+      "severity": 0.4,
+      "description": "Naples airport reopens and residents outside the red zone return home to clear ash.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 236,
+        "injuries": 1520,
+        "missing": 90,
+        "displaced": 210000,
+        "sheltered": 70000,
+        "households_without_power": 40000,
+        "households_without_water": 20000,
+        "economic_loss_usd": 15500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 8100,
+        "debris_tonnes": 3000000,
+        "aid_contributors": [
+          {
+            "country": "Greece",
+            "personnel": 150,
+            "cargo_tonnes": 40,
+            "cargo": "roof-clearing equipment"
+          },
+          {
+            "country": "Spain",
+            "personnel": 220,
+            "cargo_tonnes": 55,
+            "cargo": "respiratory masks"
+          }
+        ]
+      },
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

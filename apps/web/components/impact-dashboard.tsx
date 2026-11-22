@@ -1,4 +1,5 @@
 import { motion, useReducedMotion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 import type { ImpactSnapshot, ScenarioEvent } from "../lib/scenario";
 import { formatSimTime } from "../lib/scenario";
 
@@ -17,6 +18,36 @@ function money(value: number) { return `$${new Intl.NumberFormat("en", { notatio
 function numeric(value: unknown): number | undefined { return typeof value === "number" && Number.isFinite(value) ? value : undefined; }
 function latestImpact(events: ScenarioEvent[]): ImpactSnapshot | undefined {
   return [...events].reverse().find((event) => event.status === "applied" && event.payload.impacts)?.payload.impacts;
+}
+// A new report counts up from the last shown figure in 20 increments of 5%
+// (about a second). Falling figures, rewinds and reduced motion show the value at once.
+const countSteps = 20;
+const countStepMs = 45;
+function useCountUp(value: number, still: boolean) {
+  const [shown, setShown] = useState(still ? value : 0);
+  const from = useRef(still ? value : 0);
+  useEffect(() => {
+    const start = from.current;
+    if (still || value <= start) {
+      from.current = value;
+      setShown(value);
+      return;
+    }
+    let step = 0;
+    const timer = setInterval(() => {
+      step += 1;
+      const next = step >= countSteps ? value : start + ((value - start) * step) / countSteps;
+      from.current = next;
+      setShown(next);
+      if (step >= countSteps) clearInterval(timer);
+    }, countStepMs);
+    return () => clearInterval(timer);
+  }, [still, value]);
+  return shown;
+}
+function CountUp({ value, format, still }: { value: number; format: (value: number) => string; still: boolean }) {
+  const shown = useCountUp(value, still);
+  return <span className="impact-value" data-value={value} aria-label={format(value)}>{format(Math.round(shown))}</span>;
 }
 function Sparkline({ values }: { values: number[] }) {
   const max = Math.max(1, ...values);
@@ -74,7 +105,7 @@ export function ImpactDashboard({ events }: { events: ScenarioEvent[] }) {
                 transition={{ duration: reducedMotion ? 0 : 0.2 }}>
                 <dt>{card.label}</dt>
                 <dd>
-                  {card.format(value)}{"suffix" in card ? card.suffix : ""}
+                  <CountUp value={value} format={card.format} still={Boolean(reducedMotion)} />{"suffix" in card ? card.suffix : ""}
                   {change !== undefined && <span className="impact-change" data-direction={change > 0 ? "up" : change < 0 ? "down" : "flat"}>
                     {change > 0 ? "+" : change < 0 ? "−" : ""}{card.format(Math.abs(change))}{"suffix" in card ? card.suffix : ""} since prior report
                   </span>}

@@ -56,6 +56,7 @@
 .legend li[data-kind="outbreak"]::before { background: #78b9b5; }
 .legend li[data-kind="shockwave"]::before { background: #ff8f5c; }
 .legend li[data-kind="route"]::before { border: 1px dashed #83c9ae; border-radius: 2px; }
+.legend li[data-kind="wave"]::before { background: #6fb7e8; }
 
 .note {
   margin: 0;
