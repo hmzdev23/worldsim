@@ -58,7 +58,13 @@ class ClaudeEngineTest(unittest.TestCase):
         self.assertEqual(flag(cmd, "--model"), "haiku")
         self.assertEqual(flag(cmd, "--effort"), "low")
         self.assertEqual(flag(cmd, "--output-format"), "json")
-        self.assertEqual(json.loads(flag(cmd, "--json-schema")), OUTPUT_SCHEMA)
+        schema = json.loads(flag(cmd, "--json-schema"))
+        events = schema["properties"].pop("events")
+        self.assertEqual((events.pop("minItems"), events.pop("maxItems")), (1, 12), "Claude Code enforces 1-12 events")
+        expected = json.loads(json.dumps(OUTPUT_SCHEMA))
+        self.assertEqual(events, expected["properties"].pop("events"))
+        self.assertEqual(schema, expected, "otherwise the same schema as Codex")
+        self.assertNotIn("maxItems", OUTPUT_SCHEMA["properties"]["events"], "the shared schema is unchanged")
         self.assertEqual(flag(cmd, "--tools"), "", "no tools: the Director only writes JSON")
         self.assertEqual(flag(cmd, "--setting-sources"), "", "no user or project settings")
         self.assertIn("--strict-mcp-config", cmd)
@@ -99,6 +105,39 @@ class ClaudeEngineTest(unittest.TestCase):
             generate(PROMPT, runner=claude_runner(envelope))
         self.assertEqual(ctx.exception.code, "claude_failed")
         self.assertIn("Not logged in", ctx.exception.detail)
+
+    def test_a_rejected_answer_is_retried_once_with_the_errors(self, _):
+        broken = json.loads(json.dumps(RAW))
+        broken["events"][-1]["impacts"]["injuries"] = 0  # a running total that goes down
+        answers = iter([success(broken), success()])
+        seen = {}
+
+        def runner(cmd, **kw):
+            seen.setdefault("calls", []).append({"cmd": cmd, **kw})
+            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(next(answers)), stderr="")
+
+        batch = prepare_scenario(PROMPT, simulation_id="run-retry", runner=runner, seed=3)
+        first, second = seen["calls"]
+        self.assertNotIn("rejected by the validator", first["input"])
+        self.assertIn("rejected by the validator", second["input"])
+        self.assertIn("injuries", second["input"], "the validator's own message is fed back")
+        self.assertEqual(len(batch["events"]), len(RAW["events"]))
+
+    def test_two_rejected_answers_fail(self, _):
+        broken = success({"events": [{"type": "meteor"}]})
+        seen = {}
+        with self.assertRaises(DirectorError) as ctx:
+            prepare_scenario(PROMPT, simulation_id="run-x", runner=claude_runner(broken, seen=seen))
+        self.assertEqual(ctx.exception.code, "invalid_events")
+        self.assertEqual(len(seen["calls"]), 2, "one retry, then give up")
+
+    def test_no_retry_when_time_is_nearly_up(self, _):
+        broken = success({"events": [{"type": "meteor"}]})
+        seen = {}
+        with self.assertRaises(DirectorError):
+            generate(PROMPT, runner=claude_runner(broken, seen=seen), timeout_s=10)
+        self.assertEqual(len(seen["calls"]), 1)
+        self.assertLessEqual(seen["calls"][0]["timeout"], 10, "the call gets the caller's limit, not more")
 
     def test_codex_is_still_available(self, _):
         self.assertEqual(director_engine("codex"), "codex")

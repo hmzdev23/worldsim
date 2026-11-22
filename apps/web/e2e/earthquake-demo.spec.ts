@@ -10,7 +10,7 @@ test("earthquake headline appears on play and focuses the map", async ({ page })
   page.on("pageerror", (error) => errors.push(error.message));
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
   const wire = page.getByRole("region", { name: "WORLD//WIRE" });
   await expect(wire).toContainText("No reports yet");
@@ -40,7 +40,7 @@ test("earthquake headline appears on play and focuses the map", async ({ page })
 test("wire only shows events the stream has applied", async ({ page }) => {
   const last = fixture.events[fixture.events.length - 1];
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   const wire = page.getByRole("region", { name: "WORLD//WIRE" });
@@ -52,7 +52,7 @@ test("wire only shows events the stream has applied", async ({ page }) => {
 
 test("reset hides the headline again", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   const wire = page.getByRole("region", { name: "WORLD//WIRE" });
@@ -63,7 +63,7 @@ test("reset hides the headline again", async ({ page }) => {
 
 test("hovering a country identifies it on the map", async ({ page }, testInfo) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await expect(page.getByRole("button", { name: "Zoom in" })).toBeEnabled();
   const map = page.locator(".map-canvas");
   await map.scrollIntoViewIfNeeded();

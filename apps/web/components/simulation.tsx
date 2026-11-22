@@ -116,6 +116,11 @@ function ScenarioWorkspace() {
   function runAgain() {
     if (lastRequest.current) void start({ ...lastRequest.current, tone: runTone });
   }
+  // The fixed Japan earthquake run is no longer on the home screen; tests open it with /?demo=japan.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get("demo") === "japan") loadDemo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   function loadDemo() {
     pauseCurrent(); request.current?.abort(); request.current = null; lastRequest.current = null;
     setRun(japanDemo); setAutoStart(false); setLaunch({ status: "idle" }); setView("watch");
@@ -163,7 +168,7 @@ function ScenarioWorkspace() {
           <span className="tone-hint">{shownTone === "straight" ? "Serious presentation." : "Satire is a fictional presentation layer. Facts and impact estimates stay unchanged."}</span>
         </div>
         <div className="scenario-launch-footer"><p id="prompt-enter-hint" className={launch.status === "failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
-          <button className="demo-button" type="button" onClick={loadDemo}>Japan demo</button></div>
+</div>
       </form>
     {view === "home" && <ScenarioStarters starters={starters} loading={startersLoading} error={startersError} busy={busy}
       onRetry={() => setReload((n) => n + 1)} onLaunch={(s) => void start({ ...s, tone: nextTone })} />}

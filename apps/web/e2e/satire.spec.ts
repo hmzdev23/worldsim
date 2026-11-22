@@ -7,7 +7,7 @@ test("satirical tone adds labelled satire that follows playback", async ({ page 
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
 
   await page.getByRole("radio", { name: "Satirical" }).click();
@@ -34,7 +34,7 @@ test("satirical tone adds labelled satire that follows playback", async ({ page 
 
 test("straight-faced tone keeps the original experience", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("radio", { name: "Straight-faced" }).click();
   await page.getByRole("button", { name: "Play", exact: true }).click();

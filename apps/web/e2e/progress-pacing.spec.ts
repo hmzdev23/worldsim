@@ -56,7 +56,7 @@ test.beforeEach(({}, testInfo) => {
 test("generation shows the service's actual stage, then the run's relative pacing", async ({ page }) => {
   await mockService(page, ["model", "model", "validate"]);
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await page.getByLabel("Scenario prompt").fill("A river floods Delta Town.");
   await page.getByRole("button", { name: "Simulate", exact: true }).click();
 
@@ -78,7 +78,7 @@ test("generation shows the service's actual stage, then the run's relative pacin
 
 test("the Japan demo keeps its fixed rate and shows no pacing note", async ({ page }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await expect(page.getByRole("heading", { name: "Earthquake off Japan" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Simulation playback" }).getByLabel("Playback pacing")).toHaveCount(0);
 });
