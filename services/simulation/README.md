@@ -16,7 +16,7 @@ appears immediately after playback starts.
 
 On Windows the venv interpreter is `.venv\Scripts\python`.
 
-Options: `fixture` (defaults to `contracts/fixtures/japan-earthquake.json`), `--port 8765`, `--start-minutes`, `--speed {1,2,4,16}`, `--paused`, `--minutes-per-second` (sim minutes per wall second at 1×, default 1), `--tick-seconds` (default 1).
+Options: `fixture` (defaults to `contracts/fixtures/japan-earthquake.json`), `--port 8765`, `--start-minutes`, `--speed {1,2,4,16}`, `--paused`, `--minutes-per-second` (the demo's sim minutes per wall second at 1×, default 1), `--tick-seconds` (default 1), `--scenario-pace PERCENT` (scenario runs, default 5; see [Pacing](#pacing-sim-005-58)).
 
 ## Endpoints
 
@@ -98,7 +98,8 @@ The status body:
   "end_minutes": 4500,
   "event_count": 8,
   "sim_time_minutes": 189,
-  "playback": { "state": "paused", "speed": 1 }
+  "playback": { "state": "paused", "speed": 1 },
+  "pacing": { "mode": "relative", "fraction_per_tick": 0.05, "start_minutes": 189, "span_minutes": 4311, "minutes_per_tick": 215.55, "tick_seconds": 1 }
 }
 ```
 
@@ -117,7 +118,7 @@ The status body:
   - Raw model output and error details are only written to the server log.
   - To retry, create a new run.
 - **How the Director is called:** through `worlddirector.prepare_scenario` (#50), in a worker thread, so it never blocks the clock or other requests, with a timeout (`--director-timeout`, default 180 s). At most 2 runs generate at once, and the server keeps the 16 newest runs.
-- **Offline runs:** `--scenario-fixture NAME` makes every run use that Director fixture instead of a model, for example `--scenario-fixture global-pandemic`, or `iceland-eruption` once #54 is merged. A prompt is still required. Use it for offline demos and end-to-end tests. A request can also name a fixture with `{"fixture": "global-pandemic"}`.
+- **Offline runs:** `--scenario-fixture NAME` makes every run use that Director fixture instead of a model, for example `--scenario-fixture global-pandemic` or `iceland-eruption`. A prompt is still required. Use it for offline demos and end-to-end tests. A request can also name a fixture with `{"fixture": "global-pandemic"}`.
 
 `tests/simulation/test_scenarios.py` runs offline with a stub Director that returns the Iceland eruption fixture. It covers:
 
@@ -130,6 +131,34 @@ The status body:
 - the limits on concurrent generations and stored runs
 
 One test also uses the real Director callable with its offline fixture.
+
+## Pacing (SIM-005, #58)
+
+The server ticks every `--tick-seconds` (default 1 s). How far one tick moves the clock depends on the simulation's pacing:
+
+- **Scenario runs: relative.** One tick at 1× covers 5% of the run's span (`end_minutes − start_minutes`, from the minute the run starts to its last event). A seven-hour run and a six-month run both play in 20 ticks at 1×, 10 at 2×, 5 at 4× and 2 at 16×. Set the percentage with `--scenario-pace` (default 5).
+- **The fixture demo: fixed.** Unchanged: `--minutes-per-second` sim minutes per wall second at 1×, so `./scripts/run-demo.sh` plays the Japan demo as before.
+
+Pacing only decides how far the clock moves. It never schedules events:
+
+- Every event releases at its own `sim_time_minutes`, in canonical order, exactly once, including several events (or same-minute events) crossed in one tick.
+- Steps can be fractional (5% of 421 minutes is 21.05). The clock keeps the fraction and reports whole minutes, as before.
+- A late wall tick counts as a fraction of a tick more, so wall-clock hiccups don't change the playback length.
+- Pause, speed, seek, replay and the end clamp behave as described above. Seek and replay don't change the pace, because the span doesn't depend on the clock. Replay from 0 takes a few more ticks than the span when a run starts later than minute 0.
+- When a later event is applied, the span grows and the following ticks grow with it.
+- A zero-length span (every event at the start minute) finishes in one tick.
+- Each run paces from its own span, so runs never affect each other.
+
+`GET /timeline`, `GET /scenarios/{id}/timeline` and the run status report it as `pacing`. These are HTTP fields only, so stream messages and `contracts/stream.schema.json` are unchanged:
+
+```json
+{ "mode": "relative", "fraction_per_tick": 0.05, "start_minutes": 29, "span_minutes": 421, "minutes_per_tick": 21.05, "tick_seconds": 1 }
+{ "mode": "fixed", "minutes_per_tick": 60, "tick_seconds": 1 }
+```
+
+`minutes_per_tick` is at 1×. Multiply by `playback.speed` for the current rate. There is no control action to change pacing yet. Adding one needs agreement on the stream contract first.
+
+`tests/simulation/test_pacing.py` checks this deterministically on a multi-hour fixture (`tests/simulation/fixtures/multi-hour.json`) and a multi-month fixture (`multi-month.json`), plus the server's ticker with two runs and the demo.
 
 ## Validation rules
 
@@ -152,6 +181,8 @@ from worldsim_sim import Simulation, replay
 sim = Simulation.from_batch(batch)        # validates; raises on a bad fixture
 sim.ingest(director_batch)                # -> (events with status, rejections)
 messages = sim.advance(5)                 # 5 sim minutes × speed -> [event..., clock]
+sim = Simulation.from_batch(batch, pace=0.05)  # relative pacing
+messages = sim.tick()                     # one tick: 5% of the span × speed
 replay(batch, speed=4)                    # offline full replay, like tests/integration/mock_stream.replay
 ```
 

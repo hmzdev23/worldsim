@@ -3,10 +3,15 @@
 python -m worldsim_sim [fixture.json] [--port 8765] [--start-minutes 390]
                       [--speed 1] [--paused] [--minutes-per-second 1]
                       [--scenario-fixture NAME] [--director-timeout 180]
+                      [--scenario-pace 5]
 
 The fixture is the demo served at /stream. Runs created with POST /scenarios
 call the Director; --scenario-fixture makes every run use that Director
 fixture instead (offline, deterministic, no model credentials).
+
+Pacing: the demo moves --minutes-per-second sim minutes per wall second at 1x.
+Each scenario run moves --scenario-pace percent of its own length per tick
+(--tick-seconds), so a run of any length plays in about 20 ticks at 1x.
 """
 
 from __future__ import annotations
@@ -15,7 +20,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .engine import CONTRACTS, SPEEDS, Simulation
+from .engine import CONTRACTS, PACE_FRACTION, SPEEDS, Simulation
 
 DEFAULT_FIXTURE = CONTRACTS / "fixtures" / "japan-earthquake.json"
 
@@ -33,6 +38,8 @@ def build(argv: list[str] | None = None):
     parser.add_argument("--scenario-fixture", metavar="NAME",
                         help="serve every POST /scenarios run from this Director fixture (e.g. global-pandemic)")
     parser.add_argument("--director-timeout", type=float, default=180.0, help="seconds per scenario generation")
+    parser.add_argument("--scenario-pace", type=float, default=PACE_FRACTION * 100, metavar="PERCENT",
+                        help="percent of a scenario run's length per tick at 1x (default 5)")
     args = parser.parse_args(argv)
 
     from .scenarios import ScenarioRegistry
@@ -41,7 +48,11 @@ def build(argv: list[str] | None = None):
     batch = json.loads(args.fixture.read_text(encoding="utf-8"))
     sim = Simulation.from_batch(batch, speed=args.speed, state="paused" if args.paused else "playing")
     sim.seek(args.start_minutes)
-    scenarios = ScenarioRegistry(timeout_s=args.director_timeout, fixture=args.scenario_fixture)
+    if not 0 < args.scenario_pace <= 100:
+        parser.error("--scenario-pace must be a percent in (0, 100]")
+    scenarios = ScenarioRegistry(
+        timeout_s=args.director_timeout, fixture=args.scenario_fixture, pace=args.scenario_pace / 100
+    )
     app = create_app(
         sim, tick_seconds=args.tick_seconds, minutes_per_second=args.minutes_per_second, scenarios=scenarios
     )

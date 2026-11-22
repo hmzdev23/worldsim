@@ -21,6 +21,7 @@ from typing import Callable, Optional
 
 from .contract import EVENT_TYPES, MAX_EVENTS, MAX_HISTORY_EVENTS, MAX_SCENARIO_CHARS, OUTPUT_SCHEMA
 from .errors import DirectorError
+from .timing import Stages, stage
 from .validate import build_batch, history_state
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures"
@@ -181,9 +182,24 @@ def run_codex(
     effort: str = DEFAULT_EFFORT,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     runner: Runner = subprocess.run,
+    stages: Optional[Stages] = None,
 ) -> object:
-    """Ask Codex for raw events. Returns parsed JSON (not yet validated)."""
-    prompt = build_prompt(scenario, history)
+    """Ask Codex for raw events. Returns parsed JSON (not yet validated).
+
+    `stages` records the prompt, model (the whole codex process) and parse times.
+    """
+    with stage(stages, "prompt"):
+        prompt = build_prompt(scenario, history)
+    with stage(stages, "model"):
+        text, stderr = _call_codex(prompt, model=model, effort=effort, timeout_s=timeout_s, runner=runner)
+    with stage(stages, "parse"):
+        if not text.strip():
+            raise DirectorError("invalid_json", "Codex returned an empty response", stderr)
+        return _parse_json(text)
+
+
+def _call_codex(prompt: str, *, model: str, effort: str, timeout_s: float, runner: Runner) -> tuple[str, str]:
+    """Run `codex exec` once. Returns (answer text, stderr)."""
     codex = shutil.which("codex")
     if not codex:
         raise DirectorError("codex_missing", "Codex CLI not found. Install it and run `codex login`.")
@@ -209,9 +225,7 @@ def run_codex(
                 text = f.read()
         if not text.strip():
             text = proc.stdout or ""
-        if not text.strip():
-            raise DirectorError("invalid_json", "Codex returned an empty response", proc.stderr)
-        return _parse_json(text)
+        return text, proc.stderr or ""
 
 
 def load_fixture(name: str) -> object:
@@ -248,6 +262,7 @@ def generate(
     effort: str = DEFAULT_EFFORT,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     runner: Runner = subprocess.run,
+    stages: Optional[Stages] = None,
 ) -> dict:
     """Return a validated batch of proposed events, or raise DirectorError.
 
@@ -255,6 +270,7 @@ def generate(
     events; only applied events count). With it, the Director continues the
     simulation: same simulation/branch IDs, later times, continuing event IDs.
     With fixture set, no model is called and the scenario text is optional.
+    stages: optional timing recorder (see timing.py); it never changes the result.
     """
     past = _history_events(history)
     if isinstance(history, dict):
@@ -262,20 +278,23 @@ def generate(
         branch_id = branch_id or history.get("branch_id")
     branch_id = branch_id or "main"
     if fixture:
-        raw = load_fixture(fixture)
+        with stage(stages, "fixture"):
+            raw = load_fixture(fixture)
         source, model_name, max_events = "fixture", None, MAX_FIXTURE_EVENTS
         simulation_id = simulation_id or f"demo-{fixture}"
     else:
-        raw = run_codex(scenario, history=past, model=model, effort=effort, timeout_s=timeout_s, runner=runner)
+        raw = run_codex(scenario, history=past, model=model, effort=effort, timeout_s=timeout_s, runner=runner,
+                        stages=stages)
         source, model_name, max_events = "model", model, MAX_EVENTS
         simulation_id = simulation_id or f"sim-{_slug(scenario)}"
-    return build_batch(
-        raw,
-        simulation_id=simulation_id,
-        branch_id=branch_id,
-        source=source,
-        model=model_name,
-        first_id=first_id,
-        history=past,
-        max_events=max_events,
-    )
+    with stage(stages, "validate"):
+        return build_batch(
+            raw,
+            simulation_id=simulation_id,
+            branch_id=branch_id,
+            source=source,
+            model=model_name,
+            first_id=first_id,
+            history=past,
+            max_events=max_events,
+        )
