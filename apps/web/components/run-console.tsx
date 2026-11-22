@@ -12,7 +12,6 @@ import { ImpactDashboard } from "./impact-dashboard";
 import { WorldMap, type WorldMapHandle } from "./world-map";
 import { WorldWire } from "./world-wire";
 import { PresentationControls } from "./presentation-controls";
-import { headlineDelay, type PresentationSpeed } from "../lib/presentation";
 
 const speeds = [1, 2, 4];
 const rate = Number(process.env.NEXT_PUBLIC_SIMULATION_MINUTES_PER_SECOND ?? 60);
@@ -100,8 +99,7 @@ function useSatire(run: ScenarioRun, events: EventState, tone: Tone, isDemo: boo
 
 /**
  * One run, watched. Runs started from the home screen (`autoStart`) play as a
- * story: the clock pauses briefly on each new development, the camera follows
- * it, and its headline stays up long enough to read. Nothing waits for input.
+ * story: the clock stops on each development and waits for the viewer to advance.
  */
 export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, initialSpeed = 1, onRunAgain }: {
   run: ScenarioRun; isDemo: boolean; tone?: Tone; autoStart?: boolean; initialSpeed?: number; onRunAgain?: () => void;
@@ -109,6 +107,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   const mapRef = useRef<WorldMapHandle>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const seekFloorRef = useRef<number | undefined>(undefined);
+  const waitingForHeadline = useRef(false);
   const [connection, setConnection] = useState<"connecting" | "connected" | "reconnecting" | "unavailable">("connecting");
   const [simTime, setSimTime] = useState(run.startMinute);
   const [playback, setPlayback] = useState<Playback>({ state: "paused", speed: 1 });
@@ -128,11 +127,11 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   const pacing = pacingSummary(run.pacing, playback.speed, run.endMinute - simTime);
   const progress = Math.max(0, Math.min(1, (simTime - run.startMinute) / Math.max(1, run.endMinute - run.startMinute)));
   const story = autoStart && !isDemo;
-  const [presentationSpeed, setPresentationSpeed] = useState<PresentationSpeed>("normal");
-  const [reading, setReading] = useState(false);
-  const [hovering, setHovering] = useState(false);  // pointer on the headline card holds it
   const [wantPlaying, setWantPlaying] = useState(false);
   const [beatReady, setBeatReady] = useState(true);
+  const [film, setFilm] = useState<{ status: "idle" | "queued" | "generating" | "ready" | "failed"; stage: string; videoUrl?: string; message?: string }>({ status: "idle", stage: "idle" });
+  const [filmOpen, setFilmOpen] = useState(false);
+  const [filmDismissed, setFilmDismissed] = useState(false);
   const [autoFollow, setAutoFollow] = useState(true);
   const [followSuspended, setFollowSuspended] = useState(false);
   const [manualSerial, setManualSerial] = useState(0);
@@ -150,46 +149,70 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
     sendControl({ action: "speed", speed: initialSpeed });
     setWantPlaying(true);
     if (!story) sendControl({ action: "play" });
-    // The presentation scheduler starts the clock after any opening report.
+    // Story playback is started after the stream connects.
   }, [autoStart, connected, initialSpeed]);
   const followLocation = events.applied.find(e => e.id === selectedId)?.location;
   const highlightedCountry = followLocation?.country_code ?? run.firstEvent.location.country_code;
   const lastFocus = useRef<string | undefined>(undefined);
   const advanceStory = useCallback(() => {
     mapRef.current?.stopMotion();
-    setEvents(previous => ({...previous, queue: previous.queue.slice(1)}));
+    setEvents(previous => {
+      const queue = previous.queue.slice(1);
+      waitingForHeadline.current = queue.length > 0;
+      return { ...previous, queue };
+    });
     setBeatReady(true);
   }, []);
 
   // Snapshot boundaries cancel pending cosmetic work; they never replay old reports.
   useEffect(() => { setBeatReady(true); lastBeat.current = simTime; }, [events.revision]);
-  // Story runs play "until the next event": the server stops the clock exactly on each
-  // event, its card stays up long enough to read, then the clock plays on to the next one.
+  // Keep the simulation stopped until the viewer advances each queued headline.
   useEffect(() => {
-    if (!story || !reportedHeadline || reading || hovering || !wantPlaying) return;
-    const timer = setTimeout(advanceStory, headlineDelay(presentationSpeed, reportedHeadline));
-    return () => clearTimeout(timer);
-  }, [reportedHeadline?.event_id, reading, hovering, wantPlaying, presentationSpeed, advanceStory, story]);
-  useEffect(() => {
-    if (story && wantPlaying && beatReady && !reading && !atEnd &&
+    if (story && wantPlaying && beatReady && !atEnd &&
         events.queue.length === 0 && playback.state === "paused" && connected) sendControl({action: "play", until_next_event: true});
-  }, [wantPlaying, beatReady, reading, atEnd, events.queue.length, playback.state, connected, story]);
-  useEffect(() => {
-    if (story && reading) sendControl({action: "pause"});
-  }, [reading, story]);
+  }, [wantPlaying, beatReady, atEnd, events.queue.length, playback.state, connected, story]);
   useEffect(() => {
     if (reportedHeadline) setSelectedId(reportedHeadline.event_id);
   }, [reportedHeadline?.event_id]);
   useEffect(() => {
     if (followSuspended || !autoFollow) { lastFocus.current = undefined; return; }
-    if (story && followLocation && !reading) {
+    if (story && followLocation) {
       const key = `${followLocation.lat.toFixed(1)},${followLocation.lon.toFixed(1)}`;
       if (key !== lastFocus.current) {
-        mapRef.current?.focusLocation(followLocation, presentationSpeed === "fast");
+        mapRef.current?.focusLocation(followLocation, false);
         lastFocus.current = key;
       }
     }
-  }, [selectedId, autoFollow, followSuspended, presentationSpeed]);
+  }, [selectedId, autoFollow, followSuspended, story, followLocation]);
+
+  useEffect(() => {
+    if (!story) return;
+    const controller = new AbortController();
+    let retry: ReturnType<typeof setTimeout> | undefined;
+    async function refresh(start: boolean) {
+      try {
+        const response = await fetch(`/api/recap-films/${encodeURIComponent(run.id)}`, {
+          method: start ? "POST" : "GET",
+          headers: start ? { "Content-Type": "application/json" } : undefined,
+          body: start ? JSON.stringify({ tone }) : undefined,
+          signal: controller.signal,
+        });
+        const data = await response.json() as { status?: "queued" | "generating" | "ready" | "failed"; stage?: string; videoUrl?: string; message?: string };
+        if (!response.ok || !data.status) throw new Error(data.message ?? "The recap film job is unavailable.");
+        setFilm({ status: data.status, stage: data.stage ?? "starting", videoUrl: data.videoUrl, message: data.message });
+        if (data.status === "queued" || data.status === "generating") retry = setTimeout(() => void refresh(false), 2500);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setFilm({ status: "failed", stage: "failed", message: error instanceof Error ? error.message : "The recap film is unavailable." });
+      }
+    }
+    void refresh(true);
+    return () => { controller.abort(); if (retry) clearTimeout(retry); };
+  }, [run.id, story, tone]);
+
+  useEffect(() => {
+    if (story && atEnd && events.queue.length === 0 && film.status !== "idle" && !filmDismissed) setFilmOpen(true);
+  }, [story, atEnd, events.queue.length, film.status, filmDismissed]);
   useEffect(() => {
     if (story) document.querySelector(".workspace")?.scrollIntoView({block: "start"});
   }, [run.id]);
@@ -221,6 +244,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         if (data.kind === "snapshot") {
           if (!initialized && isDemo && (data.sim_time_minutes !== run.startMinute || data.playback.state !== "paused")) return;
           initialized = true;
+          waitingForHeadline.current = false;
           setConnection("connected");
           setSimTime(data.sim_time_minutes);
           setPlayback(data.playback);
@@ -236,6 +260,13 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         } else if (data.kind === "event" && data.event.status === "applied") {
           const { event } = data;
           if (seekFloorRef.current !== undefined && event.sim_time_minutes <= seekFloorRef.current) return;
+          if (story) {
+            // Do not rely only on the server's stop-at-event flag: the direct pause
+            // closes the event/clock message race and keeps playback stopped locally.
+            socket.send(JSON.stringify({ action: "pause" }));
+            waitingForHeadline.current = true;
+            setPlayback((previous) => ({ ...previous, state: "paused" }));
+          }
           setEvents((previous) => {
             if (previous.applied.some((applied) => applied.id === event.id)) return previous;
             return {
@@ -246,7 +277,11 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
           });
         } else if (data.kind === "clock") {
           setSimTime(data.sim_time_minutes);
-          setPlayback(data.playback);
+          if (story && waitingForHeadline.current && data.playback.state === "playing") {
+            setPlayback((previous) => ({ ...previous, state: "paused" }));
+          } else {
+            setPlayback(data.playback);
+          }
         }
       };
       socket.onclose = ({ code }) => {
@@ -282,12 +317,14 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   }
 
   function seek(minute: number) {
-    setWantPlaying(false); setReading(false); setBeatReady(true);
+    setWantPlaying(false); setBeatReady(true);
+    waitingForHeadline.current = false;
     seekFloorRef.current = minute;
     sendControl({ action: "seek", sim_time_minutes: minute });
   }
 
   function togglePlayback() {
+    if (story && events.queue.length > 0) return;
     if (story ? wantPlaying : playback.state === "playing") {
       setWantPlaying(false);
       sendControl({ action: "pause" });
@@ -295,11 +332,13 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
     }
     if (atEnd) seek(run.startMinute);
     if (simTime <= run.startMinute || atEnd) focusFirstEvent();
-    setWantPlaying(true); setReading(false);
+    setWantPlaying(true);
     sendControl(story ? { action: "play", until_next_event: true } : { action: "play" });
   }
 
-  const playbackLabel = (story ? wantPlaying && !atEnd : playback.state === "playing") ? "Pause" : atEnd ? "Replay" : "Play";
+  const playbackLabel = story && events.queue.length > 0 ? "Headline paused"
+    : (story ? wantPlaying && !atEnd : playback.state === "playing") ? "Pause" : atEnd ? "Replay" : "Play";
+  const filmPercent = film.stage === "render" ? 80 : film.stage === "assemble" ? 95 : film.stage === "narration" ? 35 : film.stage === "script" ? 15 : 0;
   const status = {
     connected: "Live stream connected",
     connecting: "Connecting to stream",
@@ -311,9 +350,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   return (
     <div className="workspace" data-tone={tone}>
       {story && <div className="story-toolbar">
-        <PresentationControls speed={presentationSpeed} onSpeed={setPresentationSpeed}
-          held={reading} onHold={() => setReading(v => !v)} onSkip={advanceStory}
-          autoFollow={autoFollow} suspended={followSuspended} onFollow={() => {
+        <PresentationControls autoFollow={autoFollow} suspended={followSuspended} onFollow={() => {
             if (followSuspended) { setFollowSuspended(false); setAutoFollow(true); }
             else setAutoFollow(v => !v);
           }} />
@@ -339,15 +376,32 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         )}
         <HeadlineAlert
           item={reportedHeadline}
-          // Story runs pause the clock on each headline; the bar shows when the story moves on.
-          dwellMs={story && wantPlaying && !reading && reportedHeadline ? headlineDelay(presentationSpeed, reportedHeadline) : undefined}
-          held={hovering || reading}
-          onHold={setHovering}
           queuedCount={Math.max(0, events.queue.length - 1)}
           onAdvance={advanceStory}
-          onDismiss={advanceStory}
         />
       </WorldMap>
+
+      {filmOpen && story && atEnd && events.queue.length === 0 && (
+        <div className="recap-modal-backdrop" role="presentation">
+          <section className="recap-modal" role="dialog" aria-modal="true" aria-labelledby="recap-modal-title">
+            <button className="recap-modal-close" type="button" onClick={() => { setFilmOpen(false); setFilmDismissed(true); }} aria-label="Close recap">×</button>
+            <p className="alt-kicker">Your run is complete</p>
+            <h2 id="recap-modal-title">The recap film</h2>
+            {film.status === "ready" && film.videoUrl ? (
+              <video className="recap-video" controls playsInline preload="metadata" src={film.videoUrl} />
+            ) : film.status === "failed" ? (
+              <p role="status">{film.message ?? "The recap film could not be rendered."}</p>
+            ) : (
+              <div className="recap-pending" role="status">
+                <span className="recap-spinner" aria-hidden="true" />
+                <p>{filmPercent > 0 ? `Your recap video is about ${filmPercent}% generated.` : "Your recap video is being prepared."}</p>
+                <span>It will appear here when rendering finishes.</span>
+              </div>
+            )}
+            <button className="recap-modal-done" type="button" onClick={() => { setFilmOpen(false); setFilmDismissed(true); }}>Close</button>
+          </section>
+        </div>
+      )}
 
       <motion.aside
         className="inspector"
@@ -379,7 +433,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
             className="play-button"
             type="button"
             onClick={togglePlayback}
-            disabled={!connected}
+            disabled={!connected || (story && events.queue.length > 0)}
             whileTap={{ scale: 0.96 }}
             transition={{ duration: 0.12 }}
           >
@@ -416,7 +470,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
           {pacing && (
             <p className="timeline-pacing" aria-label="Playback pacing">
               <span>{pacing.rate}</span>
-              <span>{story ? (atEnd ? "at the end" : "Story pace controls reading time") : pacing.left}</span>
+              <span>{story ? (events.queue.length > 0 ? "waiting for you to continue" : atEnd ? "at the end" : "story playback") : pacing.left}</span>
             </p>
           )}
         </div>

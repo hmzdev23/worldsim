@@ -414,7 +414,6 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 .headline-alert-actions button { display: inline-flex; align-items: center; gap: 5px; min-height: 31px; padding: 4px 8px; border: 1px solid transparent; border-radius: 6px; font-size: 12px; font-weight: 550; white-space: nowrap; }
 .headline-alert-actions .headline-alert-focus { border-color: #454a52; background: #22262b; color: var(--text); }
 .headline-alert-advance { background: transparent; color: var(--text); }
-.headline-alert-dismiss { background: transparent; color: var(--muted); }
 .headline-alert-actions button:hover { border-color: #777e88; background-color: #24282e; color: var(--text); }
 .headline-alert-actions button:focus-visible { outline-offset: 0; }
 
@@ -900,8 +899,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 .motion-beam { position: absolute; left: 14px; top: 30px; width: 36px; height: 60px; translate: 0 var(--ufo-y, 0);
   background: linear-gradient(#bff4ffcc, #9fe8ff22); clip-path: polygon(35% 0, 65% 0, 100% 100%, 0 100%); opacity: var(--ufo-beam, 0); }
 
-/* Headline pop-up: a compact card at the right of the map, not a panel across it.
-   It slides in, the story waits while it is up (thin bar = time left; hover holds it), then it goes. */
+/* Headline pop-up: a compact card at the right of the map. The story waits until the viewer advances. */
 .headline-alert {
   inset: auto 58px 18px auto;
   width: min(350px, calc(100% - 82px));
@@ -919,10 +917,20 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 .headline-alert-actions { padding: 3px 6px; }
 .headline-alert-actions button { min-height: 26px; padding: 2px 6px; font-size: 11px; }
 .headline-alert-queue > span { font-size: 10px; }
-.headline-alert-timer { position: relative; flex: none; height: 3px; background: #ffffff10; }
-.headline-alert-timer span { position: absolute; inset: 0; background: var(--accent); transform-origin: left; animation: headline-dwell var(--dwell) linear forwards; }
-.headline-alert-timer[data-held="true"] span { animation-play-state: paused; }
-@keyframes headline-dwell { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.play-button:disabled { opacity: .6; cursor: wait; }
+.recap-modal-backdrop { position: fixed; z-index: 50; inset: 0; display: grid; place-items: center; padding: 20px; background: #07090dcc; backdrop-filter: blur(8px); }
+.recap-modal { position: relative; display: grid; gap: 14px; width: min(760px, 100%); max-height: min(90svh, 900px); overflow: auto; padding: 28px; border: 1px solid #555a62; border-radius: 12px; background: var(--surface); box-shadow: 0 24px 80px #000b; }
+.recap-modal h2 { margin: -10px 0 0; font-size: clamp(24px, 4vw, 34px); }
+.recap-modal > p { margin: 0; }
+.recap-modal-close { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border: 1px solid var(--line); border-radius: 6px; background: var(--canvas); color: var(--text); font-size: 24px; line-height: 1; }
+.recap-video { display: block; width: 100%; max-height: 64svh; background: #090a0b; border-radius: 8px; }
+.recap-pending { display: grid; justify-items: center; gap: 10px; min-height: 190px; align-content: center; padding: 24px; border: 1px solid var(--line); border-radius: 8px; background: var(--canvas); text-align: center; }
+.recap-pending p { margin: 0; font-size: 18px; font-weight: 600; }
+.recap-pending > span:last-child { color: var(--muted); font-size: 13px; }
+.recap-spinner { width: 28px; height: 28px; border: 3px solid #ffffff26; border-top-color: var(--accent); border-radius: 50%; animation: recap-spin .9s linear infinite; }
+.recap-modal-done { justify-self: end; min-height: 38px; padding: 7px 15px; border: 1px solid var(--line); border-radius: 6px; background: var(--canvas); color: var(--text); }
+@keyframes recap-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .recap-spinner { animation-duration: 3s; } }
 @media (min-width: 681px) and (max-height: 780px) {
   .headline-alert { bottom: 14px; width: min(330px, calc(100% - 82px)); max-height: min(64%, 300px); }
   .headline-alert h2 { font-size: 16px; }

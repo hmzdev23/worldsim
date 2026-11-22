@@ -101,7 +101,7 @@ These came from #80, #82 and the onboarding work and are now deleted:
 **Kept:**
 - The ten scenario fixtures, now offered as starters (`GET /starters`, `fixtures/starters.json`).
 - The nuclear country picker and "change the starting conditions", now optional exploration.
-- The cinematic presentation: beat pauses, camera that follows events, headline dwell. Every run started from the home screen now plays as a story, and nothing waits for input.
+- The cinematic presentation: the clock stops at each event, the camera follows it, and the next headline waits for the viewer to advance it.
 - Hamza's map effects.
 
 #79 and #81 also add player mode. They are superseded by this branch.
@@ -140,6 +140,8 @@ RECAP_ESTIMATE=1 scripts/recap-film.sh RUN_ID                 # silent preview, 
 
 Narration needs `ELEVENLABS_API_KEY` in the environment or in the untracked `.env.local`. Generated scripts, voice clips and MP4s are git-ignored.
 
+For prompted and starter runs, the web app starts the same recap build in a background process as soon as the run opens. It uses an isolated workspace per run. Once the viewer has advanced the last headline and the simulation is complete, a popup opens with the video if it is ready; otherwise it reports the approximate render stage and updates when the film is ready. The app needs the local Node/Python/ffmpeg/Playwright/Three setup and ElevenLabs credentials described above.
+
 ## Tests
 
 | Suite | Count | New tests |
@@ -161,5 +163,5 @@ cd apps/web && npx playwright test --project=desktop
 ## Known limits
 
 - **Not run with the real model yet:** the seeded prompt directions haven't been tried with the real Director (Hamza's Codex setup). Starters work offline.
-- **Films aren't made from the web page:** the recap film is a local command. Rendering takes a few minutes in headless Chromium, so the web app doesn't start it yet.
+- **Film generation is local:** the web app background worker uses the same local renderer and credentials as the command-line build. It depends on the local Node server staying up while the film renders.
 - **Starter variation is shallow:** offline starters vary timing, severity, scale and which side branches happen. A different chain of events needs a model run, which happens whenever the prompt or starting conditions are edited.

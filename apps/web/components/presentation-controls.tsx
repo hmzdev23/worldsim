@@ -1,14 +1,8 @@
-import type { PresentationSpeed } from "../lib/presentation";
-export function PresentationControls({speed, onSpeed, held, onHold, onSkip, autoFollow, onFollow, suspended}: {
- speed: PresentationSpeed; onSpeed: (s: PresentationSpeed) => void; held: boolean; onHold: () => void;
- onSkip: () => void; autoFollow: boolean; onFollow: () => void; suspended: boolean;
+export function PresentationControls({autoFollow, onFollow, suspended}: {
+ autoFollow: boolean; onFollow: () => void; suspended: boolean;
 }) {
  return <section className="presentation-controls" aria-label="Story presentation">
-  <div><strong>Story presentation</strong><span>Reading pace · separate from simulation speed</span></div>
-  <details className="pace-settings"><summary>Pace settings</summary><div role="group" aria-label="Presentation speed">{(["cinematic","normal","fast"] as const).map(s =>
-    <button type="button" key={s} aria-pressed={speed === s} onClick={() => onSpeed(s)}>{s[0].toUpperCase()+s.slice(1)}</button>)}</div><p>News reading pace. Simulation speed is controlled on the timeline.</p></details>
-  <button type="button" aria-pressed={held} onClick={onHold}>{held ? "Continue presentation" : "Hold to read"}</button>
-  <button type="button" onClick={onSkip}>Advance story</button>
+  <div><strong>Story presentation</strong><span>Headlines wait for you to continue.</span></div>
   <button type="button" aria-pressed={autoFollow && !suspended} onClick={onFollow}>Auto-follow: {autoFollow && !suspended ? "on" : suspended ? "suspended" : "off"}</button>
  </section>;
 }
