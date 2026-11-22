@@ -53,7 +53,7 @@ Hamza uses Codex. Mathys, Anthony, and Amir can use Claude Code or their own cod
 (`claude -p` on Haiku at low effort) on the computer running the simulation
 server, using that person's signed-in Claude account. Each run gets a new
 random seed, so the same prompt gives a different story every time. Set
-`WORLDSIM_DIRECTOR_ENGINE=codex` to use Codex instead.
+The demo launcher uses Codex by default. Set `WORLDSIM_DIRECTOR_ENGINE=claude` to use Claude Code.
 Running the Japan earthquake demo does not require Codex or a model login.
 
 - **Already have WORLD//SIM open locally?** Use that folder in your coding AI and go straight to step 3.

@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
+export WORLDSIM_DIRECTOR_ENGINE="${WORLDSIM_DIRECTOR_ENGINE:-codex}"
 
 if [ ! -x "$ROOT/apps/web/node_modules/.bin/next" ]; then
   echo "Web dependencies are missing. From the repo root, run: (cd apps/web && npm ci)" >&2
