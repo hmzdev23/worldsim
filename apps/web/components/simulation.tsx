@@ -8,6 +8,9 @@ import { listStarters, pauseRun, prepareScenario } from "../lib/scenario-api";
 import { generationStageLabel, tones, type ScenarioRun, type Starter, type Tone } from "../lib/scenario";
 import { RunConsole } from "./run-console";
 import { ScenarioStarters, type StarterLaunch } from "./scenario-starters";
+
+// Used when the box is empty: press Enter (or Simulate) to run it.
+const DEFAULT_PROMPT = "What if a volcanic eruption closed Iceland’s main airport for two days?";
 import { ToneSelector } from "./tone-selector";
 
 const toneKey = "worldsim:tone";
@@ -119,12 +122,15 @@ function ScenarioWorkspace() {
   }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void start({ prompt: prompt.trim(), tone: nextTone });
+    // An empty box runs the example shown in it, so Enter alone starts a run.
+    void start({ prompt: prompt.trim() || DEFAULT_PROMPT, tone: nextTone });
   }
 
   const launchMessage = launch.status === "failed" ? launch.message : busy
     ? `Preparing a new run${stage ? ` · ${generationStageLabel(stage)}` : ""}. Elapsed: ${elapsedSeconds}s.`
-    : "Describe any situation. Every run rolls a new seed, so it never plays out the same way twice.";
+    : prompt.trim()
+      ? "Press Enter to simulate (Shift+Enter for a new line). Every run rolls a new seed, so it never plays out the same way twice."
+      : "Describe any situation, or press Enter to run the example. Every run rolls a new seed, so it never plays out the same way twice.";
 
   return <main className={`simulation-shell view-${view}`}>
     <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span><span>WORLD<span className="wordmark-slashes">//</span>SIM</span></h1>
@@ -140,16 +146,23 @@ function ScenarioWorkspace() {
       <p>Describe a situation and watch the world respond on the map. Run it again and a different, plausible future unfolds.</p>
     </section>}
     <form className="scenario-launch" onSubmit={submit}><label htmlFor="scenario-prompt">Scenario prompt</label>
-      <div className="scenario-input-row"><textarea id="scenario-prompt" rows={2} maxLength={2000} required value={prompt} disabled={busy}
-          placeholder="What if a volcanic eruption closed Iceland’s main airport for two days?"
+      <div className="scenario-input-row"><textarea id="scenario-prompt" rows={2} maxLength={2000} value={prompt} disabled={busy}
+          placeholder={DEFAULT_PROMPT} aria-describedby="prompt-enter-hint"
+          onKeyDown={(e) => {
+            // Enter runs the scenario; Shift+Enter adds a line.
+            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+              e.preventDefault();
+              e.currentTarget.form?.requestSubmit();
+            }
+          }}
           onChange={(e) => { setPrompt(e.currentTarget.value); if (launch.status !== "idle") setLaunch({ status: "idle" }); }} />
-          <button className="generate-button" type="submit" disabled={busy || !prompt.trim()}>{busy ? "Preparing…" : launch.status === "failed" ? "Try again" : "Simulate"}<ArrowRight size={16} aria-hidden="true" /></button></div>
+          <button className="generate-button" type="submit" disabled={busy}>{busy ? "Preparing…" : launch.status === "failed" ? "Try again" : "Simulate"}<ArrowRight size={16} aria-hidden="true" /></button></div>
         <div className="scenario-tone-row">
           <span id="tone-label">Tone</span>
           <ToneSelector value={shownTone} onChange={chooseTone} />
           <span className="tone-hint">{shownTone === "straight" ? "Serious presentation." : "Satire is a fictional presentation layer. Facts and impact estimates stay unchanged."}</span>
         </div>
-        <div className="scenario-launch-footer"><p className={launch.status === "failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
+        <div className="scenario-launch-footer"><p id="prompt-enter-hint" className={launch.status === "failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
           <button className="demo-button" type="button" onClick={loadDemo}>Japan demo</button></div>
       </form>
     {view === "home" && <ScenarioStarters starters={starters} loading={startersLoading} error={startersError} busy={busy}
