@@ -12,6 +12,7 @@ type Props = {
   onBranch: (decisionId: string) => void;
   onCompare: () => void;
   onSelectRole?: () => void;
+  onSelectScenario?: () => void;
 };
 
 const choiceText: Record<string, string> = {
@@ -21,7 +22,7 @@ const choiceText: Record<string, string> = {
   free_text: "Own decision (not simulated offline)",
 };
 
-export function PlayerSummaryPanel({ summary, busy, onTryAgain, onBranch, onCompare, onSelectRole }: Props) {
+export function PlayerSummaryPanel({ summary, busy, onTryAgain, onBranch, onCompare, onSelectRole, onSelectScenario }: Props) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => headingRef.current?.focus(), []);
   const { score } = summary;
@@ -113,7 +114,7 @@ export function PlayerSummaryPanel({ summary, busy, onTryAgain, onBranch, onComp
         <button type="button" onClick={onCompare}>Open the alternate timeline</button>
         <button type="button" disabled={busy} onClick={onTryAgain}>Try again</button>
         <button type="button" onClick={onSelectRole}>Try a different role</button>
-        <button type="button" onClick={onSelectRole}>Return to scenario selection</button>
+        <button type="button" onClick={onSelectScenario}>Return to scenario selection</button>
       </div>
     </section>
   );

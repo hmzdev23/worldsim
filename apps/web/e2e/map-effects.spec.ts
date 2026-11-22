@@ -107,6 +107,7 @@ test("an outbreak without a reported radius stays a point pulse", () => {
 test("outbreaks accumulate, disasters ring, and only a supported aid route is drawn", async ({ page }) => {
   await mockScenarioService(page);
   await page.goto("/");
+  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
   const map = page.getByRole("region", { name: "Interactive world map" });
   const effects = map.getByRole("group", { name: "Map effects" });
   const playback = page.getByRole("region", { name: "Simulation playback" });
@@ -153,6 +154,7 @@ test.describe("with reduced motion", () => {
   test("the aid marker rests at the destination instead of moving", async ({ page }) => {
     await mockScenarioService(page);
     await page.goto("/");
+  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
     const map = page.getByRole("region", { name: "Interactive world map" });
     await generate(page, "A new virus spreads from Singapore while aid moves.", "Pandemic and aid");
     await page.getByRole("region", { name: "Simulation playback" }).getByRole("button", { name: "Play", exact: true }).click();

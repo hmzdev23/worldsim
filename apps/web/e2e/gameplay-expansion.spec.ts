@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { briefMission } from "./helpers/onboarding";
 import fixture from "../../../contracts/fixtures/japan-earthquake.json";
 import { japanDemo } from "../lib/earthquake";
 
@@ -16,14 +17,12 @@ for (const sample of [
     const errors: string[] = [];
     page.on("pageerror", e => errors.push(e.message));
     await page.goto("/");
-    const library = page.getByRole("region", {name: "Play a role", exact: true});
-    await expect(library.locator(".scenario-choice")).toHaveCount(10);
-    await library.getByLabel("Scenario", {exact: true}).selectOption(sample.fixture);
-    await library.getByLabel("Role", {exact: true}).selectOption(sample.role);
-    await expect(library.getByRole("region", {name: "Mission briefing"})).toContainText("Your mission");
+    await briefMission(page, sample.fixture === "global-pandemic" ? "Global Pandemic" : sample.title,
+      sample.role === "medical" ? "Hospital director" : sample.role === "diplomat" ? "International diplomat" : "City mayor");
+    await page.getByRole("radio", {name:/Take your time/}).check();
     await page.screenshot({path: info.outputPath("library.png"), fullPage:true});
     const created = page.waitForResponse(r => r.request().method() === "POST" && new URL(r.url()).pathname.endsWith("/scenarios"));
-    await library.getByRole("button", {name: "Play this role"}).click();
+    await page.getByRole("button", {name: "Begin simulation"}).click();
     const runId = (await (await created).json()).id;
     await page.evaluate(() => {
       const seen: {id: string; minute: number}[] = [];
@@ -36,6 +35,7 @@ for (const sample of [
       new MutationObserver(record).observe(document.body,{subtree:true,childList:true,attributes:true}); record();
     });
     const controls=page.getByRole("region", {name:"Story presentation"});
+    await controls.getByText("Pace settings", {exact:true}).click();
     await expect(controls.getByRole("button",{name:"Normal",exact:true})).toHaveAttribute("aria-pressed","true");
     await controls.getByRole("button",{name:"Hold to read"}).click();
     await expect(controls.getByRole("button",{name:"Continue presentation"})).toHaveAttribute("aria-pressed","true");
@@ -53,7 +53,6 @@ for (const sample of [
     await controls.getByRole("button",{name:"Auto-follow: suspended"}).click();
     const playback=page.getByRole("region",{name:"Simulation playback"});
     await playback.getByRole("button",{name:"4×"}).click();
-    await playback.getByRole("button",{name:"Play",exact:true}).click();
     const card=page.getByRole("dialog");
     let count=0;
     for (;;) {
@@ -93,21 +92,21 @@ for (const sample of [
     await page.screenshot({path:info.outputPath("results.png"),fullPage:true});
     expect(errors).toEqual([]);
     await page.getByRole("button",{name:"Try a different role"}).click();
-    await expect(library.getByLabel("Scenario",{exact:true})).toHaveValue(sample.fixture);
+    await expect(page.getByRole("heading", {name:"Who will you be?"})).toBeVisible();
+    await expect(page.getByRole("region", {name:"Game setup"}).getByRole("button", {pressed:true})).toHaveCount(1);
   });
 }
 
 
 test("normal story cadence holds the deterministic clock and permits reading / skipping", async ({page}) => {
   await page.goto("/");
-  const library=page.getByRole("region",{name:"Play a role",exact:true});
-  await library.getByLabel("Scenario",{exact:true}).selectOption("alien-invasion");
-  await library.getByRole("button",{name:"Play this role"}).click();
+  await briefMission(page, "Alien Invasion", "International diplomat");
+  await page.getByRole("radio", {name:/Take your time/}).check();
+  await page.getByRole("button",{name:"Begin simulation"}).click();
   await expect(page.getByRole("region",{name:"Story presentation"})).toBeVisible();
   const playback=page.getByRole("region",{name:"Simulation playback"});
   const position=playback.getByRole("slider");
   const initial=await position.inputValue();
-  await playback.getByRole("button",{name:"Play",exact:true}).click();
   await expect.poll(()=>position.inputValue()).not.toBe(initial);
   const firstBeat=await position.inputValue();
   await page.waitForTimeout(1300);
@@ -144,6 +143,7 @@ test("a report without grounded geography stays in history without crashing the 
     });
   });
   await page.goto("/");
+  await page.getByRole("button", {name:"Watch a simulation",exact:true}).click();
   await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("button",{name:"Play",exact:true}).click();
   await expect(page.getByRole("region",{name:"WORLD//WIRE"})).toContainText("Unlocated report");

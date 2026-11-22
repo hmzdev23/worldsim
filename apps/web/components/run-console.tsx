@@ -97,7 +97,7 @@ function usePlayer(run: ScenarioRun) {
   return { state, summary, refresh };
 }
 
-export function RunConsole({ run, isDemo, onRestart, onSelectRole }: { run: ScenarioRun; isDemo: boolean; onRestart?: () => void; onSelectRole?: () => void }) {
+export function RunConsole({ run, isDemo, onRestart, onSelectRole, onSelectScenario, autoStart = false, initialSpeed = 1 }: { run: ScenarioRun; isDemo: boolean; onRestart?: () => void; onSelectRole?: () => void; onSelectScenario?: () => void; autoStart?: boolean; initialSpeed?: number }) {
   const mapRef = useRef<WorldMapHandle>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const seekFloorRef = useRef<number | undefined>(undefined);
@@ -133,6 +133,14 @@ export function RunConsole({ run, isDemo, onRestart, onSelectRole }: { run: Scen
   }, [manualSerial, followSuspended]);
   const [selectedId, setSelectedId] = useState<string>();
   const lastBeat = useRef(run.startMinute);
+  const started = useRef(false);
+  useEffect(() => {
+    if (!autoStart || !connected || started.current) return;
+    started.current = true;
+    sendControl({ action: "speed", speed: initialSpeed });
+    setWantPlaying(true);
+    // The presentation scheduler starts the clock after any opening report.
+  }, [autoStart, connected, initialSpeed]);
   const [beatSerial, setBeatSerial] = useState(0);
   const followLocation = cardWaiting ? events.applied.find(e => e.id === pending?.trigger.event_id)?.location
     : events.applied.find(e => e.id === selectedId)?.location;
@@ -213,6 +221,7 @@ export function RunConsole({ run, isDemo, onRestart, onSelectRole }: { run: Scen
       let initialized = false;
       socket.onopen = () => {
         if (stopped || !isDemo) return;
+        seekFloorRef.current = run.startMinute;
         socket.send(JSON.stringify({ action: "pause" }));
         socket.send(JSON.stringify({ action: "seek", sim_time_minutes: run.startMinute }));
       };
@@ -275,6 +284,7 @@ export function RunConsole({ run, isDemo, onRestart, onSelectRole }: { run: Scen
     return () => {
       stopped = true;
       if (retryTimer) clearTimeout(retryTimer);
+      if (socketRef.current?.readyState === WebSocket.OPEN) socketRef.current.send(JSON.stringify({action: "pause"}));
       socketRef.current?.close();
       socketRef.current = null;
     };
@@ -439,7 +449,7 @@ export function RunConsole({ run, isDemo, onRestart, onSelectRole }: { run: Scen
       >
         {run.player && player.summary && finished && (
           <PlayerSummaryPanel summary={player.summary} busy={playerBusy}
-            onTryAgain={() => onRestart?.()} onSelectRole={onSelectRole} onBranch={(id) => branchFrom(id)} onCompare={showComparison} />
+            onTryAgain={() => onRestart?.()} onSelectRole={onSelectRole} onSelectScenario={onSelectScenario} onBranch={(id) => branchFrom(id)} onCompare={showComparison} />
         )}
         <div className="scenario-summary">
           <div className="scenario-status">

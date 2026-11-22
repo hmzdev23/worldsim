@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { briefMission } from "./helpers/onboarding";
 
 // Player mode (prototype): the real scenario service plays the offline pandemic
 // fixture as the regional health minister. One skip ("Do nothing") and two
@@ -13,16 +14,12 @@ test("pandemic as health minister: skip, two decisions, score and summary", asyn
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("/");
-  const launch = page.getByRole("region", { name: /Play a role/ });
-  await launch.getByLabel("Scenario").selectOption({ label: "Novel virus outbreak" });
-  await launch.getByLabel("Role").selectOption({ label: "Regional health minister" });
-  await launch.getByRole("button", { name: "Play this role" }).click();
-  await expect(page.getByRole("heading", { name: "Novel virus outbreak · Regional health minister" })).toBeVisible();
-
+  await briefMission(page, "Global Pandemic", "Regional health minister");
+  await page.getByRole("button", {name: "Begin simulation"}).click();
+  await expect(page.getByRole("heading", {name: "Novel virus outbreak · Regional health minister"})).toBeVisible();
+  await page.getByText("Pace settings", {exact:true}).click();
   await page.getByRole("button", { name: "Fast", exact: true }).click();
-  const playback = page.getByRole("region", { name: "Simulation playback" });
-  await playback.getByRole("button", { name: "4×" }).click();
-  await playback.getByRole("button", { name: "Play", exact: true }).click();
+  const playback = page.getByRole("region", {name: "Simulation playback"});
 
   // Card 1: the outbreak reaches a new country. Check the card, then skip it.
   const card = page.getByRole("dialog");
@@ -83,7 +80,7 @@ test("pandemic as health minister: skip, two decisions, score and summary", asyn
   if (testInfo.project.name === "mobile") {
     await summary.getByRole("button", { name: "Try again", exact: true }).click();
     await expect(summary).toHaveCount(0);
-    await expect(playback.getByRole("button", { name: "Play", exact: true })).toBeEnabled();
+    await expect(playback.getByRole("button", { name: "Pause", exact: true })).toBeEnabled();
     await expect(page.getByRole("dialog")).toHaveCount(0);
     return;
   }
