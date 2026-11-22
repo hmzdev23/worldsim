@@ -52,6 +52,9 @@ PUBLIC_ERRORS = {
     ),
     "codex_failed": ("unavailable", True, 503, "The Director is unavailable right now. Try again shortly."),
     "codex_missing": ("unavailable", False, 503, "The Director is not set up on this server."),
+    "claude_timeout": ("timeout", True, 504, "The Director took too long to predict this scenario. Try again."),
+    "claude_failed": ("unavailable", True, 503, "The Director is unavailable right now. Try again shortly."),
+    "claude_missing": ("unavailable", False, 503, "The Director is not set up on this server."),
     "fixture_missing": ("unavailable", False, 500, "The requested sample scenario is not available."),
 }  # fmt: skip
 FALLBACK_ERROR = ("unavailable", True, 500, "Something went wrong while preparing the scenario. Try again.")

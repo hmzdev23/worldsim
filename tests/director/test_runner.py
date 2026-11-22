@@ -6,6 +6,7 @@ stub runner standing in for the Codex subprocess.
 
 import copy
 import json
+import os
 import subprocess
 import sys
 import unittest
@@ -126,6 +127,7 @@ class FixtureRunTest(unittest.TestCase):
         self.assertTrue(all(e["location"]["country_code"] in ("ISL", "GBR") for e in sims["run-ice"].snapshot()["events"]))
 
 
+@mock.patch.dict(os.environ, {"WORLDSIM_DIRECTOR_ENGINE": "codex"})  # these tests drive a fake Codex
 class ModelRunTest(unittest.TestCase):
     """The same call without a fixture goes through the Codex path."""
 

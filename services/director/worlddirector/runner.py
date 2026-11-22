@@ -16,7 +16,7 @@ import subprocess
 from typing import Optional
 
 from .contract import DEFAULT_TONE, SLUG_PATTERN
-from .director import DEFAULT_EFFORT, DEFAULT_MODEL, DEFAULT_TIMEOUT_S, Runner, _clean_scenario, check_tone, generate
+from .director import DEFAULT_TIMEOUT_S, Runner, _clean_scenario, check_tone, director_engine, generate
 from .errors import DirectorError
 from .timing import Stages, stage
 
@@ -40,6 +40,9 @@ _PUBLIC = {
     ),
     "codex_failed": ("unavailable", True, 503, "The Director is unavailable right now. Try again shortly."),
     "codex_missing": ("unavailable", False, 503, "The Director is not set up on this server."),
+    "claude_timeout": ("timeout", True, 504, "The Director took too long to predict this scenario. Try again."),
+    "claude_failed": ("unavailable", True, 503, "The Director is unavailable right now. Try again shortly."),
+    "claude_missing": ("unavailable", False, 503, "The Director is not set up on this server."),
     "fixture_missing": ("unavailable", False, 500, "The requested sample scenario is not available."),
 }  # fmt: skip
 _FALLBACK = ("unavailable", True, 500, "Something went wrong while preparing the scenario. Try again.")
@@ -52,12 +55,13 @@ def prepare_scenario(
     branch_id: str = "main",
     timeout_s: float = DEFAULT_TIMEOUT_S,
     fixture: Optional[str] = None,
-    model: str = DEFAULT_MODEL,
-    effort: str = DEFAULT_EFFORT,
+    model: Optional[str] = None,
+    effort: Optional[str] = None,
     runner: Runner = subprocess.run,
     stages: Optional[Stages] = None,
     tone: str = DEFAULT_TONE,
     seed: Optional[int] = None,
+    engine: Optional[str] = None,
 ) -> dict:
     """Predict a new, independent run and return its proposed event batch.
 
@@ -69,6 +73,8 @@ def prepare_scenario(
             when each stage starts (prompt, model, parse, validate).
     tone: "straight" | "satirical" | "unhinged"; non-straight tones add the
           optional payload.satire layer in the same model call.
+    engine: "claude" (default: Claude Code on Haiku, low effort) or "codex";
+            unset reads $WORLDSIM_DIRECTOR_ENGINE.
     seed: the run's variation seed; every run should get a new one
           (variation.new_seed) so no two runs are the same.
     Always starts from an empty history. Raises DirectorError on any failure.
@@ -103,11 +109,12 @@ def prepare_scenario(
             stages=stages,
             seed=seed,
             tone=tone,
+            engine=engine,
         )
     except DirectorError:
         raise
-    except Exception as exc:  # e.g. OSError launching codex: still a typed failure
-        raise DirectorError("codex_failed", "The Director could not run", repr(exc)) from None
+    except Exception as exc:  # e.g. OSError launching the CLI: still a typed failure
+        raise DirectorError(f"{director_engine(engine)}_failed", "The Director could not run", repr(exc)) from None
 
     events = batch.get("events") or []
     if (
