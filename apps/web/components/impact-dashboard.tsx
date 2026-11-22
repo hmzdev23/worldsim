@@ -1,4 +1,6 @@
+import { motion, useReducedMotion } from "motion/react";
 import type { ImpactSnapshot, ScenarioEvent } from "../lib/scenario";
+import { formatSimTime } from "../lib/scenario";
 
 const cards = [
   { key: "deaths", label: "Deaths", format: integer },
@@ -18,10 +20,15 @@ function latestImpact(events: ScenarioEvent[]): ImpactSnapshot | undefined {
 }
 function Sparkline({ values }: { values: number[] }) {
   const max = Math.max(1, ...values);
-  const points = values.map((value, index) => `${(index / (values.length - 1)) * 100},${30 - (value / max) * 26}`).join(" ");
-  return <svg className="impact-sparkline" viewBox="0 0 100 32" aria-hidden="true"><polyline points={points} /></svg>;
+  const points = values.map((value, index) => `${(index / Math.max(1, values.length - 1)) * 100},${28 - (value / max) * 22}`).join(" ");
+  return <svg className="impact-sparkline" viewBox="0 0 100 32" preserveAspectRatio="none" aria-hidden="true">
+    <path className="impact-sparkline-baseline" d="M0 29H100" />
+    <polyline points={points} />
+    {values.length > 0 && <circle cx="100" cy={28 - (values.at(-1)! / max) * 22} r="2.2" />}
+  </svg>;
 }
 export function ImpactDashboard({ events }: { events: ScenarioEvent[] }) {
+  const reducedMotion = useReducedMotion();
   const impact = latestImpact(events);
   const environmental = [
     impact?.flooded_area_km2 == null ? null : `${integer(impact.flooded_area_km2)} km² flooded`,
@@ -52,16 +59,31 @@ export function ImpactDashboard({ events }: { events: ScenarioEvent[] }) {
           {reportedCards.map(({ card, value }) => {
             const history = events.flatMap((event) => {
               const entry = numeric(event.payload.impacts?.[card.key]);
-              return entry === undefined ? [] : [entry];
+              return entry === undefined ? [] : [{ value: entry, time: event.sim_time_minutes }];
             });
+            const previous = history.length > 1 ? history.at(-2)?.value : undefined;
+            const change = previous === undefined ? undefined : value - previous;
+            const trendRange = history.length > 1
+              ? `${formatSimTime(history[0].time)} to ${formatSimTime(history.at(-1)!.time)}`
+              : undefined;
+            const trendValues = history.map(({ value: entry }) => entry);
             return (
-              <div className="impact-card" key={card.key}>
+              <motion.div className="impact-card" key={card.key} layout
+                initial={reducedMotion ? false : { opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: reducedMotion ? 0 : 0.2 }}>
                 <dt>{card.label}</dt>
                 <dd>
                   {card.format(value)}{"suffix" in card ? card.suffix : ""}
-                  {history.length > 1 && <Sparkline values={history} />}
+                  {change !== undefined && <span className="impact-change" data-direction={change > 0 ? "up" : change < 0 ? "down" : "flat"}>
+                    {change > 0 ? "+" : change < 0 ? "−" : ""}{card.format(Math.abs(change))}{"suffix" in card ? card.suffix : ""} since prior report
+                  </span>}
+                  {history.length > 1 && <div className="impact-trend" aria-label={`${card.label} reported trend, ${trendRange}`}>
+                    <Sparkline values={trendValues} />
+                    <div className="impact-trend-range"><span>{formatSimTime(history[0].time)}</span><span>{formatSimTime(history.at(-1)!.time)}</span></div>
+                  </div>}
                 </dd>
-              </div>
+              </motion.div>
             );
           })}
         </dl>
