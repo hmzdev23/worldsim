@@ -1,0 +1,5 @@
+Owner: Anthony. Scope services/simulation/ and tests/simulation/. Coordinate any additive stream or control contract with all owners in #13.
+
+For both short and year-long scenarios, make the default playback traverse about 5% of the scenario duration per clock tick, with existing playback speed multipliers. Treat 5% as progress pacing, not an event schedule: preserve each event's authored simulated timestamp and canonical ordering. Multiple events crossed in a tick must all emit exactly once, including equal-time events. Cover zero-duration/empty timelines, fractional minutes, pause, speeds, clamping, seek/replay, multiple independent runs, and newly appended events. Keep the server the authoritative clock and maintain the existing Japan demo path. Propose how the frontend displays and changes this relative pacing before changing shared controls. Agree pacing interval and any configuration with Hamza in #13.
+
+Add deterministic tests on both a multi-hour and multi-month fixture, and run the simulation and offline smoke suites. No model credentials required.

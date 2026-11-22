@@ -23,7 +23,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from .engine import Message, Simulation
+from .engine import PACE_FRACTION, Message, Simulation
 
 log = logging.getLogger("worldsim_sim")
 
@@ -159,6 +159,7 @@ class Run:
                 event_count=len(sim.timeline),
                 sim_time_minutes=sim.now,
                 playback=sim.playback,
+                pacing=sim.pacing,
             )
         if self.error is not None:
             out["error"] = self.error
@@ -193,13 +194,16 @@ class ScenarioRegistry:
         max_generating: int = 2,
         max_runs: int = 16,
         fixture: str | None = None,
+        pace: float = PACE_FRACTION,
     ) -> None:
+        Simulation(simulation_id="pace-check", pace=pace)  # same validation as the engine
         self.generator = generator
         self.timeout_s = timeout_s
         self.grace_s = 5.0  # backstop beyond timeout_s if the generator ignores it
         self.max_generating = max_generating
         self.max_runs = max_runs
         self.fixture = fixture  # when set, every run uses this Director fixture (offline demo/E2E)
+        self.pace = pace  # fraction of each run's span per clock tick at 1x (SIM-005)
         self._runs: dict[str, Run] = {}
         self._tasks: set[asyncio.Task] = set()
 
@@ -242,6 +246,8 @@ class ScenarioRegistry:
             return
         first = sim.timeline[0]["sim_time_minutes"]
         run.start_minutes = max(0, first - 1)
+        sim.start_minutes = run.start_minutes
+        sim.pace = self.pace
         sim.seek(run.start_minutes)
         run.channel = Channel(sim)
         run.status = "ready"
