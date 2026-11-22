@@ -222,7 +222,7 @@ class SeekAndBranchTests(unittest.TestCase):
         first = play_until_card(player)
         player.decide(first.id, option_id="screen_arrivals", at_minutes=player.sim.now)
         second = play_until_card(player)
-        player.decide(second.id, option_id="ease_restrictions", at_minutes=player.sim.now)
+        player.decide(second.id, option_id=second.options[0]["id"], at_minutes=player.sim.now)
         self.assertEqual(player.sim.branch_id, "b2")
         with self.assertRaises(PlayerError) as caught:
             player.control({"action": "seek", "sim_time_minutes": 8000})
@@ -344,7 +344,8 @@ class PlayerServerTests(unittest.TestCase):
 
     def test_player_run_over_http(self):
         scenarios = self.client.get("/player/scenarios").json()["scenarios"]
-        self.assertEqual({s["fixture"] for s in scenarios}, set(FIXTURES))
+        from worlddirector.runner import RUN_FIXTURES
+        self.assertEqual({s["fixture"] for s in scenarios}, set(RUN_FIXTURES))
         run_id = self.start()
         status = self.client.get(f"/scenarios/{run_id}").json()
         self.assertEqual((status["mode"], status["role"], status["branch_id"]), ("player", "health_minister", "main"))

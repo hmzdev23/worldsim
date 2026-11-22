@@ -42,3 +42,7 @@ This is a prototype for team review. Design: [docs/plans/player-mode.md](../../d
 ## To decide
 - Whether to keep voided segments in memory (they are now, for review).
 - Whether free text on model runs should run in the background, with a stage, instead of inside the request.
+
+
+## Local gameplay expansion
+PlayerSession now exposes released-event phases and role responsibilities. Mitigated critical events remain response-review decisions. Player runs use 60 beats; watch pacing and scoring.py are unchanged. All 50 roles have engine and HTTP coverage. See ../../GAMEPLAY_EXPANSION_REVIEW.md. This expansion is uncommitted on codex/gameplay-expansion.

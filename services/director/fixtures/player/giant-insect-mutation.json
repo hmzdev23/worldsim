@@ -1,0 +1,809 @@
+{
+  "schema_version": "0.1",
+  "fixture": "giant-insect-mutation",
+  "title": "Giant Insect Mutation",
+  "summary": "Localized insects begin doubling in physical size in an impossible fictional mutation. Communities face ecological disruption and uncertain encounters.",
+  "label": "SIMULATED",
+  "category": "Ecological fantasy",
+  "icon": "✳",
+  "briefing": "Localized insects begin doubling in physical size in an impossible fictional mutation. Communities face ecological disruption and uncertain encounters.",
+  "variables": {
+    "fixed": {
+      "place": "Manaus forest edge (fictional setting)",
+      "hazard": "other_hazard",
+      "premise": "Localized insects begin doubling in physical size in an impossible fictional mutation. Communities face ecological disruption and uncertain encounters."
+    },
+    "independent": [
+      {
+        "name": "science_policy",
+        "label": "Scientific research director priority",
+        "options": [
+          "Routine mandate",
+          "Commission an independent assessment",
+          "Share verified research updates",
+          "Coordinate international research support"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "mayor_policy",
+        "label": "City mayor priority",
+        "options": [
+          "Routine mandate",
+          "Open community shelters",
+          "Support neighborhood councils",
+          "Fund local supply hubs"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "crisis_policy",
+        "label": "National crisis coordinator priority",
+        "options": [
+          "Routine mandate",
+          "Coordinate essential services",
+          "Convene regional response councils",
+          "Request a joint relief mission"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "environment_policy",
+        "label": "Environmental minister priority",
+        "options": [
+          "Routine mandate",
+          "Fund habitat monitoring partnerships",
+          "Support affected rural communities",
+          "Convene a conservation compact"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "aid_policy",
+        "label": "Humanitarian aid director priority",
+        "options": [
+          "Routine mandate",
+          "Coordinate relief partnerships",
+          "Support displaced communities",
+          "Fund local relief markets"
+        ],
+        "default": "Routine mandate"
+      }
+    ],
+    "dependent": [
+      {
+        "name": "severity_load",
+        "label": "Overall crisis severity",
+        "measure": "severity_load",
+        "better": "lower",
+        "scale": 0.3,
+        "weight": 2
+      },
+      {
+        "name": "time_to_first_aid",
+        "label": "Time to outside support",
+        "measure": "time_to_first_aid",
+        "better": "lower",
+        "scale": 0.5,
+        "weight": 1
+      },
+      {
+        "name": "affected_countries",
+        "label": "Countries reporting disruption",
+        "measure": "affected_countries",
+        "better": "lower",
+        "scale": 0.3,
+        "weight": 1
+      }
+    ]
+  },
+  "triggers": {
+    "rules": [
+      {
+        "id": "service_pressure",
+        "kind": "event_type",
+        "types": [
+          "infrastructure_failure"
+        ],
+        "label": "Essential services under pressure"
+      }
+    ],
+    "min_gap_minutes": 1440,
+    "defer_minutes": 180,
+    "max_deferrals": 2
+  },
+  "roles": [
+    {
+      "id": "science",
+      "title": "Scientific research director",
+      "summary": "Fictional role: evidence gathering, uncertainty and trusted interpretation.",
+      "responsibilities": "Evidence gathering, uncertainty and trusted interpretation",
+      "perspective": "Prioritize evidence gathering, uncertainty and trusted interpretation in Giant Insect Mutation.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "mayor",
+      "title": "City mayor",
+      "summary": "Fictional role: shelters, local access and neighborhood trust.",
+      "responsibilities": "Shelters, local access and neighborhood trust",
+      "perspective": "Prioritize shelters, local access and neighborhood trust in Giant Insect Mutation.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "crisis",
+      "title": "National crisis coordinator",
+      "summary": "Fictional role: cross-agency priorities, public trust and continuity.",
+      "responsibilities": "Cross-agency priorities, public trust and continuity",
+      "perspective": "Prioritize cross-agency priorities, public trust and continuity in Giant Insect Mutation.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "environment",
+      "title": "Environmental minister",
+      "summary": "Fictional role: habitat protection, ecological uncertainty and community access.",
+      "responsibilities": "Habitat protection, ecological uncertainty and community access",
+      "perspective": "Prioritize habitat protection, ecological uncertainty and community access in Giant Insect Mutation.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "aid",
+      "title": "Humanitarian aid director",
+      "summary": "Fictional role: equitable relief, displaced communities and partner capacity.",
+      "responsibilities": "Equitable relief, displaced communities and partner capacity",
+      "perspective": "Prioritize equitable relief, displaced communities and partner capacity in Giant Insect Mutation.",
+      "emphasis": [
+        "time_to_first_aid"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "science_1",
+      "label": "Commission an independent assessment",
+      "tradeoff": "Reduce future uncertainty-driven disruption; expertise is diverted.",
+      "roles": [
+        "science"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.8
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: scientific research director coordinates commission an independent assessment for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to commission an independent assessment leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "science_policy": "Commission an independent assessment"
+      }
+    },
+    {
+      "id": "science_2",
+      "label": "Share verified research updates",
+      "tradeoff": "Reduce panic; unresolved questions remain public.",
+      "roles": [
+        "science"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.7
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: scientific research director coordinates share verified research updates for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to share verified research updates leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "science_policy": "Share verified research updates"
+      }
+    },
+    {
+      "id": "science_3",
+      "label": "Coordinate international research support",
+      "tradeoff": "Bring support forward; coordination consumes capacity.",
+      "roles": [
+        "science"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -720
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: scientific research director coordinates coordinate international research support for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate international research support leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "science_policy": "Coordinate international research support"
+      }
+    },
+    {
+      "id": "mayor_1",
+      "label": "Open community shelters",
+      "tradeoff": "Protect displaced families; municipal services lose staff.",
+      "roles": [
+        "mayor"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: city mayor coordinates open community shelters for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to open community shelters leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "mayor_policy": "Open community shelters"
+      }
+    },
+    {
+      "id": "mayor_2",
+      "label": "Support neighborhood councils",
+      "tradeoff": "Improve local coordination; assistance arrives unevenly.",
+      "roles": [
+        "mayor"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.72
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: city mayor coordinates support neighborhood councils for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support neighborhood councils leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "mayor_policy": "Support neighborhood councils"
+      }
+    },
+    {
+      "id": "mayor_3",
+      "label": "Fund local supply hubs",
+      "tradeoff": "Ease shortages; reserve funds become committed.",
+      "roles": [
+        "mayor"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.8
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: city mayor coordinates fund local supply hubs for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to fund local supply hubs leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "mayor_policy": "Fund local supply hubs"
+      }
+    },
+    {
+      "id": "crisis_1",
+      "label": "Coordinate essential services",
+      "tradeoff": "Reduce cascading failures; central coordination takes resources.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates coordinate essential services for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate essential services leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Coordinate essential services"
+      }
+    },
+    {
+      "id": "crisis_2",
+      "label": "Convene regional response councils",
+      "tradeoff": "Reduce tensions; local deliberation takes time.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates convene regional response councils for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to convene regional response councils leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Convene regional response councils"
+      }
+    },
+    {
+      "id": "crisis_3",
+      "label": "Request a joint relief mission",
+      "tradeoff": "Bring aid forward; partners must agree on priorities.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -720
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates request a joint relief mission for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to request a joint relief mission leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Request a joint relief mission"
+      }
+    },
+    {
+      "id": "environment_1",
+      "label": "Fund habitat monitoring partnerships",
+      "tradeoff": "Reduce future disruption; monitoring needs sustained funding.",
+      "roles": [
+        "environment"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "other_hazard": 0.82
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: environmental minister coordinates fund habitat monitoring partnerships for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to fund habitat monitoring partnerships leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "environment_policy": "Fund habitat monitoring partnerships"
+      }
+    },
+    {
+      "id": "environment_2",
+      "label": "Support affected rural communities",
+      "tradeoff": "Ease shortages; environmental budgets tighten.",
+      "roles": [
+        "environment"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: environmental minister coordinates support affected rural communities for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support affected rural communities leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "environment_policy": "Support affected rural communities"
+      }
+    },
+    {
+      "id": "environment_3",
+      "label": "Convene a conservation compact",
+      "tradeoff": "Reduce tensions over land access; agreement takes time.",
+      "roles": [
+        "environment"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.7
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: environmental minister coordinates convene a conservation compact for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to convene a conservation compact leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "environment_policy": "Convene a conservation compact"
+      }
+    },
+    {
+      "id": "aid_1",
+      "label": "Coordinate relief partnerships",
+      "tradeoff": "Bring aid forward; local delivery remains difficult.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -720
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates coordinate relief partnerships for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate relief partnerships leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Coordinate relief partnerships"
+      }
+    },
+    {
+      "id": "aid_2",
+      "label": "Support displaced communities",
+      "tradeoff": "Reduce service strain; funds leave other programs.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.8
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates support displaced communities for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support displaced communities leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Support displaced communities"
+      }
+    },
+    {
+      "id": "aid_3",
+      "label": "Fund local relief markets",
+      "tradeoff": "Ease shortages; purchasing power is uneven.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 240,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates fund local relief markets for Giant Insect Mutation."
+          },
+          {
+            "after_minutes": 360,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to fund local relief markets leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Fund local relief markets"
+      }
+    }
+  ],
+  "phases": [
+    {
+      "at_minutes": 720,
+      "title": "Unusual sightings",
+      "summary": "Forest observers report insects twice their usual physical size near Manaus: an impossible fictional mutation."
+    },
+    {
+      "at_minutes": 2880,
+      "title": "Growing encounters",
+      "summary": "Some insects now reach four times normal physical size; the premise is explicitly fantastical."
+    },
+    {
+      "at_minutes": 5040,
+      "title": "Ecosystem disruption",
+      "summary": "Insects eight times normal size are reported near another regional habitat; growth concerns size, not population."
+    },
+    {
+      "at_minutes": 7200,
+      "title": "Regional cooperation",
+      "summary": "Regional partners coordinate ecological observation and humanitarian support."
+    },
+    {
+      "at_minutes": 9360,
+      "title": "Coexistence",
+      "summary": "The emergency concludes with a provisional habitat and community-support compact."
+    }
+  ],
+  "presentation": {
+    "steps": 60,
+    "target_minutes": "5–10 including decisions"
+  }
+}

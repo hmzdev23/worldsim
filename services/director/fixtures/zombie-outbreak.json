@@ -1,0 +1,366 @@
+{
+  "events": [
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": "Fictional Z-series",
+      "label": null,
+      "impacts": null,
+      "type": "disease_outbreak",
+      "sim_time_minutes": 360,
+      "location": {
+        "name": "Toronto",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 43.65,
+        "lon": -79.38
+      },
+      "severity": 0.45,
+      "description": "Simulated: Hospitals report an impossible fictional infection causing zombie-like behavior.",
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Toronto",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 43.65,
+        "lon": -79.38
+      },
+      "severity": 0.45,
+      "description": "Simulated: City leaders publish uncertainty briefings and open community help lines.",
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 1080,
+      "location": {
+        "name": "Toronto",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 43.65,
+        "lon": -79.38
+      },
+      "severity": 0.7,
+      "description": "Simulated: Care centers and shelters report pressure as families seek support.",
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": "Fictional Z-series",
+      "label": null,
+      "impacts": null,
+      "type": "disease_outbreak",
+      "sim_time_minutes": 1440,
+      "location": {
+        "name": "Montreal",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5,
+        "lon": -73.57
+      },
+      "severity": 0.45,
+      "description": "Simulated: A linked fictional outbreak is reported in another city.",
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "evacuation",
+      "sim_time_minutes": 1800,
+      "location": {
+        "name": "Montreal",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5,
+        "lon": -73.57
+      },
+      "severity": 0.45,
+      "description": "Simulated: Families relocate to community reception centers without leaving vulnerable neighbors behind.",
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 2160,
+      "location": {
+        "name": "Montreal",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5,
+        "lon": -73.57
+      },
+      "severity": 0.7,
+      "description": "Simulated: Reception centers struggle to maintain ordinary health and food services.",
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "economic_shock",
+      "sim_time_minutes": 2520,
+      "location": {
+        "name": "Montreal",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5,
+        "lon": -73.57
+      },
+      "severity": 0.45,
+      "description": "Simulated: Supply disruptions reduce access to household essentials.",
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "civil_unrest",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "Montreal",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5,
+        "lon": -73.57
+      },
+      "severity": 0.45,
+      "description": "Simulated: Neighborhood groups demand fair shelter access and reliable information.",
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 3240,
+      "location": {
+        "name": "Boston",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 42.36,
+        "lon": -71.06
+      },
+      "severity": 0.7,
+      "description": "Simulated: The third affected city reports shortages across its community network.",
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Geneva, Switzerland",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "international_aid",
+      "sim_time_minutes": 3600,
+      "location": {
+        "name": "Boston",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 42.36,
+        "lon": -71.06
+      },
+      "severity": 0.45,
+      "description": "Simulated: Humanitarian partners bring essential supplies and additional care capacity.",
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 3960,
+      "location": {
+        "name": "Boston",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 42.36,
+        "lon": -71.06
+      },
+      "severity": 0.45,
+      "description": "Simulated: Cities agree on a shared community support framework.",
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "Boston",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 42.36,
+        "lon": -71.06
+      },
+      "severity": 0.15,
+      "description": "Simulated: New fictional infection reports decline as community services stabilize.",
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 4680,
+      "location": {
+        "name": "Boston",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 42.36,
+        "lon": -71.06
+      },
+      "severity": 0.15,
+      "description": "Simulated: The emergency concludes with a long-term support plan for affected families.",
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

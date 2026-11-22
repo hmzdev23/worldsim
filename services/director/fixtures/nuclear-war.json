@@ -1,0 +1,366 @@
+{
+  "events": [
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "conflict_escalation",
+      "sim_time_minutes": 360,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.45,
+      "description": "Simulated: Fictional rival blocs suspend talks during an escalating international confrontation.",
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.45,
+      "description": "Simulated: Civilian leaders ask a neutral forum to preserve humanitarian communication.",
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 1080,
+      "location": {
+        "name": "Geneva",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.7,
+      "description": "Simulated: Public services strain as families seek information and safe accommodation.",
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Humanitarian alert",
+      "impacts": null,
+      "type": "other_hazard",
+      "sim_time_minutes": 1440,
+      "location": {
+        "name": "Geneva humanitarian reporting hub",
+        "country": "Switzerland",
+        "country_code": "CHE",
+        "lat": 46.2,
+        "lon": 6.14
+      },
+      "severity": 0.45,
+      "description": "Simulated: Geneva humanitarian monitors report a fictional nuclear exchange in unnamed conflict zones; this marker locates the reporting hub.",
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "evacuation",
+      "sim_time_minutes": 1800,
+      "location": {
+        "name": "Vienna",
+        "country": "Austria",
+        "country_code": "AUT",
+        "lat": 48.21,
+        "lon": 16.37
+      },
+      "severity": 0.45,
+      "description": "Simulated: Displaced families reach a European humanitarian reception hub.",
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 2160,
+      "location": {
+        "name": "Vienna",
+        "country": "Austria",
+        "country_code": "AUT",
+        "lat": 48.21,
+        "lon": 16.37
+      },
+      "severity": 0.7,
+      "description": "Simulated: Reception services struggle to provide care and accommodation.",
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "contamination",
+      "sim_time_minutes": 2520,
+      "location": {
+        "name": "Vienna",
+        "country": "Austria",
+        "country_code": "AUT",
+        "lat": 48.21,
+        "lon": 16.37
+      },
+      "severity": 0.45,
+      "description": "Simulated: Fictional contamination concerns interrupt regional trade and food access.",
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "civil_unrest",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "Vienna",
+        "country": "Austria",
+        "country_code": "AUT",
+        "lat": 48.21,
+        "lon": 16.37
+      },
+      "severity": 0.45,
+      "description": "Simulated: Communities demand transparent support for displaced and host families.",
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 3240,
+      "location": {
+        "name": "Berlin",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 52.52,
+        "lon": 13.41
+      },
+      "severity": 0.7,
+      "description": "Simulated: A second reception network reports shortages of essential supplies.",
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Geneva, Switzerland",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "international_aid",
+      "sim_time_minutes": 3600,
+      "location": {
+        "name": "Berlin",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 52.52,
+        "lon": 13.41
+      },
+      "severity": 0.45,
+      "description": "Simulated: International partners organize coordinated civilian relief.",
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "ceasefire",
+      "sim_time_minutes": 3960,
+      "location": {
+        "name": "Berlin",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 52.52,
+        "lon": 13.41
+      },
+      "severity": 0.45,
+      "description": "Simulated: Neutral mediators report a pause in the fictional confrontation.",
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "Berlin",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 52.52,
+        "lon": 13.41
+      },
+      "severity": 0.15,
+      "description": "Simulated: Humanitarian agencies begin sustained support for displaced communities.",
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 4680,
+      "location": {
+        "name": "Berlin",
+        "country": "Germany",
+        "country_code": "DEU",
+        "lat": 52.52,
+        "lon": 13.41
+      },
+      "severity": 0.15,
+      "description": "Simulated: Emergency talks conclude with a fragile civilian protection agreement.",
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

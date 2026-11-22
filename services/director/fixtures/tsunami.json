@@ -1,0 +1,366 @@
+{
+  "events": [
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "tsunami_warning",
+      "sim_time_minutes": 60,
+      "location": {
+        "name": "Valparaiso coast",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -33.05,
+        "lon": -71.62
+      },
+      "severity": 0.45,
+      "description": "Simulated: A major fictional offshore disturbance prompts coastal tsunami warnings.",
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 120,
+      "location": {
+        "name": "Valparaiso coast",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -33.05,
+        "lon": -71.62
+      },
+      "severity": 0.45,
+      "description": "Simulated: Coastal councils begin public briefings and review shelter capacity.",
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 180,
+      "location": {
+        "name": "Valparaiso coast",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -33.05,
+        "lon": -71.62
+      },
+      "severity": 0.7,
+      "description": "Simulated: Coastal transport links close as the first surge interrupts local access.",
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "flooding",
+      "sim_time_minutes": 240,
+      "location": {
+        "name": "Valparaiso coast",
+        "country": "Chile",
+        "country_code": "CHL",
+        "lat": -33.05,
+        "lon": -71.62
+      },
+      "severity": 0.45,
+      "description": "Simulated: A later surge floods waterfront neighborhoods and displaces residents.",
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "evacuation",
+      "sim_time_minutes": 300,
+      "location": {
+        "name": "Callao",
+        "country": "Peru",
+        "country_code": "PER",
+        "lat": -12.06,
+        "lon": -77.14
+      },
+      "severity": 0.45,
+      "description": "Simulated: Community centers receive families leaving damaged coastal homes.",
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 360,
+      "location": {
+        "name": "Callao",
+        "country": "Peru",
+        "country_code": "PER",
+        "lat": -12.06,
+        "lon": -77.14
+      },
+      "severity": 0.7,
+      "description": "Simulated: Waterfront service outages spread to the next affected coastline.",
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "economic_shock",
+      "sim_time_minutes": 420,
+      "location": {
+        "name": "Callao",
+        "country": "Peru",
+        "country_code": "PER",
+        "lat": -12.06,
+        "lon": -77.14
+      },
+      "severity": 0.45,
+      "description": "Simulated: Fishing and port livelihoods suffer after repeated coastal disruption.",
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "civil_unrest",
+      "sim_time_minutes": 480,
+      "location": {
+        "name": "Callao",
+        "country": "Peru",
+        "country_code": "PER",
+        "lat": -12.06,
+        "lon": -77.14
+      },
+      "severity": 0.45,
+      "description": "Simulated: Families ask for clearer relief priorities as supplies become scarce.",
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 540,
+      "location": {
+        "name": "Honolulu",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 21.31,
+        "lon": -157.86
+      },
+      "severity": 0.7,
+      "description": "Simulated: Shelters on the third coastline report pressure on water and transport.",
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Geneva, Switzerland",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "international_aid",
+      "sim_time_minutes": 600,
+      "location": {
+        "name": "Honolulu",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 21.31,
+        "lon": -157.86
+      },
+      "severity": 0.45,
+      "description": "Simulated: Regional partners deliver support for shelters and damaged utilities.",
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 660,
+      "location": {
+        "name": "Honolulu",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 21.31,
+        "lon": -157.86
+      },
+      "severity": 0.45,
+      "description": "Simulated: Local councils publish a joint coastal recovery framework.",
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Honolulu",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 21.31,
+        "lon": -157.86
+      },
+      "severity": 0.15,
+      "description": "Simulated: Coastal access begins reopening while displaced families remain supported.",
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 780,
+      "location": {
+        "name": "Honolulu",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 21.31,
+        "lon": -157.86
+      },
+      "severity": 0.15,
+      "description": "Simulated: The emergency phase concludes with a community-led rebuilding agreement.",
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

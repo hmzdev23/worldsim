@@ -62,6 +62,7 @@ test("hovering a country identifies it on the map", async ({ page }, testInfo) =
   await page.goto("/");
   await expect(page.getByRole("button", { name: "Zoom in" })).toBeEnabled();
   const map = page.locator(".map-canvas");
+  await map.scrollIntoViewIfNeeded();
   const bounds = await map.boundingBox();
   if (!bounds) throw new Error("map canvas is missing");
 

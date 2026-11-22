@@ -8,93 +8,776 @@
     "fixed": {
       "place": "Reykjanes Peninsula (fictional scenario)",
       "hazard": "volcanic_eruption",
-      "start": "DAY 1 · 03:09",
+      "start": "DAY 1 Â· 03:09",
       "baseline_population": 30000
     },
     "independent": [
-      { "name": "evacuation_level", "label": "Evacuation level", "options": ["targeted", "wide"], "default": "targeted" },
-      { "name": "plant_defence", "label": "Power plant defence", "options": ["none", "barriers"], "default": "none" },
-      { "name": "flight_policy", "label": "Flight policy", "options": ["normal", "rerouted"], "default": "normal" },
-      { "name": "shelter_places", "label": "Extra shelter places (fictional)", "range": [0, 5000], "default": 0 },
-      { "name": "outside_aid", "label": "Outside aid requested", "options": ["no", "yes"], "default": "no" }
+      {
+        "name": "evacuation_level",
+        "label": "Evacuation level",
+        "options": [
+          "targeted",
+          "wide"
+        ],
+        "default": "targeted"
+      },
+      {
+        "name": "plant_defence",
+        "label": "Power plant defence",
+        "options": [
+          "none",
+          "barriers"
+        ],
+        "default": "none"
+      },
+      {
+        "name": "flight_policy",
+        "label": "Flight policy",
+        "options": [
+          "normal",
+          "rerouted"
+        ],
+        "default": "normal"
+      },
+      {
+        "name": "shelter_places",
+        "label": "Extra shelter places (fictional)",
+        "range": [
+          0,
+          5000
+        ],
+        "default": 0
+      },
+      {
+        "name": "outside_aid",
+        "label": "Outside aid requested",
+        "options": [
+          "no",
+          "yes"
+        ],
+        "default": "no"
+      },
+      {
+        "name": "volcano_policy",
+        "label": "Volcanologist priority",
+        "options": [
+          "Routine mandate",
+          "Support community ash monitoring",
+          "Publish an uncertainty briefing",
+          "Coordinate scientific assistance"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "transport_policy",
+        "label": "Transport minister priority",
+        "options": [
+          "Routine mandate",
+          "Fund accessible transport alternatives",
+          "Support stranded travelers",
+          "Coordinate transport mutual aid"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "medical_policy",
+        "label": "Hospital director priority",
+        "options": [
+          "Routine mandate",
+          "Protect essential care capacity",
+          "Support community care teams",
+          "Coordinate medical mutual aid"
+        ],
+        "default": "Routine mandate"
+      }
     ],
     "dependent": [
-      { "name": "deaths", "label": "Deaths (fictional estimate)", "measure": "impact", "key": "deaths", "better": "lower", "scale": 0.4, "weight": 3 },
-      { "name": "households_without_power", "label": "Households without power", "measure": "impact", "key": "households_without_power", "better": "lower", "scale": 0.4, "weight": 1 },
-      { "name": "economic_loss_usd", "label": "Economic losses (fictional US$)", "measure": "impact", "key": "economic_loss_usd", "better": "lower", "scale": 0.3, "weight": 1 },
-      { "name": "time_to_first_aid", "label": "Time to first outside aid", "measure": "time_to_first_aid", "better": "lower", "scale": 0.5, "weight": 1 }
+      {
+        "name": "deaths",
+        "label": "Deaths (fictional estimate)",
+        "measure": "impact",
+        "key": "deaths",
+        "better": "lower",
+        "scale": 0.4,
+        "weight": 3
+      },
+      {
+        "name": "households_without_power",
+        "label": "Households without power",
+        "measure": "impact",
+        "key": "households_without_power",
+        "better": "lower",
+        "scale": 0.4,
+        "weight": 1
+      },
+      {
+        "name": "economic_loss_usd",
+        "label": "Economic losses (fictional US$)",
+        "measure": "impact",
+        "key": "economic_loss_usd",
+        "better": "lower",
+        "scale": 0.3,
+        "weight": 1
+      },
+      {
+        "name": "time_to_first_aid",
+        "label": "Time to first outside aid",
+        "measure": "time_to_first_aid",
+        "better": "lower",
+        "scale": 0.5,
+        "weight": 1
+      }
     ]
   },
   "triggers": {
     "rules": [
-      { "id": "severe", "kind": "severity", "at_least": 0.6, "label": "A severe event" },
-      { "id": "new_region", "kind": "new_region", "label": "A new country is affected" }
+      {
+        "id": "severe",
+        "kind": "severity",
+        "at_least": 0.6,
+        "label": "A severe event"
+      },
+      {
+        "id": "new_region",
+        "kind": "new_region",
+        "label": "A new country is affected"
+      }
     ],
     "min_gap_minutes": 180,
     "defer_minutes": 60,
     "max_deferrals": 2
   },
   "roles": [
-    { "id": "crisis_coordinator", "title": "National crisis coordinator", "summary": "Fictional role: coordinates the national response." },
-    { "id": "aid_director", "title": "Aid agency director", "summary": "Fictional role: directs an international relief agency." }
+    {
+      "id": "crisis_coordinator",
+      "title": "National crisis coordinator",
+      "summary": "Fictional role: coordinates the national response.",
+      "responsibilities": "coordinates the national response.",
+      "perspective": "Coordinate coordinates the national response.",
+      "emphasis": [
+        "deaths"
+      ]
+    },
+    {
+      "id": "aid_director",
+      "title": "Aid agency director",
+      "summary": "Fictional role: directs an international relief agency.",
+      "responsibilities": "directs an international relief agency.",
+      "perspective": "Coordinate directs an international relief agency.",
+      "emphasis": [
+        "deaths"
+      ]
+    },
+    {
+      "id": "volcano",
+      "title": "Volcanologist",
+      "summary": "Fictional role: monitoring uncertainty, public interpretation and scientific cooperation.",
+      "responsibilities": "Monitoring uncertainty, public interpretation and scientific cooperation",
+      "perspective": "Prioritize monitoring uncertainty, public interpretation and scientific cooperation in Volcanic Eruption.",
+      "emphasis": [
+        "economic_loss_usd"
+      ]
+    },
+    {
+      "id": "transport",
+      "title": "Transport minister",
+      "summary": "Fictional role: accessible travel, displaced passengers and network continuity.",
+      "responsibilities": "Accessible travel, displaced passengers and network continuity",
+      "perspective": "Prioritize accessible travel, displaced passengers and network continuity in Volcanic Eruption.",
+      "emphasis": [
+        "economic_loss_usd"
+      ]
+    },
+    {
+      "id": "medical",
+      "title": "Hospital director",
+      "summary": "Fictional role: medical capacity, staff welfare and continuity of care.",
+      "responsibilities": "Medical capacity, staff welfare and continuity of care",
+      "perspective": "Prioritize medical capacity, staff welfare and continuity of care in Volcanic Eruption.",
+      "emphasis": [
+        "deaths"
+      ]
+    }
   ],
   "actions": [
     {
-      "id": "widen_evacuation", "label": "Widen the evacuation zone",
+      "id": "widen_evacuation",
+      "label": "Widen the evacuation zone",
       "tradeoff": "Moves more people out of danger; more people need shelter.",
-      "roles": ["crisis_coordinator"], "event_types": ["volcanic_eruption", "evacuation", "contamination"],
-      "sets": { "evacuation_level": "wide" }, "cost": 4,
-      "intervention": { "type": "evacuation", "severity": 0.4 },
+      "roles": [
+        "crisis_coordinator"
+      ],
+      "event_types": [
+        "volcanic_eruption",
+        "evacuation",
+        "contamination"
+      ],
+      "sets": {
+        "evacuation_level": "wide"
+      },
+      "cost": 4,
+      "intervention": {
+        "type": "evacuation",
+        "severity": 0.4
+      },
       "effects": {
-        "impacts_scale": { "deaths": 0.5, "injuries": 0.7, "displaced": 1.15, "sheltered": 1.2 },
+        "impacts_scale": {
+          "deaths": 0.5,
+          "injuries": 0.7,
+          "displaced": 1.15,
+          "sheltered": 1.2
+        },
         "consequences": [
-          { "after_minutes": 60, "type": "evacuation", "kind": "side_effect", "severity": 0.3,
-            "description": "Simulated: more families move into crowded shelters." }
+          {
+            "after_minutes": 60,
+            "type": "evacuation",
+            "kind": "side_effect",
+            "severity": 0.3,
+            "description": "Simulated: more families move into crowded shelters."
+          }
         ]
       }
     },
     {
-      "id": "protect_power_plant", "label": "Build lava barriers around the power plant",
+      "id": "protect_power_plant",
+      "label": "Build lava barriers around the power plant",
       "tradeoff": "May save power and hot water; costly and uncertain.",
-      "roles": ["crisis_coordinator"], "event_types": ["volcanic_eruption", "infrastructure_failure"],
-      "sets": { "plant_defence": "barriers" }, "cost": 5,
-      "intervention": { "type": "government_response", "severity": 0.3 },
+      "roles": [
+        "crisis_coordinator"
+      ],
+      "event_types": [
+        "volcanic_eruption",
+        "infrastructure_failure"
+      ],
+      "sets": {
+        "plant_defence": "barriers"
+      },
+      "cost": 5,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.3
+      },
       "effects": {
-        "severity_scale": { "infrastructure_failure": 0.75 },
-        "impacts_scale": { "households_without_power": 0.6, "households_without_water": 0.6, "economic_loss_usd": 1.05 }
+        "severity_scale": {
+          "infrastructure_failure": 0.75
+        },
+        "impacts_scale": {
+          "households_without_power": 0.6,
+          "households_without_water": 0.6,
+          "economic_loss_usd": 1.05
+        }
       }
     },
     {
-      "id": "reroute_flights", "label": "Reroute flights around the ash",
+      "id": "reroute_flights",
+      "label": "Reroute flights around the ash",
       "tradeoff": "Keeps some flights moving; longer routes cost more.",
-      "roles": ["crisis_coordinator", "aid_director"], "event_types": ["volcanic_eruption", "economic_shock", "contamination"],
-      "sets": { "flight_policy": "rerouted" }, "cost": 2,
-      "intervention": { "type": "government_response", "severity": 0.2 },
-      "effects": { "severity_scale": { "economic_shock": 0.7 }, "impacts_scale": { "economic_loss_usd": 0.85 } }
+      "roles": [
+        "crisis_coordinator",
+        "aid_director"
+      ],
+      "event_types": [
+        "volcanic_eruption",
+        "economic_shock",
+        "contamination"
+      ],
+      "sets": {
+        "flight_policy": "rerouted"
+      },
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.7
+        },
+        "impacts_scale": {
+          "economic_loss_usd": 0.85
+        }
+      }
     },
     {
-      "id": "open_shelters", "label": "Fund extra emergency shelters",
+      "id": "open_shelters",
+      "label": "Fund extra emergency shelters",
       "tradeoff": "Keeps evacuees safer; money is spent before needs are clear.",
-      "roles": ["aid_director"], "event_types": ["evacuation", "volcanic_eruption", "infrastructure_failure"],
-      "sets": { "shelter_places": 2000 }, "cost": 2,
-      "intervention": { "type": "international_aid", "severity": 0.2 },
-      "effects": { "impacts_scale": { "injuries": 0.85, "sheltered": 1.2 } }
+      "roles": [
+        "aid_director"
+      ],
+      "event_types": [
+        "evacuation",
+        "volcanic_eruption",
+        "infrastructure_failure"
+      ],
+      "sets": {
+        "shelter_places": 2000
+      },
+      "cost": 2,
+      "intervention": {
+        "type": "international_aid",
+        "severity": 0.2
+      },
+      "effects": {
+        "impacts_scale": {
+          "injuries": 0.85,
+          "sheltered": 1.2
+        }
+      }
     },
     {
-      "id": "request_aid", "label": "Request outside aid now",
+      "id": "request_aid",
+      "label": "Request outside aid now",
       "tradeoff": "Brings help sooner; depends on partners' timelines.",
-      "roles": ["crisis_coordinator", "aid_director"], "event_types": ["*"],
-      "sets": { "outside_aid": "yes" }, "cost": 2,
-      "intervention": { "type": "government_response", "severity": 0.2 },
-      "effects": { "shift": [{ "type": "international_aid", "minutes": -600 }] }
+      "roles": [
+        "crisis_coordinator",
+        "aid_director"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "sets": {
+        "outside_aid": "yes"
+      },
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -600
+          }
+        ]
+      }
     },
     {
-      "id": "public_briefing", "label": "Give a public briefing",
+      "id": "public_briefing",
+      "label": "Give a public briefing",
       "tradeoff": "Builds trust at little cost; little direct effect.",
-      "roles": ["crisis_coordinator", "aid_director"], "event_types": ["*"],
+      "roles": [
+        "crisis_coordinator",
+        "aid_director"
+      ],
+      "event_types": [
+        "*"
+      ],
       "cost": 1,
-      "intervention": { "type": "government_response", "severity": 0.1 },
-      "effects": { "impacts_scale": { "injuries": 0.95 } }
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.1
+      },
+      "effects": {
+        "impacts_scale": {
+          "injuries": 0.95
+        }
+      }
+    },
+    {
+      "id": "volcano_1",
+      "label": "Support community ash monitoring",
+      "tradeoff": "Reduce later disruption; field teams need resources.",
+      "roles": [
+        "volcano"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.8
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: volcanologist coordinates support community ash monitoring for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support community ash monitoring leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "volcano_policy": "Support community ash monitoring"
+      }
+    },
+    {
+      "id": "volcano_2",
+      "label": "Publish an uncertainty briefing",
+      "tradeoff": "Reduce public tension; warnings may disrupt commerce.",
+      "roles": [
+        "volcano"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: volcanologist coordinates publish an uncertainty briefing for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to publish an uncertainty briefing leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "volcano_policy": "Publish an uncertainty briefing"
+      }
+    },
+    {
+      "id": "volcano_3",
+      "label": "Coordinate scientific assistance",
+      "tradeoff": "Bring aid forward; external experts need support.",
+      "roles": [
+        "volcano"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -60
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: volcanologist coordinates coordinate scientific assistance for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate scientific assistance leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "volcano_policy": "Coordinate scientific assistance"
+      }
+    },
+    {
+      "id": "transport_1",
+      "label": "Fund accessible transport alternatives",
+      "tradeoff": "Reduce later disruption; transport budgets tighten.",
+      "roles": [
+        "transport"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: transport minister coordinates fund accessible transport alternatives for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to fund accessible transport alternatives leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "transport_policy": "Fund accessible transport alternatives"
+      }
+    },
+    {
+      "id": "transport_2",
+      "label": "Support stranded travelers",
+      "tradeoff": "Ease economic harm; relief has a public cost.",
+      "roles": [
+        "transport"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: transport minister coordinates support stranded travelers for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support stranded travelers leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "transport_policy": "Support stranded travelers"
+      }
+    },
+    {
+      "id": "transport_3",
+      "label": "Coordinate transport mutual aid",
+      "tradeoff": "Bring help forward; partners need staging capacity.",
+      "roles": [
+        "transport"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -60
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: transport minister coordinates coordinate transport mutual aid for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate transport mutual aid leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "transport_policy": "Coordinate transport mutual aid"
+      }
+    },
+    {
+      "id": "medical_1",
+      "label": "Protect essential care capacity",
+      "tradeoff": "Reduce later service failures; elective care waits.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.72
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates protect essential care capacity for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to protect essential care capacity leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Protect essential care capacity"
+      }
+    },
+    {
+      "id": "medical_2",
+      "label": "Support community care teams",
+      "tradeoff": "Support local care access; staff and budgets must cover more services.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates support community care teams for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support community care teams leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Support community care teams"
+      }
+    },
+    {
+      "id": "medical_3",
+      "label": "Coordinate medical mutual aid",
+      "tradeoff": "Bring support forward; partners retain competing needs.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -60
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates coordinate medical mutual aid for Volcanic Eruption."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate medical mutual aid leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Coordinate medical mutual aid"
+      }
+    }
+  ],
+  "display_title": "Volcanic Eruption",
+  "category": "Volcanic disaster",
+  "icon": "△",
+  "briefing": "A fictional fissure eruption threatens a town, a power plant and air travel. Every figure is a simulated estimate.",
+  "presentation": {
+    "steps": 60,
+    "target_minutes": "5–10 including decisions"
+  },
+  "phases": [
+    {
+      "at_minutes": 190,
+      "title": "Eruption",
+      "summary": "A fissure eruption opens on the Reykjanes Peninsula, sending lava toward Grindavik and ash high into the sky."
+    },
+    {
+      "at_minutes": 420,
+      "title": "Displacement",
+      "summary": "Lava cuts the pipelines from the Svartsengi geothermal plant, leaving the peninsula without hot water and power."
+    },
+    {
+      "at_minutes": 1100,
+      "title": "Regional disruption",
+      "summary": "The ash cloud closes North Atlantic airspace; thousands of flights between Europe and North America are grounded."
+    },
+    {
+      "at_minutes": 2000,
+      "title": "Relief effort",
+      "summary": "Danish teams arrive with air-quality monitors and generators for the evacuated towns."
+    },
+    {
+      "at_minutes": 3600,
+      "title": "Recovery",
+      "summary": "Crews reconnect a temporary hot-water line as the eruption weakens and airspace reopens."
     }
   ]
 }

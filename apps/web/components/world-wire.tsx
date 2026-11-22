@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Broadcast } from "@phosphor-icons/react";
 import { focusNewsItem, type NewsItem } from "../lib/scenario";
 
-export function WorldWire({ items, loading }: { items: NewsItem[]; loading: boolean }) {
+export function WorldWire({ items, loading, selectedId, onSelect }: { items: NewsItem[]; loading: boolean; selectedId?: string; onSelect?: (item: NewsItem) => void }) {
   const [focused, setFocused] = useState<NewsItem>();
 
   return (
@@ -17,10 +17,10 @@ export function WorldWire({ items, loading }: { items: NewsItem[]; loading: bool
         <ul className="world-wire-list">
           {items.map((item) => (
             <li key={item.event_id}>
-              <button type="button" className="wire-card" aria-pressed={focused === item}
-                onClick={() => { setFocused(item); focusNewsItem(item); }}>
+              <button type="button" className="wire-card" aria-pressed={selectedId ? selectedId === item.event_id : focused === item}
+                onClick={() => { setFocused(item); if (onSelect) onSelect(item); else focusNewsItem(item); }}>
                 <span className="wire-meta"><span>{item.label}</span><span>{item.sim_time_label}</span></span>
-                <span className="wire-headline">{item.headline}</span>
+                <span className="wire-importance">{item.severity >= .6 ? "Major development" : "Update"}</span><span className="wire-headline">{item.headline}</span>
                 <span className="wire-dek">{item.dek}</span>
               </button>
             </li>

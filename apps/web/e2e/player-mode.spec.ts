@@ -19,6 +19,7 @@ test("pandemic as health minister: skip, two decisions, score and summary", asyn
   await launch.getByRole("button", { name: "Play this role" }).click();
   await expect(page.getByRole("heading", { name: "Novel virus outbreak · Regional health minister" })).toBeVisible();
 
+  await page.getByRole("button", { name: "Fast", exact: true }).click();
   const playback = page.getByRole("region", { name: "Simulation playback" });
   await playback.getByRole("button", { name: "4×" }).click();
   await playback.getByRole("button", { name: "Play", exact: true }).click();

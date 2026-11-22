@@ -1,0 +1,366 @@
+{
+  "events": [
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "alien_contact",
+      "sim_time_minutes": 240,
+      "location": {
+        "name": "Nairobi",
+        "country": "Kenya",
+        "country_code": "KEN",
+        "lat": -1.29,
+        "lon": 36.82
+      },
+      "severity": 0.45,
+      "description": "Simulated: An unidentified extraterrestrial object appears above Nairobi; its intentions are unknown.",
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 480,
+      "location": {
+        "name": "Nairobi",
+        "country": "Kenya",
+        "country_code": "KEN",
+        "lat": -1.29,
+        "lon": 36.82
+      },
+      "severity": 0.45,
+      "description": "Simulated: An international civilian forum asks for calm and independent observation.",
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Nairobi",
+        "country": "Kenya",
+        "country_code": "KEN",
+        "lat": -1.29,
+        "lon": 36.82
+      },
+      "severity": 0.7,
+      "description": "Simulated: Local communications and transit suffer unexplained interruptions near the arrival.",
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "alien_contact",
+      "sim_time_minutes": 960,
+      "location": {
+        "name": "Cairo",
+        "country": "Egypt",
+        "country_code": "EGY",
+        "lat": 30.04,
+        "lon": 31.24
+      },
+      "severity": 0.45,
+      "description": "Simulated: A second object is reported above Cairo without a clear message.",
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "conflict_escalation",
+      "sim_time_minutes": 1200,
+      "location": {
+        "name": "Cairo",
+        "country": "Egypt",
+        "country_code": "EGY",
+        "lat": 30.04,
+        "lon": 31.24
+      },
+      "severity": 0.45,
+      "description": "Simulated: Disagreement grows over how humanity should respond to the visitors.",
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 1440,
+      "location": {
+        "name": "Cairo",
+        "country": "Egypt",
+        "country_code": "EGY",
+        "lat": 30.04,
+        "lon": 31.24
+      },
+      "severity": 0.7,
+      "description": "Simulated: Regional communication failures interrupt essential public services.",
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "alien_contact",
+      "sim_time_minutes": 1680,
+      "location": {
+        "name": "Rome",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.9,
+        "lon": 12.5
+      },
+      "severity": 0.45,
+      "description": "Simulated: A third arrival over Rome broadens the fictional international crisis.",
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "civil_unrest",
+      "sim_time_minutes": 1920,
+      "location": {
+        "name": "Cairo",
+        "country": "Egypt",
+        "country_code": "EGY",
+        "lat": 30.04,
+        "lon": 31.24
+      },
+      "severity": 0.45,
+      "description": "Simulated: Public demonstrations demand transparent communication and civilian protection.",
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 2160,
+      "location": {
+        "name": "Rome",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.9,
+        "lon": 12.5
+      },
+      "severity": 0.7,
+      "description": "Simulated: Community centers across the affected cities report growing service pressure.",
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Geneva, Switzerland",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "international_aid",
+      "sim_time_minutes": 2400,
+      "location": {
+        "name": "Rome",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.9,
+        "lon": 12.5
+      },
+      "severity": 0.45,
+      "description": "Simulated: International partners coordinate humanitarian support for disrupted communities.",
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 2640,
+      "location": {
+        "name": "Rome",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.9,
+        "lon": 12.5
+      },
+      "severity": 0.45,
+      "description": "Simulated: Civilian observers report the first repeatable nonverbal exchange.",
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "Rome",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.9,
+        "lon": 12.5
+      },
+      "severity": 0.15,
+      "description": "Simulated: Service interruptions ease while observers continue cautious communication.",
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 3120,
+      "location": {
+        "name": "Rome",
+        "country": "Italy",
+        "country_code": "ITA",
+        "lat": 41.9,
+        "lon": 12.5
+      },
+      "severity": 0.15,
+      "description": "Simulated: The first-contact emergency concludes with a provisional international observation accord.",
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

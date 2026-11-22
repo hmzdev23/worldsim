@@ -1,0 +1,366 @@
+{
+  "events": [
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Giant Insect Mutation",
+      "impacts": null,
+      "type": "other_hazard",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Manaus forest edge",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -3.1,
+        "lon": -60.02
+      },
+      "severity": 0.45,
+      "description": "Simulated: Forest observers report insects twice their usual physical size near Manaus: an impossible fictional mutation.",
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 1440,
+      "location": {
+        "name": "Manaus forest edge",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -3.1,
+        "lon": -60.02
+      },
+      "severity": 0.45,
+      "description": "Simulated: Local researchers begin independent observation with community representatives.",
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 2160,
+      "location": {
+        "name": "Manaus forest edge",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -3.1,
+        "lon": -60.02
+      },
+      "severity": 0.7,
+      "description": "Simulated: Early encounters interrupt forest-edge transport and ordinary public services.",
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Giant Insect Mutation",
+      "impacts": null,
+      "type": "other_hazard",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "Manaus forest edge",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -3.1,
+        "lon": -60.02
+      },
+      "severity": 0.45,
+      "description": "Simulated: Some insects now reach four times normal physical size; the premise is explicitly fantastical.",
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "evacuation",
+      "sim_time_minutes": 3600,
+      "location": {
+        "name": "Belem",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -1.46,
+        "lon": -48.5
+      },
+      "severity": 0.45,
+      "description": "Simulated: Forest-edge families seek temporary accommodation after close encounters.",
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "Belem",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -1.46,
+        "lon": -48.5
+      },
+      "severity": 0.7,
+      "description": "Simulated: Larger encounters disrupt food access and public services around Belem.",
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Giant Insect Mutation",
+      "impacts": null,
+      "type": "other_hazard",
+      "sim_time_minutes": 5040,
+      "location": {
+        "name": "Belem",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -1.46,
+        "lon": -48.5
+      },
+      "severity": 0.45,
+      "description": "Simulated: Insects eight times normal size are reported near another regional habitat; growth concerns size, not population.",
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "civil_unrest",
+      "sim_time_minutes": 5760,
+      "location": {
+        "name": "Belem",
+        "country": "Brazil",
+        "country_code": "BRA",
+        "lat": -1.46,
+        "lon": -48.5
+      },
+      "severity": 0.45,
+      "description": "Simulated: Communities debate habitat access and support for displaced families.",
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 6480,
+      "location": {
+        "name": "Bogota",
+        "country": "Colombia",
+        "country_code": "COL",
+        "lat": 4.71,
+        "lon": -74.07
+      },
+      "severity": 0.7,
+      "description": "Simulated: A neighboring country reports service pressure after new giant-insect encounters.",
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Geneva, Switzerland",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "international_aid",
+      "sim_time_minutes": 7200,
+      "location": {
+        "name": "Bogota",
+        "country": "Colombia",
+        "country_code": "COL",
+        "lat": 4.71,
+        "lon": -74.07
+      },
+      "severity": 0.45,
+      "description": "Simulated: Regional partners coordinate ecological observation and humanitarian support.",
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 7920,
+      "location": {
+        "name": "Bogota",
+        "country": "Colombia",
+        "country_code": "COL",
+        "lat": 4.71,
+        "lon": -74.07
+      },
+      "severity": 0.45,
+      "description": "Simulated: Researchers and communities establish a shared habitat observation framework.",
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 8640,
+      "location": {
+        "name": "Bogota",
+        "country": "Colombia",
+        "country_code": "COL",
+        "lat": 4.71,
+        "lon": -74.07
+      },
+      "severity": 0.15,
+      "description": "Simulated: Encounters become less disruptive as communities adapt within the fictional premise.",
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 9360,
+      "location": {
+        "name": "Bogota",
+        "country": "Colombia",
+        "country_code": "COL",
+        "lat": 4.71,
+        "lon": -74.07
+      },
+      "severity": 0.15,
+      "description": "Simulated: The emergency concludes with a provisional habitat and community-support compact.",
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

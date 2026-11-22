@@ -2,6 +2,13 @@
 
 Describe a hypothetical crisis, watch it unfold on an animated world map, and follow the response through the fictional **WORLD//WIRE** news feed.
 
+## Play the offline decision game
+
+The local gameplay expansion provides ten scenarios, five roles each, readable news pacing,
+map auto-follow and deterministic branch comparisons. Run `./scripts/run-demo.sh`, open
+http://127.0.0.1:3000 and choose **Play a role**. See [gameplay expansion notes](docs/plans/gameplay-expansion.md)
+and [validation review](GAMEPLAY_EXPANSION_REVIEW.md). No model or paid API is needed for the game.
+
 ## Start here
 
 Already working? Open [TEAM-SYNC.md](TEAM-SYNC.md) and the

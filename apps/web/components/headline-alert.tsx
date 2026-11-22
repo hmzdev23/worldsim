@@ -22,10 +22,10 @@ export function HeadlineAlert({
         {item && `Simulated headline. ${item.headline}. ${item.dek}`}
       </div>
       {item && (
-        <section className="headline-alert" data-severity={item.severity >= 0.75 ? "high" : item.severity >= 0.4 ? "moderate" : "low"} aria-labelledby="map-headline-title">
+        <section data-event-id={item.event_id} data-minute={item.sim_time_minutes} className="headline-alert" data-severity={item.severity >= 0.75 ? "high" : item.severity >= 0.4 ? "moderate" : "low"} aria-labelledby="map-headline-title">
           <header className="headline-alert-bar">
             <span><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE <span className="headline-alert-live">LIVE</span></span>
-            <span>{item.label}</span>
+            <span>{item.severity >= .6 ? "BREAKING NEWS · " : "UPDATE · "}{item.label}</span>
           </header>
           <motion.div
             className="headline-alert-story"

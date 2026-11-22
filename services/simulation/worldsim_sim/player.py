@@ -350,8 +350,16 @@ class PlayerSession:
             return None
         for rule in self.spec["triggers"]["rules"]:
             kind = rule["kind"]
-            if kind == "severity" and is_hazard(event) and event["severity"] >= rule["at_least"]:
-                return rule
+            if kind == "severity" and is_hazard(event):
+                if event["severity"] >= rule["at_least"]:
+                    return rule
+                # A mitigated critical event still deserves a policy review. Use
+                # its unchanged baseline identity, never invent a new event or
+                # show a future baseline result to the player.
+                baseline = next((e for e in self.segments[0].sim._timeline if e["id"] == event["id"]), None)
+                if (self.spec.get("presentation") and baseline is not None and
+                        baseline["severity"] >= rule["at_least"]):
+                    return {**rule, "label": "Response review: pressure reduced"}
             if kind == "new_region" and is_hazard(event):
                 seen = {e["location"].get("country_code") for e in earlier if is_hazard(e)}
                 if seen and event["location"].get("country_code") not in seen:
@@ -456,7 +464,7 @@ class PlayerSession:
                    if isinstance(impacts.get(k), (int, float)) and impacts.get(k)]
         if figures:
             sentences.append("Simulated estimates: " + ", ".join(figures) + ".")
-        return " ".join(sentences)
+        return " ".join(sentences) + (" Your responsibility: " + self.role["responsibilities"] + "." if self.role.get("responsibilities") else "")
 
     # ---- decisions ------------------------------------------------------
 
@@ -668,6 +676,16 @@ class PlayerSession:
 
     # ---- views ----------------------------------------------------------
 
+    def current_phase(self) -> dict[str, Any] | None:
+        phases = self.spec.get("phases", [])
+        reached = [(i, p) for i, p in enumerate(phases) if p["at_minutes"] <= self.sim.now]
+        if not reached:
+            return None
+        index, phase = reached[-1]
+        released = self.sim.snapshot()["events"]
+        summary = (released[-1].get("payload") or {}).get("description", "") if released else ""
+        return {**phase, "summary": summary, "index": index + 1, "total": len(phases)}
+
     def state_json(self) -> dict[str, Any]:
         sim = self.sim
         pending = self.pending
@@ -675,7 +693,8 @@ class PlayerSession:
             "mode": "player",
             "label": self.spec.get("label", "SIMULATED"),
             "scenario": {"fixture": self.spec["fixture"], "title": self.spec["title"]},
-            "role": {"id": self.role["id"], "title": self.role["title"]},
+            "role": dict(self.role),
+            "phase": self.current_phase(),
             "branch_id": sim.branch_id,
             "sim_time_minutes": sim.now,
             "finished": self.finished,

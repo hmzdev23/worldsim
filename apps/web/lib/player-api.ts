@@ -3,8 +3,8 @@
 
 const proxy = "/api/simulation";
 
-export type PlayerRole = { id: string; title: string; summary: string };
-export type PlayableScenario = { fixture: string; title: string; summary: string; roles: PlayerRole[] };
+export type PlayerRole = { id: string; title: string; summary: string; responsibilities?: string; perspective?: string; emphasis?: string[] };
+export type PlayableScenario = { fixture: string; title: string; summary: string; roles: PlayerRole[]; outcomes?: {name: string; label: string}[]; display_title?: string; category?: string; icon?: string; briefing?: string };
 
 export type DecisionOption = { id: string; label: string; tradeoff: string };
 
@@ -45,10 +45,11 @@ export type PendingDecision = DecisionRecord & {
 };
 
 export type PlayerState = {
+  phase?: { at_minutes: number; title: string; summary: string; index: number; total: number } | null;
   mode: "player";
   label: string;
   scenario: { fixture: string; title: string };
-  role: { id: string; title: string };
+  role: PlayerRole;
   branch_id: string;
   sim_time_minutes: number;
   finished: boolean;
@@ -113,7 +114,7 @@ export type Comparison = {
 export type PlayerSummary = {
   finished: boolean;
   label: string;
-  role: { id: string; title: string };
+  role: PlayerRole;
   scenario: { fixture: string; title: string };
   score: { total: number; max: number; components: ScoreComponent[] };
   decisions: (DecisionRecord & { verdict: string; caused: string[] })[];

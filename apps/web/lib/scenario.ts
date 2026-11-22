@@ -38,6 +38,7 @@ export type ScenarioEvent = {
   location: MapLocation & { name: string; country: string; country_code: string };
   severity: number;
   visual: string;
+  provenance?: { source?: string };
   payload: Record<string, unknown> & { impacts?: ImpactSnapshot };
   parent_ids: string[];
 };
@@ -109,6 +110,7 @@ export type StreamMessage = RunIdentity & { sim_time_minutes: number } & (
 
 // Both the alert and the archive consume WORLD//WIRE items through this shape.
 export type NewsItem = {
+  sim_time_minutes?: number;
   event_id: string;
   event_type: string;
   severity: number;
@@ -135,7 +137,7 @@ export function focusNewsItem(item: NewsItem) {
 }
 
 export function fallbackNewsItem(event: ScenarioEvent): NewsItem {
-  const place = event.location.name || event.location.country;
+  const place = event.location?.name || event.location?.country || "the scenario";
   const { description, label } = event.payload;
   const subject = typeof label === "string" && label.trim()
     ? label
@@ -150,6 +152,7 @@ export function fallbackNewsItem(event: ScenarioEvent): NewsItem {
       ? description
       : "A simulated event has been applied to the world state.",
     sim_time_label: formatSimTime(event.sim_time_minutes),
-    focus: { event_id: event.id, lat: event.location.lat, lon: event.location.lon, zoom: 5.5 },
+    sim_time_minutes: event.sim_time_minutes,
+    focus: { event_id: event.id, lat: event.location?.lat ?? Number.NaN, lon: event.location?.lon ?? Number.NaN, zoom: 5.5 },
   };
 }

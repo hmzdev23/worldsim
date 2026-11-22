@@ -44,3 +44,7 @@ This is a prototype for team review, written by Anthony's agent in your folder. 
 ## Please review
 - Where the card sits over the map; it currently hides the headline alert while it waits.
 - Whether to replace polling with a `decision` stream message (a proposed v0.2 contract change).
+
+
+## Local gameplay expansion
+ScenarioLibrary and PresentationControls extend launch and pacing. RunConsole serializes story presentation, gates clock beats, prioritizes cards and synchronizes map selection. WorldMap suspends follow after manual input and groups locations. Tablet/mobile layouts and complete-playthrough tests cover 1440/768/390 widths. See ../../GAMEPLAY_EXPANSION_REVIEW.md for results, concurrency notes and PR #79 integration considerations. Changes remain uncommitted.
