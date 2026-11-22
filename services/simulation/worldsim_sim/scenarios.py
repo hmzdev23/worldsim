@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import inspect
 import logging
 import secrets
 import sys
@@ -23,7 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
-from .engine import Message, Simulation
+from .engine import PACE_FRACTION, Message, Simulation
 
 log = logging.getLogger("worldsim_sim")
 
@@ -61,14 +62,36 @@ def _import(package: str, service: str):
         return __import__(package)
 
 
-def director_generator(prompt: str, *, fixture: str | None, simulation_id: str, branch_id: str, timeout_s: float) -> dict:
+def director_generator(
+    prompt: str,
+    *,
+    fixture: str | None,
+    simulation_id: str,
+    branch_id: str,
+    timeout_s: float,
+    on_stage: Callable[[str], None] | None = None,
+) -> dict:
     """The real Director: `prepare_scenario` (#50) when present, else `generate`.
 
-    With `fixture`, no model is called.
+    With `fixture`, no model is called. `on_stage` hears each Director stage
+    as it starts (prompt, model, parse, validate) when the Director reports
+    stages (`worlddirector.Stages`, #61); otherwise it is never called.
     """
     worlddirector = _import("worlddirector", "director")
     call = getattr(worlddirector, "prepare_scenario", None) or worlddirector.generate
-    return call(prompt, fixture=fixture, simulation_id=simulation_id, branch_id=branch_id, timeout_s=timeout_s)
+    kwargs: dict[str, Any] = {}
+    stages = getattr(worlddirector, "Stages", None)
+    if on_stage is not None and stages is not None and _accepts(call, "stages"):
+        kwargs["stages"] = stages(on_stage=on_stage)
+    return call(prompt, fixture=fixture, simulation_id=simulation_id, branch_id=branch_id, timeout_s=timeout_s, **kwargs)
+
+
+def _accepts(fn: Callable[..., Any], name: str) -> bool:
+    try:
+        params = inspect.signature(fn).parameters
+    except (TypeError, ValueError):  # pragma: no cover - builtins
+        return False
+    return name in params or any(p.kind is p.VAR_KEYWORD for p in params.values())
 
 
 def public_error(code: str) -> dict[str, Any]:
@@ -142,6 +165,14 @@ class Run:
     error: dict[str, Any] | None = None
     start_minutes: int | None = None
     created: float = field(default_factory=time.monotonic)
+    # Generation progress (#61): the stage actually running, never a percentage.
+    stage: str = "queued"
+    stage_started: float = field(default_factory=time.monotonic)
+    finished: float | None = None
+
+    def enter(self, stage: str) -> None:
+        """Record the stage that just started. Called from the generation thread."""
+        self.stage, self.stage_started = stage, time.monotonic()
 
     def to_json(self) -> dict[str, Any]:
         out: dict[str, Any] = {
@@ -151,6 +182,12 @@ class Run:
             "simulation_id": self.id,
             "branch_id": BRANCH_ID,
         }
+        now = time.monotonic()
+        if self.status == "generating":
+            out.update(stage=self.stage, elapsed_s=round(now - self.created, 1),
+                       stage_elapsed_s=round(now - self.stage_started, 1))
+        elif self.finished is not None:
+            out["generation_s"] = round(self.finished - self.created, 1)
         if self.channel is not None:
             sim = self.channel.sim
             out.update(
@@ -159,6 +196,7 @@ class Run:
                 event_count=len(sim.timeline),
                 sim_time_minutes=sim.now,
                 playback=sim.playback,
+                pacing=sim.pacing,
             )
         if self.error is not None:
             out["error"] = self.error
@@ -193,13 +231,16 @@ class ScenarioRegistry:
         max_generating: int = 2,
         max_runs: int = 16,
         fixture: str | None = None,
+        pace: float = PACE_FRACTION,
     ) -> None:
+        Simulation(simulation_id="pace-check", pace=pace)  # same validation as the engine
         self.generator = generator
         self.timeout_s = timeout_s
         self.grace_s = 5.0  # backstop beyond timeout_s if the generator ignores it
         self.max_generating = max_generating
         self.max_runs = max_runs
         self.fixture = fixture  # when set, every run uses this Director fixture (offline demo/E2E)
+        self.pace = pace  # fraction of each run's span per clock tick at 1x (SIM-005)
         self._runs: dict[str, Run] = {}
         self._tasks: set[asyncio.Task] = set()
 
@@ -227,21 +268,29 @@ class ScenarioRegistry:
         return run
 
     async def _generate(self, run: Run) -> None:
+        kwargs: dict[str, Any] = {"on_stage": run.enter} if _accepts(self.generator, "on_stage") else {}
         call = lambda: self.generator(  # noqa: E731
-            run.prompt, fixture=run.fixture, simulation_id=run.id, branch_id=BRANCH_ID, timeout_s=self.timeout_s
+            run.prompt, fixture=run.fixture, simulation_id=run.id, branch_id=BRANCH_ID, timeout_s=self.timeout_s,
+            **kwargs,
         )
+        run.enter("starting")
         try:
             # The Director enforces timeout_s itself. This is a backstop, and
             # the worker thread is abandoned rather than killed.
             batch = await asyncio.wait_for(asyncio.to_thread(call), self.timeout_s + self.grace_s)
+            run.enter("applying")
             sim = simulation_for(run.id, batch)
         except Exception as exc:  # noqa: BLE001 - any failure fails the run, never the server
+            run.finished = time.monotonic()
             self._fail(run, exc)
             return
+        run.finished = time.monotonic()
         if run.id not in self._runs:  # evicted while generating
             return
         first = sim.timeline[0]["sim_time_minutes"]
         run.start_minutes = max(0, first - 1)
+        sim.start_minutes = run.start_minutes
+        sim.pace = self.pace
         sim.seek(run.start_minutes)
         run.channel = Channel(sim)
         run.status = "ready"

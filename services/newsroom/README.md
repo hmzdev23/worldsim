@@ -112,6 +112,45 @@ body = news_response(sim.snapshot())   # sim is that run's Simulation
 - **Matching in the browser.** Drop a response whose `simulation_id` or `branch_id` isn't the active run. Keep only items whose `event_id` is in the current applied set. That also discards a response that was requested before a seek and arrives after it. The alert shows the item for each newly applied stream event, and the archive shows all kept items.
 - **Stream consumers.** `WireFeed` follows one run. A snapshot from another run starts it over, and event messages from any other run or branch are ignored.
 
+## Live storytelling (NEWS-006)
+
+Fast runs can apply several events in one tick (SIM-005 paces a run at 5% of its length per tick, #58). Every alert must still read as its own story. Feed fields are unchanged. Only the copy in `headline` and `dek` changed.
+
+- **Distinct headlines across a run.** Repeats at the same place are reworded:
+  - `New eruption near …`
+  - `More outages hit …`
+  - `Unrest spreads in …`
+  - `Northland launches another strike on …`
+  - `Another meteor strikes …`
+
+  If two alerts would still read the same, for example same-minute events at one place, the later ones get ` (update 2)`, ` (update 3)`, and so on. This depends only on earlier events, so it survives seeks and replays.
+- **Pandemic spread, grounded in the events.**
+  - The first report reads `<pathogen> outbreak reported in …`.
+  - A later outbreak that lists an earlier outbreak in `parent_ids` reads `<pathogen> spreads to …`. Without that causal link it reads `<pathogen> cases confirmed in …`, and at the same place it reads `<pathogen> outbreak grows in …`.
+  - The dek adds `Outbreaks now reported in N places.`, which counts places with outbreak events. It never states infections, case counts or prevalence that the events don't carry.
+- **Follow-up context.** When an event's parent is a different kind of event, the dek ends with `Follows the eruption in Reykjanes Peninsula.` (or `… the earthquake off the coast of Miyagi.`), but only while it fits in `DEK_MAX`. The figures and the event's own description always come first. Events with neither still lead with the simulated fallback line.
+- **No repeated place.** `Singapore mobilizes emergency response`, not `… in Singapore`.
+- **No invented routes.** Aid copy names the sender, the receiving place and its quantities. It never names a route, flight or convoy unless the event's own text does.
+
+`tests/newsroom/test_storytelling.py` covers:
+- pandemic spread, a disaster, infrastructure, aid and recovery, using the Director's `global-pandemic` and `iceland-eruption` run fixtures
+- hand-built batches, including rapid same-minute events
+- alert, archive, seek and replay all giving identical copy
+- run isolation
+
+`tests/integration/test_paced_storytelling.py` runs Iceland through the 5%-paced stream and this newsroom at 1×, 4× and 16×. It checks that:
+- alerts arrive in canonical order
+- two aid events in the same minute both alert
+- no future news appears after a seek or replay
+- playback is reproducible
+- a live server run gives matching `/news`
+
+With #62 merged, the integration test now runs against the paced engine.
+
+## Recap storyboard (RECAP-001)
+
+`python3 -m worldwire.storyboard RUN` writes the shot list for the post-run recap video. The format and beats are described in [apps/recap/README.md](../../apps/recap/README.md), and the schema is [apps/recap/storyboard.schema.json](../../apps/recap/storyboard.schema.json). It reuses this package's headlines and impact formatting, so the video and WORLD//WIRE agree.
+
 ## Web panel
 
 `apps/web` imports the generated `feeds/japan-earthquake.json`. Its `WorldWire` component shows a story only for events the simulation stream has applied, and falls back to a basic card for events missing from the feed. A test fails if the committed feed drifts from the fixture. The regenerate command is above.

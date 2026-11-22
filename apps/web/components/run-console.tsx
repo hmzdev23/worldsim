@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import feed from "../../../services/newsroom/feeds/japan-earthquake.json";
 import { japanDemo } from "../lib/earthquake";
 import { readScenarioNews, streamUrl } from "../lib/scenario-api";
-import { fallbackNewsItem, formatSimTime, sameRun, type NewsItem, type Playback, type RunIdentity, type ScenarioEvent, type ScenarioRun, type StreamMessage } from "../lib/scenario";
+import { fallbackNewsItem, formatSimTime, pacingSummary, sameRun, type NewsItem, type Playback, type RunIdentity, type ScenarioEvent, type ScenarioRun, type StreamMessage } from "../lib/scenario";
 import { HeadlineAlert } from "./headline-alert";
 import { ImpactDashboard } from "./impact-dashboard";
 import { WorldMap, type WorldMapHandle } from "./world-map";
@@ -63,6 +63,7 @@ function useRunNews(run: ScenarioRun, events: EventState, isDemo: boolean) {
 export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean }) {
   const mapRef = useRef<WorldMapHandle>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const seekFloorRef = useRef<number | undefined>(undefined);
   const [connection, setConnection] = useState<"connecting" | "connected" | "reconnecting" | "unavailable">("connecting");
   const [simTime, setSimTime] = useState(run.startMinute);
   const [playback, setPlayback] = useState<Playback>({ state: "paused", speed: 1 });
@@ -72,6 +73,7 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
   const connected = connection === "connected";
   const atEnd = simTime >= run.endMinute;
   const reportedHeadline = events.queue[0] && reports.get(events.queue[0].id);
+  const pacing = pacingSummary(run.pacing, playback.speed, run.endMinute - simTime);
   const progress = Math.max(0, Math.min(1, (simTime - run.startMinute) / Math.max(1, run.endMinute - run.startMinute)));
 
   useEffect(() => {
@@ -113,12 +115,13 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
           return;
         } else if (data.kind === "event" && data.event.status === "applied") {
           const { event } = data;
+          if (seekFloorRef.current !== undefined && event.sim_time_minutes <= seekFloorRef.current) return;
           setEvents((previous) => {
             if (previous.applied.some((applied) => applied.id === event.id)) return previous;
             return {
               ...previous,
               applied: [...previous.applied, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence),
-              queue: [...previous.queue, event],
+              queue: [...previous.queue, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence),
             };
           });
         } else if (data.kind === "clock") {
@@ -158,6 +161,7 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
   }
 
   function seek(minute: number) {
+    seekFloorRef.current = minute;
     sendControl({ action: "seek", sim_time_minutes: minute });
   }
 
@@ -184,7 +188,9 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
     <div className="workspace">
       <WorldMap
         ref={mapRef}
-        elapsedSeconds={(simTime - run.startMinute) / minutesPerSecond}
+        elapsedSeconds={(simTime - run.startMinute) / (run.pacing?.mode === "relative" && run.pacing.minutes_per_tick > 0
+          ? run.pacing.minutes_per_tick / run.pacing.tick_seconds
+          : minutesPerSecond)}
         events={events.applied}
         focusCountry={run.firstEvent.location.country_code}
       >
@@ -192,6 +198,7 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
           item={reportedHeadline}
           queuedCount={Math.max(0, events.queue.length - 1)}
           onAdvance={() => setEvents((previous) => ({ ...previous, queue: previous.queue.slice(1) }))}
+          onDismiss={() => setEvents((previous) => ({ ...previous, queue: previous.queue.slice(1) }))}
         />
       </WorldMap>
 
@@ -256,6 +263,12 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
             onChange={(event) => seek(event.currentTarget.valueAsNumber)}
             style={{ "--elapsed": `${progress * 100}%` } as CSSProperties}
           />
+          {pacing && (
+            <p className="timeline-pacing" aria-label="Playback pacing">
+              <span>{pacing.rate}</span>
+              <span>{pacing.left}</span>
+            </p>
+          )}
         </div>
         <div className="speed-control" role="group" aria-label="Playback speed">
           {speeds.map((speed) => (
