@@ -6,10 +6,19 @@ Turns a hypothetical scenario into a validated batch of **proposed** WORLD//SIM 
 cd services/director
 python3 -m worlddirector --fixture japan-earthquake        # deterministic, offline, no model
 python3 -m worlddirector --fixture global-pandemic         # 10 events over 3 months, 7 countries
-python3 -m worlddirector "A M7.5 earthquake hits Lima"     # real prediction through the model
+python3 -m worlddirector "A M7.5 earthquake hits Lima"     # real prediction: Claude Code, Haiku, low effort
+python3 -m worlddirector --engine codex "A M7.5 earthquake hits Lima"   # or through Codex
 python3 -m unittest discover -s ../../tests/director       # tests (the model is faked)
 ../../scripts/smoke-demo.sh                                # everyone's checks, Director included
 ```
+
+## Who can be the Director
+
+Anyone with [Claude Code](https://claude.com/claude-code) installed and signed in (`claude` on PATH). By default the Director runs `claude -p` on **Haiku at low effort**: no tools, no MCP servers, no saved session, no user or project settings, in an empty temp folder, with the event schema passed as `--json-schema`. A live run takes about 10–60 s.
+
+- **Randomness:** every run gets a new seed (`variation.py`), and the seed adds different directions to the prompt. Generating the same prompt twice gives two different, valid stories.
+- **Codex:** set `WORLDSIM_DIRECTOR_ENGINE=codex`, or pass `--engine codex`, to use the Codex CLI (GPT-6 Luna, high effort) as before.
+- `--model` and `--effort` override the engine's defaults.
 
 ## Predicting, then continuing
 
@@ -64,7 +73,7 @@ except DirectorError as err:
 ```
 
 - **Blocking:** a model run can take minutes. Call it off the request and clock loop (thread or executor).
-- **`timeout_s`** is clamped to 5–600 s. Model and credentials stay with the local Codex login.
+- **`timeout_s`** is clamped to 5–600 s. Model and credentials stay with the local Claude Code (or Codex) login.
 - **`fixture=`:** one of `RUN_FIXTURES` (`iceland-eruption`, `global-pandemic`, `japan-earthquake`). The service decides when to use one. The prompt is still validated, and no model is called.
 - **Errors:** `public_error(err)` returns `{error, state, retryable, status, message}`. It never contains `err.detail`.
 
@@ -72,11 +81,11 @@ except DirectorError as err:
 | --- | --- | --- | --- | --- |
 | `invalid_scenario` | `invalid_prompt` | no (edit the prompt) | 422 | empty or longer than 2000 characters |
 | `invalid_request` | `invalid_request` | no | 400 | bad `simulation_id`/`branch_id` or `timeout_s` (caller bug) |
-| `codex_timeout` | `timeout` | yes | 504 | model exceeded `timeout_s` |
+| `claude_timeout` / `codex_timeout` | `timeout` | yes | 504 | model exceeded `timeout_s` |
 | `invalid_json` | `invalid_output` | yes | 502 | model reply was not JSON |
 | `invalid_events` | `invalid_output` | yes | 502 | reply failed validation (order, coordinates, causes, payload, impacts) |
-| `codex_failed` | `unavailable` | yes | 503 | Codex exited non-zero or could not start |
-| `codex_missing` | `unavailable` | no | 503 | Codex CLI not installed on this server |
+| `claude_failed` / `codex_failed` | `unavailable` | yes | 503 | the CLI exited non-zero, reported an error (e.g. not signed in) or could not start |
+| `claude_missing` / `codex_missing` | `unavailable` | no | 503 | the engine's CLI is not installed on this server |
 | `fixture_missing` | `unavailable` | no | 500 | unknown sample fixture |
 | anything else | `unavailable` | yes | 500 | unexpected |
 
@@ -135,9 +144,9 @@ The model must follow a strict JSON schema (`OUTPUT_SCHEMA`), and its output is 
 | `error` | Meaning |
 | --- | --- |
 | `invalid_scenario` | Empty or over 2000 characters, or a bad `simulation_id`/`branch_id`/`first_id` |
-| `codex_missing` | `codex` is not on PATH |
-| `codex_timeout` | No answer within `--timeout` (default 240 s) |
-| `codex_failed` | Codex exited non-zero (for example, not logged in). `detail` holds stderr |
+| `claude_missing` / `codex_missing` | `claude` (or `codex`) is not on PATH |
+| `claude_timeout` / `codex_timeout` | No answer within `--timeout` (default 240 s) |
+| `claude_failed` / `codex_failed` | The CLI exited non-zero or reported an error (for example, not logged in). `detail` holds stderr or the error |
 | `invalid_json` | Empty response or not JSON |
 | `invalid_events` | JSON failed validation. `detail` lists every problem |
 | `invalid_history` | The history isn't a batch or list of events, or its file can't be read |

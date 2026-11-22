@@ -11,7 +11,7 @@ import json
 import sys
 from typing import Optional, Sequence
 
-from .director import DEFAULT_EFFORT, DEFAULT_MODEL, DEFAULT_TIMEOUT_S, generate
+from .director import DEFAULT_TIMEOUT_S, ENGINES, generate
 from .errors import DirectorError
 from .sim_client import DEFAULT_SIM_URL, get_snapshot, post_batch
 
@@ -38,8 +38,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     p.add_argument("--simulation-id")
     p.add_argument("--branch-id")
     p.add_argument("--first-id", type=int, help="number for the first evt-NNNN id (default: after the history)")
-    p.add_argument("--model", default=DEFAULT_MODEL)
-    p.add_argument("--effort", default=DEFAULT_EFFORT)
+    p.add_argument("--engine", choices=sorted(ENGINES),
+                   help="claude (default: Claude Code, haiku, low effort) or codex; default $WORLDSIM_DIRECTOR_ENGINE")
+    p.add_argument("--model", help="model for the engine (default: haiku for claude, gpt-6-luna for codex)")
+    p.add_argument("--effort", help="reasoning effort (default: low for claude, high for codex)")
     p.add_argument("--timeout", type=float, default=DEFAULT_TIMEOUT_S, help="seconds")
     args = p.parse_args(argv)
     if not args.fixture and not args.scenario.strip():
@@ -64,6 +66,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             first_id=args.first_id,
             model=args.model,
             effort=args.effort,
+            engine=args.engine,
             timeout_s=args.timeout,
             tone=args.tone,
         )

@@ -6,6 +6,7 @@ never loosens the existing rules (order, causes, impacts, whole-batch rejection)
 
 import copy
 import json
+import os
 import subprocess
 import sys
 import unittest
@@ -113,6 +114,7 @@ class ValidationTest(unittest.TestCase):
             build(raw)
 
 
+@mock.patch.dict(os.environ, {"WORLDSIM_DIRECTOR_ENGINE": "codex"})  # these tests drive a fake Codex
 class RunnerTest(unittest.TestCase):
     def test_tone_reaches_the_model_prompt(self):
         seen = {}

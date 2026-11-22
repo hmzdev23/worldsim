@@ -291,6 +291,7 @@ class SchemaAndPromptTest(unittest.TestCase):
             self.assertEqual(ctx.exception.code, "invalid_scenario")
 
 
+@mock.patch.dict(os.environ, {"WORLDSIM_DIRECTOR_ENGINE": "codex"})  # these tests drive a fake Codex
 class CodexModeTest(unittest.TestCase):
     """Exercise the real subprocess path against a fake `codex` executable."""
 

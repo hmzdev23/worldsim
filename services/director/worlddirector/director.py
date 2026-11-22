@@ -1,9 +1,15 @@
 """World Director: scenario prompt -> validated, proposed event batch.
 
-Two modes:
+Modes:
+  * claude  - (default) runs Claude Code (`claude -p`) on Haiku at low effort
+              under the host's signed-in Claude account. Anyone with Claude Code
+              installed and logged in can be the Director.
   * codex   - runs Codex CLI (GPT-6 Luna, high effort) under the host's
-              signed-in ChatGPT account, like scripts/try-director.sh.
+              signed-in ChatGPT account. Set WORLDSIM_DIRECTOR_ENGINE=codex.
   * fixture - replays a checked-in raw model response. Deterministic, offline.
+
+Every model run gets a random seed (variation.py), so the same prompt gives a
+different, still-valid story each time.
 
 Both modes go through the same validator, so fixtures exercise the real path.
 """
@@ -26,8 +32,21 @@ from .validate import build_batch, history_state
 from .variation import check_seed, prompt_rules, vary_raw
 
 FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures"
-DEFAULT_MODEL = "gpt-6-luna"
-DEFAULT_EFFORT = "high"
+# Engine -> (model, reasoning effort). Claude Code is the default Director.
+ENGINES: dict = {"claude": ("haiku", "low"), "codex": ("gpt-6-luna", "high")}
+ENGINE_ENV = "WORLDSIM_DIRECTOR_ENGINE"
+
+
+def director_engine(engine: Optional[str] = None) -> str:
+    """The engine to use: the argument, else $WORLDSIM_DIRECTOR_ENGINE, else claude."""
+    name = (engine or os.environ.get(ENGINE_ENV) or "claude").strip().lower()
+    if name not in ENGINES:
+        raise DirectorError("invalid_request", f"Unknown Director engine {name!r}. Use one of: {', '.join(ENGINES)}")
+    return name
+
+
+DEFAULT_ENGINE = "claude"
+DEFAULT_MODEL, DEFAULT_EFFORT = ENGINES[DEFAULT_ENGINE]
 DEFAULT_TIMEOUT_S = 240
 MAX_FIXTURE_EVENTS = 200  # hand-written fixtures may be longer than one model batch
 
@@ -199,6 +218,21 @@ def codex_command(codex: str, run_dir: str, schema_path: str, out_path: str, mod
     ]  # fmt: skip
 
 
+def claude_command(claude: str, model: str, effort: str, schema: dict) -> list[str]:
+    """`claude -p` with no tools, no MCP servers, no saved session and no settings files."""
+    return [
+        claude, "-p",
+        "--model", model,
+        "--effort", effort,
+        "--output-format", "json",
+        "--json-schema", json.dumps(schema),
+        "--tools", "",
+        "--strict-mcp-config",
+        "--setting-sources", "",
+        "--no-session-persistence",
+    ]  # fmt: skip
+
+
 def _parse_json(text: str) -> object:
     text = text.strip()
     try:
@@ -212,33 +246,73 @@ def _parse_json(text: str) -> object:
             return json.loads(text[start : end + 1])
         except json.JSONDecodeError:
             pass
-    raise DirectorError("invalid_json", "Codex did not return valid JSON", text)
+    raise DirectorError("invalid_json", "The model did not return valid JSON", text)
 
 
 def run_codex(
     scenario: str,
     *,
     history: Optional[list] = None,
-    model: str = DEFAULT_MODEL,
-    effort: str = DEFAULT_EFFORT,
+    model: Optional[str] = None,
+    effort: Optional[str] = None,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     runner: Runner = subprocess.run,
     stages: Optional[Stages] = None,
     tone: str = DEFAULT_TONE,
     seed: Optional[int] = None,
+    engine: Optional[str] = None,
 ) -> object:
-    """Ask Codex for raw events. Returns parsed JSON (not yet validated).
+    """Ask the model for raw events. Returns parsed JSON (not yet validated).
 
-    `stages` records the prompt, model (the whole codex process) and parse times.
+    Kept under its old name; `engine` picks Claude Code (default) or Codex.
+    `stages` records the prompt, model (the whole CLI process) and parse times.
     """
+    engine = director_engine(engine)
+    model = model or ENGINES[engine][0]
+    effort = effort or ENGINES[engine][1]
+    call = _call_claude if engine == "claude" else _call_codex
     with stage(stages, "prompt"):
         prompt = build_prompt(scenario, history, tone, seed)
     with stage(stages, "model"):
-        text, stderr = _call_codex(prompt, model=model, effort=effort, timeout_s=timeout_s, runner=runner)
+        text, stderr = call(prompt, model=model, effort=effort, timeout_s=timeout_s, runner=runner)
     with stage(stages, "parse"):
         if not text.strip():
-            raise DirectorError("invalid_json", "Codex returned an empty response", stderr)
+            raise DirectorError("invalid_json", "The model returned an empty response", stderr)
         return _parse_json(text)
+
+
+run_model = run_codex
+
+
+def _call_claude(prompt: str, *, model: str, effort: str, timeout_s: float, runner: Runner) -> tuple[str, str]:
+    """Run `claude -p` once in an empty folder. Returns (answer JSON text, stderr)."""
+    claude = shutil.which("claude")
+    if not claude:
+        raise DirectorError("claude_missing", "Claude Code not found. Install it and sign in with `claude`.")
+    with tempfile.TemporaryDirectory(prefix="worldsim-director.") as run_dir:
+        cmd = claude_command(claude, model, effort, OUTPUT_SCHEMA)
+        try:
+            proc = runner(cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=timeout_s,
+                          cwd=run_dir, env=dict(os.environ))
+        except subprocess.TimeoutExpired:
+            raise DirectorError("claude_timeout", f"Claude Code did not finish within {timeout_s:g}s") from None
+        if proc.returncode != 0:
+            raise DirectorError("claude_failed", f"Claude Code exited with status {proc.returncode}",
+                                proc.stderr or proc.stdout)
+    out = (proc.stdout or "").strip()
+    try:
+        result = json.loads(out)
+    except json.JSONDecodeError:
+        return out, proc.stderr or ""  # not the JSON envelope; let the parser try the raw text
+    if not isinstance(result, dict):
+        return out, proc.stderr or ""
+    if result.get("is_error"):
+        raise DirectorError("claude_failed", "Claude Code reported an error", str(result.get("result") or out)[:2000])
+    structured = result.get("structured_output")
+    if structured is not None:
+        return json.dumps(structured), proc.stderr or ""
+    answer = result.get("result")
+    return (answer if isinstance(answer, str) else ""), proc.stderr or ""
 
 
 def _call_codex(prompt: str, *, model: str, effort: str, timeout_s: float, runner: Runner) -> tuple[str, str]:
@@ -301,13 +375,14 @@ def generate(
     simulation_id: Optional[str] = None,
     branch_id: Optional[str] = None,
     first_id: Optional[int] = None,
-    model: str = DEFAULT_MODEL,
-    effort: str = DEFAULT_EFFORT,
+    model: Optional[str] = None,
+    effort: Optional[str] = None,
     timeout_s: float = DEFAULT_TIMEOUT_S,
     runner: Runner = subprocess.run,
     stages: Optional[Stages] = None,
     tone: str = DEFAULT_TONE,
     seed: Optional[int] = None,
+    engine: Optional[str] = None,
 ) -> dict:
     """Return a validated batch of proposed events, or raise DirectorError.
 
@@ -342,8 +417,10 @@ def generate(
         source, model_name, max_events = "fixture", None, MAX_FIXTURE_EVENTS
         simulation_id = simulation_id or f"demo-{fixture}"
     else:
+        engine = director_engine(engine)
+        model = model or ENGINES[engine][0]
         raw = run_codex(scenario, history=past, model=model, effort=effort, timeout_s=timeout_s, runner=runner,
-                        stages=stages, tone=tone, seed=seed)
+                        stages=stages, tone=tone, seed=seed, engine=engine)
         source, model_name, max_events = "model", model, MAX_EVENTS
         simulation_id = simulation_id or f"sim-{_slug(scenario)}"
     with stage(stages, "validate"):

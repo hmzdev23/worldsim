@@ -10,6 +10,7 @@ geometry or flight paths.
 
 import io
 import json
+import os
 import subprocess
 import sys
 import unittest
@@ -112,6 +113,7 @@ class FakeClock:
         return self.now
 
 
+@mock.patch.dict(os.environ, {"WORLDSIM_DIRECTOR_ENGINE": "codex"})  # these tests drive a fake Codex
 class StageTimingTests(unittest.TestCase):
     def test_fixture_run_records_prompt_fixture_and_validate(self):
         starts = []
