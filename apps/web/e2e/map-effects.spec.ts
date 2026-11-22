@@ -116,7 +116,7 @@ test.beforeEach(({}, testInfo) => {
 test("special effects appear on the map and clear on rewind", async ({ page }) => {
   await mockScenarioService(page, true);
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await generate(page, "A hypothetical chain of events", "Special effects");
   const map = page.getByRole("region", { name: "Interactive world map" });
   const playback = page.getByRole("region", { name: "Simulation playback" });
@@ -180,7 +180,7 @@ test("special scenarios get identifiable cues at their reported locations", () =
 test("outbreaks accumulate, disasters ring, and only a supported aid route is drawn", async ({ page }) => {
   await mockScenarioService(page);
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   const map = page.getByRole("region", { name: "Interactive world map" });
   const effects = map.getByRole("group", { name: "Map effects" });
   const playback = page.getByRole("region", { name: "Simulation playback" });
@@ -239,7 +239,7 @@ test.describe("with reduced motion", () => {
   test("the aid marker rests at the destination instead of moving", async ({ page }) => {
     await mockScenarioService(page);
     await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
     const map = page.getByRole("region", { name: "Interactive world map" });
     await generate(page, "A new virus spreads from Singapore while aid moves.", "Pandemic and aid");
     // A new run plays by itself.

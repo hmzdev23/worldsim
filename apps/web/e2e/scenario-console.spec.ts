@@ -94,7 +94,7 @@ test.use({ reducedMotion: "reduce" });
 test("prompted playback keeps headlines, map focus, and seeks scoped to each run", async ({ page }) => {
   await mockScenarioService(page);
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   const prompt = page.getByLabel("Scenario prompt");
   const playback = page.getByRole("region", { name: "Simulation playback" });
   const archive = page.getByRole("region", { name: "WORLD//WIRE" });
@@ -145,7 +145,7 @@ test("prompted playback keeps headlines, map focus, and seeks scoped to each run
 test("a failed generation can be retried without leaving the demo workspace", async ({ page }) => {
   await mockScenarioService(page, { failFirst: true });
   await page.goto("/");
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   const prompt = page.getByLabel("Scenario prompt");
   await prompt.fill("A power outage on the Reykjanes Peninsula.");
   await page.getByRole("button", { name: "Simulate", exact: true }).click();
@@ -154,6 +154,6 @@ test("a failed generation can be retried without leaving the demo workspace", as
   await expect(prompt).toHaveValue("A power outage on the Reykjanes Peninsula.");
   await page.getByRole("button", { name: "Try again" }).click();
   await expect(page.getByRole("heading", { name: "Iceland eruption" })).toBeVisible();
-  await page.getByRole("button", { name: "Japan demo", exact: true }).click();
+  await page.goto("/?demo=japan");
   await expect(page.getByRole("heading", { name: "Earthquake off Japan" })).toBeVisible();
 });

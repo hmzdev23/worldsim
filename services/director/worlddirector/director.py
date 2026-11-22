@@ -16,12 +16,14 @@ Both modes go through the same validator, so fixtures exercise the real path.
 
 from __future__ import annotations
 
+import copy
 import json
 import os
 import re
 import shutil
 import subprocess
 import tempfile
+import time
 from pathlib import Path
 from typing import Callable, Optional
 
@@ -35,6 +37,10 @@ FIXTURES_DIR = Path(__file__).resolve().parent.parent / "fixtures"
 # Engine -> (model, reasoning effort). Claude Code is the default Director.
 ENGINES: dict = {"claude": ("haiku", "low"), "codex": ("gpt-6-luna", "high")}
 ENGINE_ENV = "WORLDSIM_DIRECTOR_ENGINE"
+# Extra attempts after an answer fails validation, with the errors fed back.
+RETRIES: dict = {"claude": 1, "codex": 0}
+FEEDBACK_MAX_CHARS = 2000
+MIN_RETRY_S = 20  # skip the retry when less time than this is left
 
 
 def director_engine(engine: Optional[str] = None) -> str:
@@ -218,6 +224,19 @@ def codex_command(codex: str, run_dir: str, schema_path: str, out_path: str, mod
     ]  # fmt: skip
 
 
+def claude_schema(max_events: int = MAX_EVENTS) -> dict:
+    """OUTPUT_SCHEMA plus the 1..max_events limit on `events`.
+
+    Claude Code checks structured output against --json-schema and makes the
+    model fix it, so a 13th event is corrected instead of failing the whole
+    run. (Codex's strict schema mode does not take array limits, so
+    OUTPUT_SCHEMA itself leaves them to the local validator.)
+    """
+    schema = copy.deepcopy(OUTPUT_SCHEMA)
+    schema["properties"]["events"].update(minItems=1, maxItems=max_events)
+    return schema
+
+
 def claude_command(claude: str, model: str, effort: str, schema: dict) -> list[str]:
     """`claude -p` with no tools, no MCP servers, no saved session and no settings files."""
     return [
@@ -261,6 +280,7 @@ def run_codex(
     tone: str = DEFAULT_TONE,
     seed: Optional[int] = None,
     engine: Optional[str] = None,
+    feedback: Optional[str] = None,
 ) -> object:
     """Ask the model for raw events. Returns parsed JSON (not yet validated).
 
@@ -273,6 +293,12 @@ def run_codex(
     call = _call_claude if engine == "claude" else _call_codex
     with stage(stages, "prompt"):
         prompt = build_prompt(scenario, history, tone, seed)
+        if feedback:
+            prompt += (
+                "\n\nYour previous answer was rejected by the validator for these reasons:\n"
+                + feedback[:FEEDBACK_MAX_CHARS]
+                + "\nReturn the whole answer again with every problem fixed."
+            )
     with stage(stages, "model"):
         text, stderr = call(prompt, model=model, effort=effort, timeout_s=timeout_s, runner=runner)
     with stage(stages, "parse"):
@@ -290,7 +316,7 @@ def _call_claude(prompt: str, *, model: str, effort: str, timeout_s: float, runn
     if not claude:
         raise DirectorError("claude_missing", "Claude Code not found. Install it and sign in with `claude`.")
     with tempfile.TemporaryDirectory(prefix="worldsim-director.") as run_dir:
-        cmd = claude_command(claude, model, effort, OUTPUT_SCHEMA)
+        cmd = claude_command(claude, model, effort, claude_schema())
         try:
             proc = runner(cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=timeout_s,
                           cwd=run_dir, env=dict(os.environ))
@@ -419,10 +445,25 @@ def generate(
     else:
         engine = director_engine(engine)
         model = model or ENGINES[engine][0]
-        raw = run_codex(scenario, history=past, model=model, effort=effort, timeout_s=timeout_s, runner=runner,
-                        stages=stages, tone=tone, seed=seed, engine=engine)
-        source, model_name, max_events = "model", model, MAX_EVENTS
         simulation_id = simulation_id or f"sim-{_slug(scenario)}"
+        # A fast, low-effort model sometimes slips on a rule the schema can't
+        # express (e.g. a running total that goes down). Claude Code gets the
+        # validator's errors back once and returns a corrected answer.
+        # The retry shares timeout_s with the first try, so the caller's limit still holds.
+        feedback, deadline = None, time.monotonic() + timeout_s
+        for attempt in range(1 + RETRIES.get(engine, 0)):
+            remaining = timeout_s if attempt == 0 else deadline - time.monotonic()
+            raw = run_codex(scenario, history=past, model=model, effort=effort, timeout_s=remaining, runner=runner,
+                            stages=stages, tone=tone, seed=seed, engine=engine, feedback=feedback)
+            try:
+                with stage(stages, "validate"):
+                    return build_batch(raw, simulation_id=simulation_id, branch_id=branch_id, source="model",
+                                       model=model, first_id=first_id, history=past, max_events=MAX_EVENTS)
+            except DirectorError as err:
+                last = attempt == RETRIES.get(engine, 0)
+                if err.code != "invalid_events" or last or deadline - time.monotonic() < MIN_RETRY_S:
+                    raise
+                feedback = f"{err.message}\n{err.detail or ''}".strip()
     with stage(stages, "validate"):
         return build_batch(
             raw,
