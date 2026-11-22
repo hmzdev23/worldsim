@@ -1,0 +1,247 @@
+{
+  "schema_version": "0.1",
+  "simulation_id": "montreal-pandemic",
+  "branch_id": "main",
+  "events": [
+    {
+      "id": "evt-0001",
+      "sim_time_minutes": 0,
+      "sequence": 0,
+      "type": "disease_outbreak",
+      "status": "proposed",
+      "location": {
+        "name": "Montreal, Quebec",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5019,
+        "lon": -73.5674
+      },
+      "severity": 0.55,
+      "visual": "contagion_spread",
+      "payload": {
+        "description": "A severe new respiratory illness emerges in Montreal and spreads through coughing; health officials begin investigating clusters.",
+        "radius_km": 30,
+        "pathogen": "MONT-26 respiratory virus"
+      },
+      "parent_ids": [],
+      "provenance": {
+        "source": "model",
+        "model": "gpt-6-luna"
+      }
+    },
+    {
+      "id": "evt-0002",
+      "sim_time_minutes": 2880,
+      "sequence": 0,
+      "type": "government_response",
+      "status": "proposed",
+      "location": {
+        "name": "Montreal, Quebec",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5019,
+        "lon": -73.5674
+      },
+      "severity": 0.45,
+      "visual": "emergency_mobilization",
+      "payload": {
+        "description": "Public health teams expand testing and advise residents to stay home when ill as clinics report rising respiratory cases.",
+        "radius_km": 100
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "model",
+        "model": "gpt-6-luna"
+      }
+    },
+    {
+      "id": "evt-0003",
+      "sim_time_minutes": 10080,
+      "sequence": 0,
+      "type": "disease_outbreak",
+      "status": "proposed",
+      "location": {
+        "name": "Toronto, Ontario",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 43.6532,
+        "lon": -79.3832
+      },
+      "severity": 0.6,
+      "visual": "contagion_spread",
+      "payload": {
+        "description": "Locally transmitted cases appear in Toronto, prompting expanded surveillance and temporary precautions in crowded indoor settings.",
+        "radius_km": 80,
+        "pathogen": "MONT-26 respiratory virus"
+      },
+      "parent_ids": [
+        "evt-0001"
+      ],
+      "provenance": {
+        "source": "model",
+        "model": "gpt-6-luna"
+      }
+    },
+    {
+      "id": "evt-0004",
+      "sim_time_minutes": 20160,
+      "sequence": 0,
+      "type": "disease_outbreak",
+      "status": "proposed",
+      "location": {
+        "name": "New York City, New York",
+        "country": "United States",
+        "country_code": "USA",
+        "lat": 40.7128,
+        "lon": -74.006
+      },
+      "severity": 0.62,
+      "visual": "contagion_spread",
+      "payload": {
+        "description": "Travel-linked infections lead to community spread in New York City, with hospitals preparing for a sustained rise in respiratory patients.",
+        "radius_km": 120,
+        "pathogen": "MONT-26 respiratory virus"
+      },
+      "parent_ids": [
+        "evt-0003"
+      ],
+      "provenance": {
+        "source": "model",
+        "model": "gpt-6-luna"
+      }
+    },
+    {
+      "id": "evt-0005",
+      "sim_time_minutes": 28800,
+      "sequence": 0,
+      "type": "government_response",
+      "status": "proposed",
+      "location": {
+        "name": "Ottawa, Ontario",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.4215,
+        "lon": -75.6972
+      },
+      "severity": 0.58,
+      "visual": "emergency_mobilization",
+      "payload": {
+        "description": "Canadian health authorities coordinate case reporting and recommend ventilation, masking in crowded indoor spaces, and support for strained hospitals.",
+        "radius_km": 500
+      },
+      "parent_ids": [
+        "evt-0001",
+        "evt-0003"
+      ],
+      "provenance": {
+        "source": "model",
+        "model": "gpt-6-luna"
+      }
+    },
+    {
+      "id": "evt-0006",
+      "sim_time_minutes": 43200,
+      "sequence": 0,
+      "type": "economic_shock",
+      "status": "proposed",
+      "location": {
+        "name": "Montreal, Quebec",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5019,
+        "lon": -73.5674
+      },
+      "severity": 0.5,
+      "visual": "market_shock",
+      "payload": {
+        "description": "Absences and voluntary limits on crowded activities disrupt travel, hospitality, and in-person services across affected cities.",
+        "radius_km": 700,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "economic_loss_usd": 1800000000
+        }
+      },
+      "parent_ids": [
+        "evt-0001",
+        "evt-0003",
+        "evt-0004",
+        "evt-0005"
+      ],
+      "provenance": {
+        "source": "model",
+        "model": "gpt-6-luna"
+      }
+    },
+    {
+      "id": "evt-0007",
+      "sim_time_minutes": 86400,
+      "sequence": 0,
+      "type": "disease_outbreak",
+      "status": "proposed",
+      "location": {
+        "name": "Paris",
+        "country": "France",
+        "country_code": "FRA",
+        "lat": 48.8566,
+        "lon": 2.3522
+      },
+      "severity": 0.55,
+      "visual": "contagion_spread",
+      "payload": {
+        "description": "Cases linked to international travel develop into local transmission in Paris as health services monitor spread across Europe.",
+        "radius_km": 100,
+        "pathogen": "MONT-26 respiratory virus",
+        "impacts": {
+          "basis": "fictional_estimate",
+          "economic_loss_usd": 1800000000
+        }
+      },
+      "parent_ids": [
+        "evt-0004"
+      ],
+      "provenance": {
+        "source": "model",
+        "model": "gpt-6-luna"
+      }
+    },
+    {
+      "id": "evt-0008",
+      "sim_time_minutes": 259200,
+      "sequence": 0,
+      "type": "recovery",
+      "status": "proposed",
+      "location": {
+        "name": "Montreal, Quebec",
+        "country": "Canada",
+        "country_code": "CAN",
+        "lat": 45.5019,
+        "lon": -73.5674
+      },
+      "severity": 0.28,
+      "visual": "recovery_pulse",
+      "payload": {
+        "description": "After several months, infections decline in early affected areas and hospitals regain capacity, though monitoring and periodic local precautions continue.",
+        "radius_km": 700,
+        "impacts": {
+          "basis": "fictional_estimate",
+          "economic_loss_usd": 3200000000
+        }
+      },
+      "parent_ids": [
+        "evt-0001",
+        "evt-0002",
+        "evt-0003",
+        "evt-0004",
+        "evt-0005",
+        "evt-0006",
+        "evt-0007"
+      ],
+      "provenance": {
+        "source": "model",
+        "model": "gpt-6-luna"
+      }
+    }
+  ]
+}
