@@ -18,6 +18,16 @@ function evt(id: string, minute: number, type: string, visual: string, location:
   };
 }
 
+async function expectAnchored(visual: import("@playwright/test").Locator, event: import("@playwright/test").Locator, bottom = false) {
+  await expect.poll(async () => {
+    const a = await visual.boundingBox(), b = await event.boundingBox();
+    if (!a || !b) return Infinity;
+    const dx = Math.abs(a.x + a.width / 2 - (b.x + b.width / 2));
+    const dy = Math.abs((bottom ? a.y + a.height : a.y + a.height / 2) - (b.y + b.height / 2));
+    return Math.max(dx, dy);
+  }).toBeLessThan(2);
+}
+
 const pandemic = [
   evt("evt-0001", 10, "disease_outbreak", "contagion_spread", loc("Singapore", "Singapore", "SGP", 1.35, 103.82),
     { pathogen: "novel respiratory virus", radius_km: 20 }),
@@ -118,9 +128,15 @@ test("special effects appear on the map and clear on rewind", async ({ page }) =
   const tornado = map.locator('[data-effect="tornado"]');
   const initialAlien = (await alien.boundingBox())!.width;
   const initialTornado = (await tornado.boundingBox())!.width;
+  const alienEvent = map.locator('[title="alien contact · Nairobi"]');
+  const tornadoEvent = map.locator('[title="other hazard · Toronto"]');
+  await expectAnchored(alien, alienEvent);
+  await expectAnchored(tornado, tornadoEvent);
   await map.getByRole("button", { name: "Zoom in" }).click();
   await expect.poll(async () => (await alien.boundingBox())!.width).toBeGreaterThan(initialAlien);
   await expect.poll(async () => (await tornado.boundingBox())!.width).toBeGreaterThan(initialTornado);
+  await expectAnchored(alien, alienEvent);
+  await expectAnchored(tornado, tornadoEvent);
   await playback.getByRole("slider").press("Home");
   await expect(map.locator('[data-effect="alien"]')).toHaveCount(0);
   await expect(map.locator('[data-effect="tornado"]')).toHaveCount(0);
@@ -184,6 +200,8 @@ test("outbreaks accumulate, disasters ring, and only a supported aid route is dr
   await expect(map.locator('[data-effect="volcano"]')).toHaveCount(1);
   const volcano = map.locator('[data-effect="volcano"]');
   const initialWidth = (await volcano.boundingBox())!.width;
+  const eruptionEvent = map.locator('[title="volcanic eruption · Reykjanes Peninsula"]');
+  await expectAnchored(volcano, eruptionEvent, true);
   // One route: Germany has an earlier event (Frankfurt); Norway has none, so no route to Reykjavik.
   await expect(map.locator('[data-effect="aid-marker"]')).toHaveCount(1);
   await expect(map.locator('[data-effect="aid-marker"]')).toHaveAttribute("data-event-id", "evt-0004");
@@ -193,6 +211,7 @@ test("outbreaks accumulate, disasters ring, and only a supported aid route is dr
   await expect(effects).toHaveCSS("pointer-events", "none");
   await map.getByRole("button", { name: "Zoom in" }).click();
   await expect.poll(async () => (await volcano.boundingBox())!.width).toBeGreaterThan(initialWidth);
+  await expectAnchored(volcano, eruptionEvent, true);
 
   // Seeking back removes effects for events that are no longer applied.
   const slider = playback.getByRole("slider");
@@ -221,5 +240,6 @@ test.describe("with reduced motion", () => {
     await generate(page, "A new virus spreads from Singapore while aid moves.", "Pandemic and aid");
     await page.getByRole("region", { name: "Simulation playback" }).getByRole("button", { name: "Play", exact: true }).click();
     await expect(map.locator('[data-effect="aid-marker"]')).toHaveAttribute("data-moving", "false");
+    await expectAnchored(map.locator('[data-effect="aid-marker"]'), map.locator('[title="international aid · Lagos"]'));
   });
 });

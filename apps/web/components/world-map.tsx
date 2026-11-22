@@ -57,6 +57,18 @@ function zoomScaledRadius(radius: number): ExpressionSpecification {
     4.65, radius * 0.28, 7, radius * 0.65];
 }
 
+// MapLibre owns the outer element's positioning transform. Scale only its
+// child, so zooming never scales the screen coordinates of the marker itself.
+function effectWrapper(visual: HTMLElement): HTMLElement {
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(visual);
+  return wrapper;
+}
+
+function effectVisual(marker: Marker): HTMLElement {
+  return marker.getElement().firstElementChild as HTMLElement;
+}
+
 function effectData(effects: MapEffects) {
   const points = <T extends { id: string; lon: number; lat: number; radiusKm: number; zombie?: boolean; flooding?: boolean }>(items: T[]) => ({
     type: "FeatureCollection" as const,
@@ -465,7 +477,7 @@ export function WorldMap({
       text.setAttribute("aria-hidden", "true");
       aidMarkers.current.set(route.id, {
         route,
-        marker: new Marker({ element }).setLngLat(along(route, reducedMotion() ? 1 : 0)).addTo(map),
+        marker: new Marker({ element: effectWrapper(element) }).setLngLat(along(route, reducedMotion() ? 1 : 0)).addTo(map),
         label: new Marker({ element: text, offset: [0, -14] }).setLngLat(along(route, 0.5)).addTo(map),
       });
     }
@@ -480,7 +492,7 @@ export function WorldMap({
       element.setAttribute("aria-hidden", "true");
       element.dataset.effect = "tornado";
       element.innerHTML = "<span></span><span></span><span></span>";
-      return new Marker({ element }).setLngLat([tornado.lon, tornado.lat]).addTo(map);
+      return new Marker({ element: effectWrapper(element) }).setLngLat([tornado.lon, tornado.lat]).addTo(map);
     });
     return () => { tornadoMarkers.current.forEach(marker => marker.remove()); tornadoMarkers.current = []; };
   }, [effects.tornadoes, mapReady]);
@@ -496,7 +508,7 @@ export function WorldMap({
       element.dataset.effect = cue.kind;
       element.setAttribute("aria-hidden", "true");
       element.textContent = symbols[cue.kind];
-      return new Marker({ element }).setLngLat([cue.lon, cue.lat]).addTo(map);
+      return new Marker({ element: effectWrapper(element) }).setLngLat([cue.lon, cue.lat]).addTo(map);
     });
     return () => { cueMarkers.current.forEach(marker => marker.remove()); cueMarkers.current = []; };
   }, [effects.cues, mapReady]);
@@ -510,13 +522,13 @@ export function WorldMap({
       element.dataset.effect = "volcano";
       element.setAttribute("aria-hidden", "true");
       element.innerHTML = '<span class="' + effectStyles.ash + '"></span><span class="' + effectStyles.mountain + '"></span><span class="' + effectStyles.lava + '"></span>';
-      return new Marker({ element, anchor: "bottom" }).setLngLat([item.lon, item.lat]).addTo(map);
+      return new Marker({ element: effectWrapper(element), anchor: "bottom" }).setLngLat([item.lon, item.lat]).addTo(map);
     });
     return () => { volcanoMarkers.current.forEach(marker => marker.remove()); volcanoMarkers.current = []; };
   }, [effects.shockwaves, mapReady]);
 
   useEffect(() => {
-    volcanoMarkers.current.forEach(marker => { marker.getElement().dataset.playing = String(playing); });
+    volcanoMarkers.current.forEach(marker => { effectVisual(marker).dataset.playing = String(playing); });
   }, [effects.shockwaves, mapReady, playing]);
 
   useEffect(() => {
@@ -525,9 +537,9 @@ export function WorldMap({
     const updateScale = () => {
       const scale = String(effectScale(map.getZoom()));
       for (const marker of [...volcanoMarkers.current, ...tornadoMarkers.current, ...cueMarkers.current]) {
-        marker.getElement().style.setProperty("--effect-scale", scale);
+        effectVisual(marker).style.setProperty("--effect-scale", scale);
       }
-      for (const { marker } of aidMarkers.current.values()) marker.getElement().style.setProperty("--effect-scale", scale);
+      for (const { marker } of aidMarkers.current.values()) effectVisual(marker).style.setProperty("--effect-scale", scale);
     };
     updateScale();
     map.on("zoom", updateScale);
@@ -548,15 +560,15 @@ export function WorldMap({
     map.setPaintProperty("effect-water-wave", "circle-radius", kmRadius(still ? 1 : 0.5 + phase, 12 + phase * 10));
     map.setPaintProperty("effect-water-wave", "circle-stroke-opacity", still ? 0.45 : 0.55 * (1 - phase));
     for (const marker of cueMarkers.current) {
-      marker.getElement().style.setProperty("--effect-motion", still ? "1" : String(1 + 0.08 * Math.sin(elapsedSeconds * 2)));
+      effectVisual(marker).style.setProperty("--effect-motion", still ? "1" : String(1 + 0.08 * Math.sin(elapsedSeconds * 2)));
     }
     for (const marker of tornadoMarkers.current) {
-      marker.getElement().style.rotate = still ? "0deg" : `${5 * Math.sin(elapsedSeconds * 2)}deg`;
+      effectVisual(marker).style.rotate = still ? "0deg" : `${5 * Math.sin(elapsedSeconds * 2)}deg`;
     }
     let index = 0;
     for (const { route, marker } of aidMarkers.current.values()) {
       marker.setLngLat(along(route, still ? 1 : ((elapsedSeconds / 5) + index * 0.37) % 1));
-      marker.getElement().dataset.moving = String(!still);
+      effectVisual(marker).dataset.moving = String(!still);
       index += 1;
     }
   }, [effects, elapsedSeconds, mapReady]);
