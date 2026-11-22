@@ -24,6 +24,8 @@ test("pandemic as health minister: skip, two decisions, score and summary", asyn
   // Card 1: the outbreak reaches a new country. Check the card, then skip it.
   const card = page.getByRole("dialog");
   await expect(card).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator(".inspector .decision-card")).toBeVisible();
+  await expect(page.locator(".map-panel .decision-card")).toHaveCount(0);
   await expect(card.getByRole("heading")).toBeFocused();
   await page.screenshot({ path: testInfo.outputPath("decision.png"), fullPage: true });
   await expect(card).toContainText("A new country is affected");

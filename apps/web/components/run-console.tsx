@@ -426,11 +426,6 @@ export function RunConsole({ run, isDemo, onRestart, onSelectRole, onSelectScena
             <button type="button" onClick={showComparison}>See what your decisions changed</button>
           </section>
         )}
-        {run.player && player.state && pending && (
-          <DecisionCard key={pending.id} state={player.state} pending={pending} busy={playerBusy} error={playerError}
-            onChoose={(optionId) => decide({ option_id: optionId })}
-            onFreeText={(text) => decide({ free_text: text })} />
-        )}
         <HeadlineAlert
           // While a decision card waits it has the floor; queued headlines show after.
           item={cardWaiting || (finished && events.queue.length === 0) ? undefined : reportedHeadline}
@@ -447,6 +442,11 @@ export function RunConsole({ run, isDemo, onRestart, onSelectRole, onSelectScena
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.18 }}
       >
+        {run.player && player.state && pending && (
+          <DecisionCard key={pending.id} state={player.state} pending={pending} busy={playerBusy} error={playerError}
+            onChoose={(optionId) => decide({ option_id: optionId })}
+            onFreeText={(text) => decide({ free_text: text })} />
+        )}
         {run.player && player.summary && finished && (
           <PlayerSummaryPanel summary={player.summary} busy={playerBusy}
             onTryAgain={() => onRestart?.()} onSelectRole={onSelectRole} onSelectScenario={onSelectScenario} onBranch={(id) => branchFrom(id)} onCompare={showComparison} />

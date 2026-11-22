@@ -62,14 +62,14 @@ function ScenarioWorkspace() {
     if(run.player && target===2){setFixture(run.player.fixture);setRoleId(run.player.role);}
     setStep(target);setView("setup");window.scrollTo({top:0,behavior:"instant"});
   }
-  async function start(text:string, player?:ScenarioRun["player"]) {
+  async function start(text:string, player?:ScenarioRun["player"], fixtureId?:string, watchNow=false) {
     if(!text || request.current)return;
     const controller=new AbortController();request.current=controller;preparingSince.current=Date.now();
     setLaunch({status:"generating"});setElapsedSeconds(0);setStage(undefined);
     try {
-      const next=await prepareScenario(text,controller.signal,p=>{if(!controller.signal.aborted)setStage(p.stage);},player);
+      const next=await prepareScenario(text,controller.signal,p=>{if(!controller.signal.aborted)setStage(p.stage);},player,fixtureId);
       if(controller.signal.aborted)return;
-      setRun(next);setRunPace(pace);setAutoStart(!!player);setCoach(true);setView(player ? "game" : "watch");setLaunch({status:"ready"});
+      setRun(next);setRunPace(pace);setAutoStart(!!player || watchNow);setCoach(true);setView(player ? "game" : "watch");setLaunch({status:"ready"});
     } catch(error) {
       if(!controller.signal.aborted)setLaunch({status:"failed",message:error instanceof Error ? error.message : "We couldn’t prepare this world. Please try again."});
     } finally {if(request.current===controller)request.current=null;}
@@ -110,6 +110,7 @@ function ScenarioWorkspace() {
     {view==="setup" && <ScenarioOnboarding scenarios={playable} fixture={fixture} roleId={roleId} step={step} pace={pace}
       busy={busy} loading={catalogueLoading} error={launch.status==="failed" ? launch.message : catalogueError}
       onRetry={()=>setReload(n=>n+1)} onScenario={id=>{if(id!==fixture)setRoleId("");setFixture(id);}}
+      onWatch={(text, fixtureId)=>void start(text,undefined,fixtureId,true)}
       onRole={setRoleId} onStep={next=>{setLaunch({status:"idle"});setStep(next);}} onPace={setPace} onStart={()=>playAsRole()}
       onBack={()=>{setLaunch({status:"idle"});step===1 ? setView("welcome") : setStep((step-1) as SetupStep);}}/>}
 

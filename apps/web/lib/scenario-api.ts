@@ -38,8 +38,9 @@ export async function prepareScenario(
   signal: AbortSignal,
   onProgress?: (progress: GenerationProgress) => void,
   player?: ScenarioRun["player"],
+  fixture?: string,
 ): Promise<ScenarioRun> {
-  const extra = player ? { fixture: player.fixture, mode: "player", role: player.role } : {};
+  const extra = player ? { fixture: player.fixture, mode: "player", role: player.role } : fixture ? { fixture } : {};
   let job = await requestJson<ScenarioJob>("/scenarios", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
