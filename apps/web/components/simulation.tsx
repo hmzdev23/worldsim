@@ -4,6 +4,7 @@ import { ArrowRight, GlobeHemisphereWest } from "@phosphor-icons/react";
 import { motion, MotionConfig } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { japanDemo } from "../lib/earthquake";
+import { listPlayableScenarios, type PlayableScenario } from "../lib/player-api";
 import { prepareScenario } from "../lib/scenario-api";
 import { generationStageLabel, type ScenarioRun } from "../lib/scenario";
 import { RunConsole } from "./run-console";
@@ -24,8 +25,23 @@ function ScenarioWorkspace() {
   const preparingSince = useRef<number | undefined>(undefined);
   const generating = launch.status === "generating";
   const isDemo = run === japanDemo;
+  const [playable, setPlayable] = useState<PlayableScenario[]>([]);
+  const [playFixture, setPlayFixture] = useState("");
+  const [playRole, setPlayRole] = useState("");
 
   useEffect(() => () => request.current?.abort(), []);
+
+  // Player mode (prototype): offline scenarios with a player spec, and their roles.
+  useEffect(() => {
+    const controller = new AbortController();
+    listPlayableScenarios(controller.signal).then((scenarios) => {
+      setPlayable(scenarios);
+      setPlayFixture((current) => current || scenarios[0]?.fixture || "");
+      setPlayRole((current) => current || scenarios[0]?.roles[0]?.id || "");
+    }, () => setPlayable([]));
+    return () => controller.abort();
+  }, []);
+  const chosenScenario = playable.find((item) => item.fixture === playFixture);
 
   useEffect(() => {
     if (!generating || preparingSince.current === undefined) return;
@@ -37,7 +53,18 @@ function ScenarioWorkspace() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const text = prompt.trim();
+    await start(prompt.trim());
+  }
+
+  function playAsRole(scenario = chosenScenario, roleId = playRole) {
+    const role = scenario?.roles.find((item) => item.id === roleId);
+    if (!scenario || !role) return;
+    void start(`Player mode: ${scenario.title} as ${role.title}`, {
+      fixture: scenario.fixture, role: role.id, roleTitle: role.title, scenarioTitle: scenario.title,
+    });
+  }
+
+  async function start(text: string, player?: ScenarioRun["player"]) {
     if (!text || request.current) return;
 
     const controller = new AbortController();
@@ -49,7 +76,7 @@ function ScenarioWorkspace() {
     try {
       const scenario = await prepareScenario(text, controller.signal, (progress) => {
         if (!controller.signal.aborted) setStage(progress.stage);
-      });
+      }, player);
       if (controller.signal.aborted) return;
       setRun(scenario);
       setElapsedSeconds(Math.floor((Date.now() - (preparingSince.current ?? Date.now())) / 1000));
@@ -129,7 +156,40 @@ function ScenarioWorkspace() {
         </div>
       </form>
 
-      <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo} />
+      {playable.length > 0 && (
+        <section className="player-launch" aria-labelledby="player-launch-title">
+          <h2 id="player-launch-title">Play a role <span>Simulated · fictional roles and choices</span></h2>
+          <div className="player-launch-row">
+            <label>
+              Scenario
+              <select id="player-scenario" value={playFixture} disabled={generating} onChange={(event) => {
+                const next = playable.find((item) => item.fixture === event.currentTarget.value);
+                setPlayFixture(event.currentTarget.value);
+                setPlayRole(next?.roles[0]?.id ?? "");
+              }}>
+                {playable.map((item) => <option key={item.fixture} value={item.fixture}>{item.title}</option>)}
+              </select>
+            </label>
+            <label>
+              Role
+              <select id="player-role" value={playRole} disabled={generating}
+                onChange={(event) => setPlayRole(event.currentTarget.value)}>
+                {(chosenScenario?.roles ?? []).map((role) => <option key={role.id} value={role.id}>{role.title}</option>)}
+              </select>
+            </label>
+            <button type="button" className="play-role-button" disabled={generating || !playRole} onClick={() => playAsRole()}>
+              Play this role
+            </button>
+          </div>
+          {chosenScenario && <p>{chosenScenario.summary} {chosenScenario.roles.find((r) => r.id === playRole)?.summary}</p>}
+        </section>
+      )}
+
+      <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo}
+        onRestart={run.player ? () => {
+          const scenario = playable.find((item) => item.fixture === run.player?.fixture);
+          playAsRole(scenario, run.player?.role);
+        } : undefined} />
     </main>
   );
 }

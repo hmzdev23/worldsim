@@ -56,7 +56,15 @@ export type ScenarioRun = RunIdentity & {
   endMinute: number;
   firstEvent: ScenarioEvent;
   pacing?: Pacing;
+  // Player mode (prototype): the run branches when the player decides, so its
+  // branch_id changes; match it by simulation_id only.
+  player?: { fixture: string; role: string; roleTitle: string; scenarioTitle: string };
 };
+
+/** Whether a stream message or news response belongs to this run (any branch in player mode). */
+export function sameRunOrBranch(run: ScenarioRun, other: RunIdentity) {
+  return run.player ? run.simulation_id === other.simulation_id : sameRun(run, other);
+}
 
 // What the scenario service is doing while a run generates (GET /scenarios/{id}).
 export type GenerationProgress = { stage?: string; elapsedSeconds?: number };

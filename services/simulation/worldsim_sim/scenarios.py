@@ -138,6 +138,9 @@ class Channel:
 
     sim: Simulation
     clients: set = field(default_factory=set)
+    # Player mode: a PlayerSession that arms breakpoints before each tick,
+    # reacts after it, and swaps `sim` when a decision forks a branch.
+    controller: Any = None
 
     async def broadcast(self, messages: list[Message]) -> None:
         for ws in list(self.clients):
@@ -169,6 +172,13 @@ class Run:
     stage: str = "queued"
     stage_started: float = field(default_factory=time.monotonic)
     finished: float | None = None
+    # Player mode (prototype): "watch" (default) or "player", with the chosen role.
+    mode: str = "watch"
+    role: str | None = None
+
+    @property
+    def player(self):
+        return self.channel.controller if self.channel is not None else None
 
     def enter(self, stage: str) -> None:
         """Record the stage that just started. Called from the generation thread."""
@@ -180,8 +190,11 @@ class Run:
             "status": self.status,
             "title": self.title,
             "simulation_id": self.id,
-            "branch_id": BRANCH_ID,
+            "branch_id": self.channel.sim.branch_id if self.channel is not None else BRANCH_ID,
+            "mode": self.mode,
         }
+        if self.mode == "player":
+            out["role"] = self.role
         now = time.monotonic()
         if self.status == "generating":
             out.update(stage=self.stage, elapsed_s=round(now - self.created, 1),
@@ -201,6 +214,44 @@ class Run:
         if self.error is not None:
             out["error"] = self.error
         return out
+
+
+class Catalogue:
+    """The Director's player catalogue (worlddirector.player), as the session uses it."""
+
+    def __init__(self) -> None:
+        director = _import("worlddirector", "director")
+        from worlddirector import player as module  # noqa: PLC0415 - after _import fixes sys.path
+
+        self.module = module
+        self.visuals_map = dict(director.VISUALS)
+
+    def spec(self, fixture: str | None) -> dict:
+        return self.module.load_player_spec(fixture)
+
+    def has_spec(self, fixture: str | None) -> bool:
+        return fixture is None or self.module.has_player_spec(fixture)
+
+    def list(self) -> list[dict]:
+        return self.module.list_player_specs()
+
+    def options_for(self, spec: dict, role: str, event_type: str) -> list[dict]:
+        return self.module.options_for(spec, role, event_type)
+
+    def action(self, spec: dict, action_id: str) -> dict:
+        return self.module.action(spec, action_id)
+
+    def check_free_text(self, text: str) -> str:
+        return self.module.check_free_text(text)
+
+    def intervention_visual(self, event_type: str) -> str:
+        return self.visuals_map[event_type]
+
+    def visuals(self) -> dict[str, str]:
+        return self.visuals_map
+
+    def continuer(self, text: str, **kwargs: Any) -> dict:
+        return self.module.continue_with_decision(text, **kwargs)
 
 
 def _title(prompt: str) -> str:
@@ -243,6 +294,7 @@ class ScenarioRegistry:
         self.pace = pace  # fraction of each run's span per clock tick at 1x (SIM-005)
         self._runs: dict[str, Run] = {}
         self._tasks: set[asyncio.Task] = set()
+        self._catalogue: Catalogue | None = None
 
     # ---- reads ----------------------------------------------------------
 
@@ -254,13 +306,16 @@ class ScenarioRegistry:
 
     # ---- lifecycle --------------------------------------------------------
 
-    async def create(self, prompt: str, fixture: str | None = None) -> Run:
+    async def create(self, prompt: str, fixture: str | None = None, *, mode: str = "watch",
+                     role: str | None = None) -> Run:
+        fixture = self.fixture or fixture
+        if mode == "player":
+            self._check_player(fixture, role)
         if sum(r.status == "generating" for r in self._runs.values()) >= self.max_generating:
             raise RegistryFull("Another scenario is still being prepared. Try again shortly.")
         await self._evict()
         run_id = f"run-{secrets.token_hex(5)}"
-        fixture = self.fixture or fixture
-        run = Run(id=run_id, prompt=prompt, fixture=fixture, title=_title(prompt))
+        run = Run(id=run_id, prompt=prompt, fixture=fixture, title=_title(prompt), mode=mode, role=role)
         self._runs[run_id] = run
         task = asyncio.create_task(self._generate(run))
         self._tasks.add(task)
@@ -292,8 +347,50 @@ class ScenarioRegistry:
         sim.start_minutes = run.start_minutes
         sim.pace = self.pace
         sim.seek(run.start_minutes)
-        run.channel = Channel(sim)
+        channel = Channel(sim)
+        if run.mode == "player":
+            try:
+                channel.controller = self._session(run, sim, channel)
+            except Exception as exc:  # noqa: BLE001 - a bad spec fails the run, never the server
+                run.finished = time.monotonic()
+                self._fail(run, exc)
+                return
+        run.channel = channel
         run.status = "ready"
+
+    # ---- player mode (prototype) ------------------------------------------
+
+    @property
+    def catalogue(self) -> Catalogue:
+        if self._catalogue is None:
+            self._catalogue = Catalogue()
+        return self._catalogue
+
+    def _check_player(self, fixture: str | None, role: str | None) -> None:
+        from .player import PlayerError  # noqa: PLC0415
+
+        if not self.catalogue.has_spec(fixture):
+            raise PlayerError(422, f"Player mode isn't available for {fixture!r} yet.")
+        spec = self.catalogue.spec(fixture)
+        if role not in {r["id"] for r in spec["roles"]}:
+            raise PlayerError(422, f"Choose a role: {', '.join(r['id'] for r in spec['roles'])}")
+
+    def _session(self, run: Run, sim: Simulation, channel: Channel):
+        from .player import PlayerSession  # noqa: PLC0415
+
+        catalogue = self.catalogue
+
+        def headline(snapshot: dict, event_id: str) -> str:
+            items = news_response(snapshot).get("items", [])
+            return next((i["headline"] for i in items if i.get("event_id") == event_id), "")
+
+        def switch(new_sim: Simulation) -> None:
+            channel.sim = new_sim
+
+        return PlayerSession(
+            run_id=run.id, spec=catalogue.spec(run.fixture), role=run.role, sim=sim, catalogue=catalogue,
+            headline=headline, continuer=catalogue.continuer, offline=run.fixture is not None, on_switch=switch,
+        )
 
     def _fail(self, run: Run, exc: BaseException) -> None:
         if isinstance(exc, (asyncio.TimeoutError, TimeoutError)):

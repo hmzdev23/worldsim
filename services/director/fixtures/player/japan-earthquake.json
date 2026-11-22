@@ -1,0 +1,116 @@
+{
+  "schema_version": "0.1",
+  "fixture": "japan-earthquake",
+  "title": "Earthquake off Miyagi",
+  "summary": "A fictional offshore earthquake and tsunami hit the northeast coast. Every figure is a simulated estimate.",
+  "label": "SIMULATED",
+  "variables": {
+    "fixed": {
+      "place": "Miyagi coast (fictional scenario)",
+      "hazard": "earthquake",
+      "start": "DAY 1 · 06:41",
+      "baseline_population": 2300000
+    },
+    "independent": [
+      { "name": "evacuation_level", "label": "Evacuation level", "options": ["standard", "wide"], "default": "standard" },
+      { "name": "grid_priority", "label": "Power repair priority", "options": ["normal", "hospitals_and_shelters"], "default": "normal" },
+      { "name": "coastal_inspection", "label": "Coastal site inspection", "options": ["routine", "expanded"], "default": "routine" },
+      { "name": "shelter_places", "label": "Extra shelter places (fictional)", "range": [0, 50000], "default": 0 },
+      { "name": "outside_aid", "label": "Outside aid requested", "options": ["no", "yes"], "default": "no" }
+    ],
+    "dependent": [
+      { "name": "deaths", "label": "Deaths (fictional estimate)", "measure": "impact", "key": "deaths", "better": "lower", "scale": 0.3, "weight": 3 },
+      { "name": "households_without_power", "label": "Households without power", "measure": "impact", "key": "households_without_power", "better": "lower", "scale": 0.4, "weight": 1 },
+      { "name": "economic_loss_usd", "label": "Economic losses (fictional US$)", "measure": "impact", "key": "economic_loss_usd", "better": "lower", "scale": 0.3, "weight": 1 },
+      { "name": "time_to_first_aid", "label": "Time to first outside aid", "measure": "time_to_first_aid", "better": "lower", "scale": 0.5, "weight": 1 }
+    ]
+  },
+  "triggers": {
+    "rules": [
+      { "id": "severe", "kind": "severity", "at_least": 0.6, "label": "A severe event" },
+      { "id": "follow_on", "kind": "event_type", "types": ["aftershock", "infrastructure_failure", "contamination", "economic_shock"], "label": "A follow-on event" }
+    ],
+    "min_gap_minutes": 360,
+    "defer_minutes": 60,
+    "max_deferrals": 2
+  },
+  "roles": [
+    { "id": "crisis_coordinator", "title": "National crisis coordinator", "summary": "Fictional role: coordinates the national response." },
+    { "id": "aid_director", "title": "Aid agency director", "summary": "Fictional role: directs an international relief agency." }
+  ],
+  "actions": [
+    {
+      "id": "widen_evacuation", "label": "Widen coastal evacuation orders",
+      "tradeoff": "Moves more people to high ground; more people need shelter.",
+      "roles": ["crisis_coordinator"], "event_types": ["earthquake", "tsunami_warning", "evacuation", "flooding", "aftershock"],
+      "sets": { "evacuation_level": "wide" }, "cost": 3,
+      "intervention": { "type": "evacuation", "severity": 0.4 },
+      "effects": {
+        "impacts_scale": { "deaths": 0.75, "missing": 0.75, "displaced": 1.1, "sheltered": 1.15 },
+        "consequences": [
+          { "after_minutes": 90, "type": "evacuation", "kind": "side_effect", "severity": 0.3,
+            "description": "Simulated: inland shelters fill beyond planned capacity." }
+        ]
+      }
+    },
+    {
+      "id": "prioritise_grid", "label": "Restore power to hospitals and shelters first",
+      "tradeoff": "Protects the most vulnerable; homes and businesses wait longer.",
+      "roles": ["crisis_coordinator"], "event_types": ["infrastructure_failure", "earthquake", "aftershock"],
+      "sets": { "grid_priority": "hospitals_and_shelters" }, "cost": 4,
+      "intervention": { "type": "government_response", "severity": 0.3 },
+      "effects": {
+        "severity_scale": { "infrastructure_failure": 0.8 },
+        "impacts_scale": { "households_without_power": 0.7, "households_without_water": 0.8, "economic_loss_usd": 1.05 }
+      }
+    },
+    {
+      "id": "inspect_coastal_sites", "label": "Expand inspection of damaged coastal sites",
+      "tradeoff": "Limits contamination; slows reopening of ports and farms.",
+      "roles": ["crisis_coordinator"], "event_types": ["contamination", "flooding", "economic_shock"],
+      "sets": { "coastal_inspection": "expanded" }, "cost": 2,
+      "intervention": { "type": "government_response", "severity": 0.2 },
+      "effects": { "impacts_scale": { "contaminated_area_km2": 0.8, "economic_loss_usd": 1.02 } }
+    },
+    {
+      "id": "stabilise_markets", "label": "Announce support for affected businesses",
+      "tradeoff": "Softens economic losses; adds public debt.",
+      "roles": ["crisis_coordinator"], "event_types": ["economic_shock"],
+      "cost": 3,
+      "intervention": { "type": "government_response", "severity": 0.2 },
+      "effects": { "impacts_scale": { "economic_loss_usd": 0.85 }, "severity_scale": { "economic_shock": 0.8 } }
+    },
+    {
+      "id": "open_shelters", "label": "Fund extra emergency shelters",
+      "tradeoff": "Keeps evacuees safer; money is spent before needs are clear.",
+      "roles": ["aid_director"], "event_types": ["earthquake", "tsunami_warning", "evacuation", "flooding", "aftershock"],
+      "sets": { "shelter_places": 20000 }, "cost": 2,
+      "intervention": { "type": "international_aid", "severity": 0.2 },
+      "effects": { "impacts_scale": { "injuries": 0.9, "sheltered": 1.2 } }
+    },
+    {
+      "id": "fund_recovery", "label": "Fund early recovery work",
+      "tradeoff": "Speeds rebuilding; money spent early may be wasted.",
+      "roles": ["aid_director"], "event_types": ["infrastructure_failure", "contamination", "economic_shock"],
+      "cost": 3,
+      "intervention": { "type": "international_aid", "severity": 0.2 },
+      "effects": { "impacts_scale": { "economic_loss_usd": 0.9 }, "shift": [{ "type": "recovery", "minutes": -600 }] }
+    },
+    {
+      "id": "request_aid", "label": "Request outside aid now",
+      "tradeoff": "Brings help sooner; depends on partners' timelines.",
+      "roles": ["crisis_coordinator", "aid_director"], "event_types": ["*"],
+      "sets": { "outside_aid": "yes" }, "cost": 2,
+      "intervention": { "type": "government_response", "severity": 0.2 },
+      "effects": { "shift": [{ "type": "international_aid", "minutes": -480 }] }
+    },
+    {
+      "id": "public_briefing", "label": "Give a public briefing",
+      "tradeoff": "Builds trust at little cost; little direct effect.",
+      "roles": ["crisis_coordinator", "aid_director"], "event_types": ["*"],
+      "cost": 1,
+      "intervention": { "type": "government_response", "severity": 0.1 },
+      "effects": { "severity_scale": { "evacuation": 0.95 } }
+    }
+  ]
+}

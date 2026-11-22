@@ -1,12 +1,19 @@
 import { ArrowCounterClockwise, Crosshair, Pause, Play } from "@phosphor-icons/react";
 import { motion, useReducedMotion } from "motion/react";
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import feed from "../../../services/newsroom/feeds/japan-earthquake.json";
 import { japanDemo } from "../lib/earthquake";
 import { readScenarioNews, streamUrl } from "../lib/scenario-api";
-import { fallbackNewsItem, formatSimTime, pacingSummary, sameRun, type NewsItem, type Playback, type RunIdentity, type ScenarioEvent, type ScenarioRun, type StreamMessage } from "../lib/scenario";
+import {
+  branchFromDecision, controlRun, PlayerRequestError, readPlayerState, readPlayerSummary, submitDecision,
+  type PlayerState, type PlayerSummary,
+} from "../lib/player-api";
+import { fallbackNewsItem, formatSimTime, pacingSummary, sameRun, sameRunOrBranch, type NewsItem, type Playback, type RunIdentity, type ScenarioEvent, type ScenarioRun, type StreamMessage } from "../lib/scenario";
+import { AlternateTimeline } from "./alternate-timeline";
+import { DecisionCard } from "./decision-card";
 import { HeadlineAlert } from "./headline-alert";
 import { ImpactDashboard } from "./impact-dashboard";
+import { PlayerSummaryPanel } from "./player-summary";
 import { WorldMap, type WorldMapHandle } from "./world-map";
 import { WorldWire } from "./world-wire";
 
@@ -60,7 +67,33 @@ function useRunNews(run: ScenarioRun, events: EventState, isDemo: boolean) {
   }, [applied, identity, isDemo, news, revision]);
 }
 
-export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean }) {
+// Player mode (prototype): poll the decision state over HTTP (no stream contract change).
+function usePlayer(run: ScenarioRun) {
+  const [state, setState] = useState<PlayerState>();
+  const [summary, setSummary] = useState<PlayerSummary>();
+  const refresh = useCallback(async () => {
+    if (!run.player) return;
+    try {
+      const next = await readPlayerState(run.id);
+      setState(next);
+      if (next.finished) setSummary(await readPlayerSummary(run.id));
+      else setSummary(undefined);
+    } catch {
+      // The run may have been evicted; the stream status says so.
+    }
+  }, [run]);
+
+  useEffect(() => {
+    if (!run.player) return;
+    refresh();
+    const timer = setInterval(refresh, 500);
+    return () => clearInterval(timer);
+  }, [refresh, run.player]);
+
+  return { state, summary, refresh };
+}
+
+export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDemo: boolean; onRestart?: () => void }) {
   const mapRef = useRef<WorldMapHandle>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const seekFloorRef = useRef<number | undefined>(undefined);
@@ -75,6 +108,26 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
   const reportedHeadline = events.queue[0] && reports.get(events.queue[0].id);
   const pacing = pacingSummary(run.pacing, playback.speed, run.endMinute - simTime);
   const progress = Math.max(0, Math.min(1, (simTime - run.startMinute) / Math.max(1, run.endMinute - run.startMinute)));
+  const player = usePlayer(run);
+  const [playerBusy, setPlayerBusy] = useState(false);
+  const [playerError, setPlayerError] = useState<string>();
+  const pending = player.state?.pending ?? null;
+  const cardWaiting = Boolean(pending?.waiting);
+  const finished = Boolean(run.player && player.summary?.finished);
+  const [compareOpen, setCompareOpen] = useState(false);
+  const compareHeadingRef = useRef<HTMLHeadingElement>(null);
+  const madeDecisions = (player.state?.decisions ?? []).filter((d) => d.status === "resolved").length;
+
+  // The comparison opens (below the map) once the run ends, and closes when a seek or branch reopens the run.
+  useEffect(() => setCompareOpen(finished), [finished]);
+
+  function showComparison() {
+    setCompareOpen(true);
+    requestAnimationFrame(() => {
+      compareHeadingRef.current?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+      compareHeadingRef.current?.focus({ preventScroll: true });
+    });
+  }
 
   useEffect(() => {
     let stopped = false;
@@ -98,7 +151,7 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
         } catch {
           return;
         }
-        if (!isDemo && !sameRun(data, run)) return;
+        if (!isDemo && !sameRunOrBranch(run, data)) return;
         if (data.kind === "snapshot") {
           if (!initialized && isDemo && (data.sim_time_minutes !== run.startMinute || data.playback.state !== "paused")) return;
           initialized = true;
@@ -162,12 +215,79 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
 
   function seek(minute: number) {
     seekFloorRef.current = minute;
+    if (run.player) {
+      void playerSeek(minute);
+      return;
+    }
     sendControl({ action: "seek", sim_time_minutes: minute });
+  }
+
+  // Seeking back past decisions voids them, so ask first (seek goes over HTTP to get the 409).
+  // Returns whether the seek happened.
+  async function playerSeek(minute: number): Promise<boolean> {
+    const state = player.state;
+    const later = (state?.decisions ?? []).filter((d) => d.status === "resolved" && (d.at_minutes ?? 0) > minute).length
+      + (state?.pending && state.pending.trigger.minute > minute ? 1 : 0);
+    if (later > 0 && !window.confirm(
+      `Seeking back to ${formatSimTime(minute)} voids ${later} later decision${later === 1 ? "" : "s"}. Continue?`)) {
+      await player.refresh();
+      return false;
+    }
+    let done = true;
+    try {
+      await controlRun(run.id, { action: "seek", sim_time_minutes: minute, void_decisions: later > 0 });
+    } catch (error) {
+      done = false;
+      setPlayerError(error instanceof Error ? error.message : "Seek failed.");
+    }
+    await player.refresh();
+    return done;
+  }
+
+  async function decide(body: { option_id?: string; free_text?: string }) {
+    if (!pending) return;
+    setPlayerBusy(true);
+    setPlayerError(undefined);
+    try {
+      let at = player.state?.sim_time_minutes ?? simTime;
+      if (playback.state === "playing") at = (await controlRun(run.id, { action: "pause" })).sim_time_minutes;
+      await submitDecision(run.id, { decision_id: pending.id, at_minutes: at, ...body });
+    } catch (error) {
+      setPlayerError(error instanceof PlayerRequestError || error instanceof Error ? error.message : "That decision failed.");
+    } finally {
+      await player.refresh();
+      setPlayerBusy(false);
+    }
+  }
+
+  async function branchFrom(decisionId: string) {
+    setPlayerBusy(true);
+    try {
+      await branchFromDecision(run.id, decisionId);
+      setCompareOpen(false);
+      mapRef.current?.focusLocation(run.firstEvent.location);
+      document.querySelector(".workspace")?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+    } catch (error) {
+      setPlayerError(error instanceof Error ? error.message : "Could not branch from that decision.");
+    } finally {
+      await player.refresh();
+      setPlayerBusy(false);
+    }
   }
 
   function togglePlayback() {
     if (playback.state === "playing") {
       sendControl({ action: "pause" });
+      return;
+    }
+    if (run.player && atEnd) {
+      // Replay in player mode starts a new attempt: confirm voiding the decisions first, then play.
+      seekFloorRef.current = run.startMinute;
+      void playerSeek(run.startMinute).then((done) => {
+        if (!done) return;
+        focusFirstEvent();
+        sendControl({ action: "play" });
+      });
       return;
     }
     if (atEnd) seek(run.startMinute);
@@ -194,8 +314,20 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
         events={events.applied}
         focusCountry={run.firstEvent.location.country_code}
       >
+        {finished && !cardWaiting && (
+          <section className="run-complete" aria-label="Run complete">
+            <p><strong>Simulation complete.</strong> {player.summary?.comparison.headline}</p>
+            <button type="button" onClick={showComparison}>See what your decisions changed</button>
+          </section>
+        )}
+        {run.player && player.state && pending && (
+          <DecisionCard key={pending.id} state={player.state} pending={pending} busy={playerBusy} error={playerError}
+            onChoose={(optionId) => decide({ option_id: optionId })}
+            onFreeText={(text) => decide({ free_text: text })} />
+        )}
         <HeadlineAlert
-          item={reportedHeadline}
+          // While a decision card waits it has the floor; queued headlines show after.
+          item={cardWaiting || finished ? undefined : reportedHeadline}
           queuedCount={Math.max(0, events.queue.length - 1)}
           onAdvance={() => setEvents((previous) => ({ ...previous, queue: previous.queue.slice(1) }))}
           onDismiss={() => setEvents((previous) => ({ ...previous, queue: previous.queue.slice(1) }))}
@@ -209,12 +341,22 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.18 }}
       >
+        {run.player && player.summary && (
+          <PlayerSummaryPanel summary={player.summary} busy={playerBusy}
+            onTryAgain={() => onRestart?.()} onBranch={(id) => branchFrom(id)} onCompare={showComparison} />
+        )}
         <div className="scenario-summary">
           <div className="scenario-status">
-            <span>{isDemo ? "Japan demo" : "Prompted scenario"}</span>
+            <span>{isDemo ? "Japan demo" : run.player ? `Player mode · ${run.player.roleTitle}` : "Prompted scenario"}</span>
             <span className="run-stream" role="status"><i data-connected={connected} aria-hidden="true" />{status}</span>
           </div>
           <h2>{run.title}</h2>
+          {run.player && player.state && (
+            <p className="player-branch" role="status">
+              {player.state.branch_id === "main" ? "Original timeline" : `Your timeline · branch ${player.state.branch_id}`}
+              {" · "}{madeDecisions} decision{madeDecisions === 1 ? "" : "s"} made
+            </p>
+          )}
           <button className="focus-button" type="button" onClick={focusFirstEvent}>
             <Crosshair size={16} aria-hidden="true" /> {firstPlace}
           </button>
@@ -229,7 +371,8 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
             className="play-button"
             type="button"
             onClick={togglePlayback}
-            disabled={!connected}
+            disabled={!connected || cardWaiting}
+            title={cardWaiting ? "A decision is waiting" : undefined}
             whileTap={{ scale: 0.96 }}
             transition={{ duration: 0.12 }}
           >
@@ -248,6 +391,8 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
         <div className="timeline-track">
           <div className="timeline-meta">
             <label htmlFor="playback-position">Simulation timeline</label>
+            {run.player && cardWaiting && <span className="player-paused">Paused · decision waiting</span>}
+            {run.player && pending && !pending.waiting && <span className="player-paused" data-deferred="">Decision deferred</span>}
             <span>{formatSimTime(simTime)} <span className="time-divider">/</span> {formatSimTime(run.endMinute)}</span>
           </div>
           <input
@@ -279,6 +424,15 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
           ))}
         </div>
       </section>
+
+      {run.player && player.summary && compareOpen && (
+        <AlternateTimeline ref={compareHeadingRef} comparison={player.summary.comparison} score={player.summary.score}
+          busy={playerBusy} onClose={() => {
+            setCompareOpen(false);
+            document.querySelector(".workspace")?.scrollIntoView({ behavior: reducedMotion ? "auto" : "smooth", block: "start" });
+          }}
+          onTryAgain={() => onRestart?.()} onBranch={(id) => branchFrom(id)} />
+      )}
     </div>
   );
 }
