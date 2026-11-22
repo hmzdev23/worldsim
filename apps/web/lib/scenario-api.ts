@@ -1,5 +1,5 @@
 import {
-  sameRun, type GenerationProgress, type NewsItem, type Pacing, type RunIdentity, type ScenarioEvent, type ScenarioRun,
+  sameRunOrBranch, type GenerationProgress, type NewsItem, type Pacing, type RunIdentity, type ScenarioEvent, type ScenarioRun,
 } from "./scenario";
 
 const proxy = "/api/simulation";
@@ -37,13 +37,16 @@ export async function prepareScenario(
   prompt: string,
   signal: AbortSignal,
   onProgress?: (progress: GenerationProgress) => void,
+  player?: ScenarioRun["player"],
   fixture?: string,
 ): Promise<ScenarioRun> {
   // `fixture` replays a checked-in Director scenario (offline, no model call).
+  // `player` starts the same scenario in player mode, where your decisions fork the run.
+  const extra = player ? { fixture: player.fixture, mode: "player", role: player.role } : fixture ? { fixture } : {};
   let job = await requestJson<ScenarioJob>("/scenarios", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(fixture ? { prompt, fixture } : { prompt }),
+    body: JSON.stringify({ prompt, ...extra }),
     signal,
   });
   if (!job.id || !job.simulation_id) throw new Error("The scenario service did not return a run.");
@@ -79,6 +82,8 @@ export async function prepareScenario(
     endMinute: timeline.end_minutes,
     firstEvent,
     pacing: timeline.pacing,
+    ...(fixture ? { fixture } : {}),
+    ...(player ? { player, fixture: player.fixture, title: `${player.scenarioTitle} · ${player.roleTitle}` } : {}),
   };
 }
 
@@ -87,7 +92,7 @@ export async function readScenarioNews(run: ScenarioRun, signal: AbortSignal) {
     `${scenarioPath(run.id)}/news`,
     { signal },
   );
-  return sameRun(run, report) ? report.items : [];
+  return sameRunOrBranch(run, report) ? report.items : [];
 }
 
 export function streamUrl(runId?: string) {

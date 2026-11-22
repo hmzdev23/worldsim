@@ -1,0 +1,148 @@
+{
+  "schema_version": "0.1",
+  "fixture": "global-pandemic",
+  "title": "Novel virus outbreak",
+  "summary": "A fictional respiratory virus spreads from a port city. Every figure is a simulated estimate.",
+  "label": "SIMULATED",
+  "variables": {
+    "fixed": {
+      "place": "Singapore (fictional scenario)",
+      "hazard": "disease_outbreak",
+      "start": "DAY 1 · 00:00",
+      "baseline_population": 5900000
+    },
+    "independent": [
+      { "name": "border_policy", "label": "Border policy", "options": ["open", "screening", "closed"], "default": "open" },
+      { "name": "testing_level", "label": "Testing level", "options": ["standard", "expanded"], "default": "standard" },
+      { "name": "hospital_capacity", "label": "Hospital capacity", "options": ["normal", "surge"], "default": "normal" },
+      { "name": "relief_budget_musd", "label": "Relief budget (fictional US$ million)", "range": [0, 500], "default": 0 },
+      { "name": "outside_aid", "label": "Outside aid requested", "options": ["no", "yes"], "default": "no" }
+    ],
+    "dependent": [
+      { "name": "affected_countries", "label": "Countries affected", "measure": "affected_countries", "better": "lower", "scale": 0.3, "weight": 2 },
+      { "name": "outbreak_places", "label": "Places with reported outbreaks", "measure": "outbreak_places", "better": "lower", "scale": 0.3, "weight": 2 },
+      { "name": "severity_load", "label": "Overall severity (sum of event severities)", "measure": "severity_load", "better": "lower", "scale": 0.15, "weight": 2 },
+      { "name": "time_to_first_aid", "label": "Time to first outside aid", "measure": "time_to_first_aid", "better": "lower", "scale": 0.5, "weight": 1 }
+    ]
+  },
+  "triggers": {
+    "rules": [
+      { "id": "new_region", "kind": "new_region", "label": "A new country is affected" },
+      { "id": "new_outbreak_place", "kind": "new_outbreak_place", "label": "An outbreak is reported in a new place" },
+      { "id": "severe", "kind": "severity", "at_least": 0.6, "label": "A severe event" }
+    ],
+    "min_gap_minutes": 10080,
+    "defer_minutes": 1440,
+    "max_deferrals": 2
+  },
+  "roles": [
+    { "id": "health_minister", "title": "Regional health minister", "summary": "Fictional role: sets health policy for the region." },
+    { "id": "crisis_coordinator", "title": "National crisis coordinator", "summary": "Fictional role: coordinates the whole-of-government response." },
+    { "id": "aid_director", "title": "Aid agency director", "summary": "Fictional role: directs an international relief agency." }
+  ],
+  "actions": [
+    {
+      "id": "screen_arrivals", "label": "Screen arrivals at borders",
+      "tradeoff": "Slows imported cases; travel and freight get slower.",
+      "roles": ["health_minister", "crisis_coordinator"], "event_types": ["disease_outbreak", "government_response"],
+      "sets": { "border_policy": "screening" }, "cost": 4,
+      "intervention": { "type": "government_response", "severity": 0.3 },
+      "effects": {
+        "severity_scale": { "disease_outbreak": 0.85, "infrastructure_failure": 0.9 },
+        "shift": [{ "type": "disease_outbreak", "minutes": 2880 }],
+        "consequences": [
+          { "after_minutes": 1440, "type": "economic_shock", "kind": "side_effect", "severity": 0.3,
+            "description": "Simulated: screening queues slow travel and freight through the region." }
+        ]
+      }
+    },
+    {
+      "id": "close_borders", "label": "Close borders to non-essential travel",
+      "tradeoff": "Stops the next imported outbreak; trade and public mood suffer badly.",
+      "roles": ["crisis_coordinator", "health_minister"], "event_types": ["disease_outbreak"],
+      "sets": { "border_policy": "closed" }, "cost": 9,
+      "intervention": { "type": "government_response", "severity": 0.5 },
+      "effects": {
+        "drop": [{ "type": "disease_outbreak", "count": 1 }],
+        "severity_scale": { "disease_outbreak": 0.8 },
+        "consequences": [
+          { "after_minutes": 2880, "type": "economic_shock", "kind": "side_effect", "severity": 0.6,
+            "description": "Simulated: closed borders halt trade routes and tourism." },
+          { "after_minutes": 7200, "type": "civil_unrest", "kind": "side_effect", "severity": 0.4,
+            "description": "Simulated: protests grow against the travel ban." }
+        ]
+      }
+    },
+    {
+      "id": "expand_testing", "label": "Expand testing and contact tracing",
+      "tradeoff": "Finds cases earlier; stretches labs and budgets.",
+      "roles": ["health_minister"], "event_types": ["disease_outbreak", "infrastructure_failure", "government_response"],
+      "sets": { "testing_level": "expanded" }, "cost": 3,
+      "intervention": { "type": "government_response", "severity": 0.3 },
+      "effects": {
+        "severity_scale": { "disease_outbreak": 0.85, "infrastructure_failure": 0.85 },
+        "consequences": [
+          { "after_minutes": 720, "type": "government_response", "kind": "benefit", "severity": 0.3,
+            "description": "Simulated: wider testing finds cases earlier and slows local spread." }
+        ]
+      }
+    },
+    {
+      "id": "surge_hospitals", "label": "Open surge hospital capacity",
+      "tradeoff": "Eases hospital strain; pulls staff and money from elsewhere.",
+      "roles": ["health_minister", "crisis_coordinator", "aid_director"], "event_types": ["infrastructure_failure", "disease_outbreak"],
+      "sets": { "hospital_capacity": "surge" }, "cost": 4,
+      "intervention": { "type": "government_response", "severity": 0.3 },
+      "effects": {
+        "severity_scale": { "infrastructure_failure": 0.7 },
+        "consequences": [
+          { "after_minutes": 1440, "type": "economic_shock", "kind": "side_effect", "severity": 0.25,
+            "description": "Simulated: surge wards draw budget away from other services." }
+        ]
+      }
+    },
+    {
+      "id": "relief_package", "label": "Announce an economic relief package",
+      "tradeoff": "Softens the economic hit and calms protest; adds public debt.",
+      "roles": ["crisis_coordinator", "aid_director"], "event_types": ["economic_shock", "civil_unrest"],
+      "sets": { "relief_budget_musd": 300 }, "cost": 3,
+      "intervention": { "type": "government_response", "severity": 0.3 },
+      "effects": { "severity_scale": { "economic_shock": 0.75, "civil_unrest": 0.8 } }
+    },
+    {
+      "id": "ease_restrictions", "label": "Ease restrictions",
+      "tradeoff": "Calms protests and trade; the virus spreads faster.",
+      "roles": ["crisis_coordinator", "health_minister"], "event_types": ["civil_unrest", "economic_shock"],
+      "sets": { "border_policy": "open" }, "cost": 2,
+      "intervention": { "type": "government_response", "severity": 0.3 },
+      "effects": {
+        "severity_scale": { "civil_unrest": 0.6, "economic_shock": 0.85, "disease_outbreak": 1.15 },
+        "shift": [{ "type": "disease_outbreak", "minutes": -1440 }]
+      }
+    },
+    {
+      "id": "fund_partners", "label": "Fund local health partners",
+      "tradeoff": "Strengthens clinics over time; slow to show results.",
+      "roles": ["aid_director"], "event_types": ["*"],
+      "cost": 2,
+      "intervention": { "type": "international_aid", "severity": 0.2 },
+      "effects": { "severity_scale": { "infrastructure_failure": 0.9, "disease_outbreak": 0.95 } }
+    },
+    {
+      "id": "request_aid", "label": "Request outside aid now",
+      "tradeoff": "Brings help sooner; depends on partners' timelines.",
+      "roles": ["health_minister", "crisis_coordinator", "aid_director"], "event_types": ["*"],
+      "sets": { "outside_aid": "yes" }, "cost": 2,
+      "intervention": { "type": "government_response", "severity": 0.2 },
+      "effects": { "shift": [{ "type": "international_aid", "minutes": -10080 }] }
+    },
+    {
+      "id": "public_briefing", "label": "Give a public briefing",
+      "tradeoff": "Builds trust at little cost; little direct effect.",
+      "roles": ["health_minister", "crisis_coordinator", "aid_director"], "event_types": ["*"],
+      "cost": 1,
+      "intervention": { "type": "government_response", "severity": 0.1 },
+      "effects": { "severity_scale": { "civil_unrest": 0.85 } }
+    }
+  ]
+}
