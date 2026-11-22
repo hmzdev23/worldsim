@@ -1,0 +1,353 @@
+{
+  "events": [
+    {
+      "type": "cyber_attack",
+      "sim_time_minutes": 600,
+      "location": {
+        "name": "Port Halden",
+        "country": "Kestria",
+        "country_code": "XKE",
+        "lat": -31.2,
+        "lon": -141.5
+      },
+      "severity": 0.5,
+      "description": "A cyberattack attributed to Borovia takes down Kestria's national broadcaster and payment systems.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Borovia",
+      "target": "national broadcaster",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 0,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 40000,
+        "households_without_water": null,
+        "economic_loss_usd": 300000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "type": "conflict_escalation",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Velgrad",
+        "country": "Borovia",
+        "country_code": "XBO",
+        "lat": -27.9,
+        "lon": -146.8
+      },
+      "severity": 0.7,
+      "description": "Borovia mobilises its armed forces and places its strategic forces on high alert.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 0,
+        "missing": null,
+        "displaced": null,
+        "sheltered": null,
+        "households_without_power": 40000,
+        "households_without_water": null,
+        "economic_loss_usd": 900000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "evacuation",
+      "sim_time_minutes": 780,
+      "location": {
+        "name": "Port Halden",
+        "country": "Kestria",
+        "country_code": "XKE",
+        "lat": -31.2,
+        "lon": -141.5
+      },
+      "severity": 0.7,
+      "description": "Kestrian civil defence opens public shelters and orders residents of the capital underground.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 0,
+        "injuries": 12,
+        "missing": null,
+        "displaced": 310000,
+        "sheltered": 290000,
+        "households_without_power": 40000,
+        "households_without_water": null,
+        "economic_loss_usd": 1200000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": null,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "nuclear_detonation",
+      "sim_time_minutes": 850,
+      "location": {
+        "name": "Kestrel Point naval base",
+        "country": "Kestria",
+        "country_code": "XKE",
+        "lat": -32.4,
+        "lon": -139.6
+      },
+      "severity": 1.0,
+      "description": "A Borovian nuclear weapon detonates over the Kestrel Point naval base, far from the capital.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": 15,
+      "radius_km": 8,
+      "origin": "Borovia",
+      "target": "naval base",
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1900,
+        "injuries": 5200,
+        "missing": 800,
+        "displaced": 360000,
+        "sheltered": 330000,
+        "households_without_power": 120000,
+        "households_without_water": 60000,
+        "economic_loss_usd": 24000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": null,
+        "debris_tonnes": 900000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "contamination",
+      "sim_time_minutes": 930,
+      "location": {
+        "name": "Kestrel Point fallout zone",
+        "country": "Kestria",
+        "country_code": "XKE",
+        "lat": -32.1,
+        "lon": -139.2
+      },
+      "severity": 0.8,
+      "description": "Fallout drifts east of Kestrel Point; a 40-kilometre exclusion zone is declared.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": 40,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1900,
+        "injuries": 5400,
+        "missing": 700,
+        "displaced": 380000,
+        "sheltered": 340000,
+        "households_without_power": 120000,
+        "households_without_water": 70000,
+        "economic_loss_usd": 26000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 2400,
+        "debris_tonnes": 900000,
+        "aid_contributors": null
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "international_aid",
+      "sim_time_minutes": 1500,
+      "location": {
+        "name": "Port Halden",
+        "country": "Kestria",
+        "country_code": "XKE",
+        "lat": -31.2,
+        "lon": -141.5
+      },
+      "severity": 0.4,
+      "description": "Radiation monitors, medical teams and water arrive from the Aster Isles.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Aster Isles",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1900,
+        "injuries": 5400,
+        "missing": 600,
+        "displaced": 380000,
+        "sheltered": 330000,
+        "households_without_power": 90000,
+        "households_without_water": 60000,
+        "economic_loss_usd": 26500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 2400,
+        "debris_tonnes": 900000,
+        "aid_contributors": [
+          {
+            "country": "Aster Isles",
+            "personnel": 260,
+            "cargo_tonnes": 140,
+            "cargo": "radiation monitors, medical teams and water"
+          }
+        ]
+      },
+      "caused_by": [
+        3,
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "ceasefire",
+      "sim_time_minutes": 1980,
+      "location": {
+        "name": "Mirren Atoll",
+        "country": "Mirren",
+        "country_code": "XMI",
+        "lat": -29.5,
+        "lon": -143.8
+      },
+      "severity": 0.5,
+      "description": "Borovia and Kestria sign a ceasefire on the neutral atoll of Mirren.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1900,
+        "injuries": 5400,
+        "missing": 500,
+        "displaced": 360000,
+        "sheltered": 300000,
+        "households_without_power": 70000,
+        "households_without_water": 50000,
+        "economic_loss_usd": 27000000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 2400,
+        "debris_tonnes": 900000,
+        "aid_contributors": [
+          {
+            "country": "Aster Isles",
+            "personnel": 300,
+            "cargo_tonnes": 190,
+            "cargo": "radiation monitors, medical teams and water"
+          }
+        ]
+      },
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "type": "recovery",
+      "sim_time_minutes": 3300,
+      "location": {
+        "name": "Port Halden",
+        "country": "Kestria",
+        "country_code": "XKE",
+        "lat": -31.2,
+        "lon": -141.5
+      },
+      "severity": 0.3,
+      "description": "Residents of the capital leave the shelters as power and broadcasts return.",
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": {
+        "deaths": 1900,
+        "injuries": 5400,
+        "missing": 400,
+        "displaced": 90000,
+        "sheltered": 40000,
+        "households_without_power": 8000,
+        "households_without_water": 6000,
+        "economic_loss_usd": 27500000000,
+        "flooded_area_km2": null,
+        "contaminated_area_km2": 2400,
+        "debris_tonnes": 900000,
+        "aid_contributors": [
+          {
+            "country": "Aster Isles",
+            "personnel": 320,
+            "cargo_tonnes": 230,
+            "cargo": "radiation monitors, medical teams and water"
+          }
+        ]
+      },
+      "caused_by": [
+        6,
+        5
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

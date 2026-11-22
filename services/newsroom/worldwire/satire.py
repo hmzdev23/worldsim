@@ -323,7 +323,8 @@ def check_tone(tone: str) -> str:
 
 def _country(name: str) -> str:
     """'the United States', 'the Philippines'; most country names take no article."""
-    return f"the {name}" if name.startswith(("United ", "Republic ")) or name in ("Netherlands", "Philippines") else name
+    plural = name.endswith((" Isles", " Islands")) or name in ("Netherlands", "Philippines")
+    return f"the {name}" if plural or name.startswith(("United ", "Republic ")) else name
 
 
 def _fields(event: Event, n: int) -> dict[str, str]:
