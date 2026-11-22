@@ -930,3 +930,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
   .headline-alert h2 { font-size: 15px; }
   .headline-alert-dek { -webkit-line-clamp: 2; }
 }
+
+/* Step through events, or Play: each headline shows for a reading time, then the story moves on. */
+.step-button { display: grid; place-items: center; min-width: 34px; min-height: 34px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: transparent; }
+.step-button:hover:enabled { background: var(--raised); color: var(--text); }
+.step-button:disabled { opacity: 0.45; }
+.headline-alert-timer { height: 3px; background: var(--line); overflow: hidden; }
+.headline-alert-timer i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; animation: headline-timer linear forwards; }
+@keyframes headline-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }

@@ -6,10 +6,13 @@ export function HeadlineAlert({
   item,
   queuedCount,
   onAdvance,
+  autoAdvanceMs,
 }: {
   item: NewsItem | undefined;
   queuedCount: number;
   onAdvance: () => void;
+  /** Auto-play: the story moves on after this long; a bar shows the time left. */
+  autoAdvanceMs?: number;
 }) {
   const hasNext = queuedCount > 0;
   const reducedMotion = useReducedMotion();
@@ -42,12 +45,17 @@ export function HeadlineAlert({
             <h2 id="map-headline-title">{item.headline}</h2>
             <p className="headline-alert-dek">{item.dek}</p>
           </div>
+          {autoAdvanceMs !== undefined && (
+            <div className="headline-alert-timer" aria-hidden="true">
+              <i key={`${item.event_id}-${autoAdvanceMs}`} style={{ animationDuration: `${autoAdvanceMs}ms` }} />
+            </div>
+          )}
           <footer className="headline-alert-actions">
             <button className="headline-alert-focus" type="button" onClick={() => focusNewsItem(item)}>
               <Crosshair size={17} aria-hidden="true" /> Focus map
             </button>
             <div className="headline-alert-queue">
-              <span>{hasNext ? `${queuedCount} queued` : "Latest headline"}</span>
+              <span>{autoAdvanceMs !== undefined ? "Playing" : hasNext ? `${queuedCount} queued` : "Latest headline"}</span>
               <button className="headline-alert-advance" type="button" onClick={onAdvance}>
                 {hasNext ? "Next headline" : "Continue simulation"} <CaretRight size={14} aria-hidden="true" />
               </button>
