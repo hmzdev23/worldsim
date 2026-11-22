@@ -1,0 +1,26 @@
+{
+  "cuts": [
+    0.0,
+    8.63,
+    13.08,
+    19.07,
+    29.56,
+    35.08,
+    42.27,
+    48.54,
+    56.8
+  ],
+  "voice_durations": [
+    7.384,
+    3.204,
+    4.737,
+    9.242,
+    4.272,
+    5.944,
+    5.016,
+    7.012
+  ],
+  "lead_in": 0.35,
+  "voice_id": "JBFqnCBsd6RMkjVDRZzb",
+  "model_id": "eleven_multilingual_v2"
+}

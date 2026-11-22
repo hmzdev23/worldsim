@@ -1,5 +1,6 @@
 import {
-  sameRun, type GenerationProgress, type NewsItem, type Pacing, type RunIdentity, type ScenarioEvent, type ScenarioRun,
+  sameRun, type GenerationProgress, type NewsItem, type Pacing, type RunIdentity, type SatireReport, type ScenarioEvent,
+  type ScenarioRun, type Tone,
 } from "./scenario";
 
 const proxy = "/api/simulation";
@@ -9,6 +10,7 @@ type ScenarioJob = {
   simulation_id: string;
   status: "generating" | "ready" | "failed";
   title?: string;
+  tone?: Tone;
   start_minutes?: number;
   error?: { message: string };
   stage?: string;
@@ -37,11 +39,12 @@ export async function prepareScenario(
   prompt: string,
   signal: AbortSignal,
   onProgress?: (progress: GenerationProgress) => void,
+  tone: Tone = "straight",
 ): Promise<ScenarioRun> {
   let job = await requestJson<ScenarioJob>("/scenarios", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt }),
+    body: JSON.stringify({ prompt, tone }),
     signal,
   });
   if (!job.id || !job.simulation_id) throw new Error("The scenario service did not return a run.");
@@ -73,6 +76,7 @@ export async function prepareScenario(
     simulation_id,
     branch_id: timeline.branch_id,
     title: job.title?.trim() || prompt,
+    tone: job.tone ?? tone,
     startMinute,
     endMinute: timeline.end_minutes,
     firstEvent,
@@ -86,6 +90,13 @@ export async function readScenarioNews(run: ScenarioRun, signal: AbortSignal) {
     { signal },
   );
   return sameRun(run, report) ? report.items : [];
+}
+
+/** The satire layer for the run's released events (the demo uses the fixture server's /satire). */
+export async function readSatire(run: ScenarioRun, isDemo: boolean, tone: Tone, signal: AbortSignal) {
+  const path = isDemo ? "/satire" : `${scenarioPath(run.id)}/satire`;
+  const report = await requestJson<SatireReport>(`${path}?tone=${encodeURIComponent(tone)}`, { signal });
+  return sameRun(run, report) && report.tone === tone ? report : undefined;
 }
 
 export function streamUrl(runId?: string) {

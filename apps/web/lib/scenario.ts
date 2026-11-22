@@ -49,8 +49,17 @@ export type Pacing =
   | { mode: "relative"; fraction_per_tick: number; span_minutes: number; minutes_per_tick: number; tick_seconds: number }
   | { mode: "fixed"; minutes_per_tick: number; tick_seconds: number };
 
+// Presentation tone (satire layer). "straight" is the original, serious experience.
+export type Tone = "straight" | "satirical" | "unhinged";
+export const tones: { value: Tone; label: string }[] = [
+  { value: "straight", label: "Straight-faced" },
+  { value: "satirical", label: "Satirical" },
+  { value: "unhinged", label: "Unhinged" },
+];
+
 export type ScenarioRun = RunIdentity & {
   id: string;
+  tone?: Tone;
   title: string;
   startMinute: number;
   endMinute: number;
@@ -109,6 +118,29 @@ export type NewsItem = {
   dek: string;
   sim_time_label: string;
   focus: MapLocation & { event_id: string };
+};
+
+// Satire layer from GET /satire or /scenarios/{id}/satire. Presentation only:
+// it never replaces event facts or impact estimates.
+export type SatireItem = NewsItem & { original_headline: string };
+export type SatirePost = {
+  id: string;
+  event_id: string;
+  author: string;
+  handle: string;
+  kind: string;
+  text: string;
+  label: string;
+  tags: string[];
+  sim_time_minutes: number;
+  sim_time_label: string;
+};
+export type AbsurdityMetric = { key: string; label: string; value: number };
+export type SatireReport = RunIdentity & {
+  tone: Tone;
+  items: SatireItem[];
+  posts: SatirePost[];
+  absurdity: AbsurdityMetric[];
 };
 
 export function formatSimTime(minutes: number) {

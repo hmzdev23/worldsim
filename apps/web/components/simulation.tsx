@@ -5,8 +5,22 @@ import { motion, MotionConfig } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { japanDemo } from "../lib/earthquake";
 import { prepareScenario } from "../lib/scenario-api";
-import { generationStageLabel, type ScenarioRun } from "../lib/scenario";
+import { generationStageLabel, tones, type ScenarioRun, type Tone } from "../lib/scenario";
 import { RunConsole } from "./run-console";
+import { ToneSelector } from "./tone-selector";
+
+const toneKey = "worldsim:tone";
+function storedTone(): Tone | undefined {
+  try {
+    const value = window.localStorage.getItem(toneKey);
+    return tones.some((tone) => tone.value === value) ? value as Tone : undefined;
+  } catch {
+    return undefined;
+  }
+}
+function storeTone(tone: Tone) {
+  try { window.localStorage.setItem(toneKey, tone); } catch { /* private mode: not remembered */ }
+}
 
 type LaunchState = { status: "idle" | "generating" | "ready" } | { status: "failed"; message: string };
 
@@ -20,12 +34,26 @@ function ScenarioWorkspace() {
   const [launch, setLaunch] = useState<LaunchState>({ status: "idle" });
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [stage, setStage] = useState<string | undefined>(undefined);
+  // The tone for the next run, and the tone each run was watched in (persisted per run).
+  const [nextTone, setNextTone] = useState<Tone>("straight");
+  const [toneByRun, setToneByRun] = useState<Record<string, Tone>>({});
   const request = useRef<AbortController | null>(null);
   const preparingSince = useRef<number | undefined>(undefined);
   const generating = launch.status === "generating";
   const isDemo = run === japanDemo;
 
   useEffect(() => () => request.current?.abort(), []);
+  useEffect(() => {
+    const remembered = storedTone();
+    if (remembered) setNextTone(remembered);
+  }, []);
+  const runTone: Tone = toneByRun[run.id] ?? (isDemo ? nextTone : run.tone ?? "straight");
+
+  function chooseTone(tone: Tone) {
+    setNextTone(tone);
+    setToneByRun((previous) => ({ ...previous, [run.id]: tone }));
+    storeTone(tone);
+  }
 
   useEffect(() => {
     if (!generating || preparingSince.current === undefined) return;
@@ -49,8 +77,9 @@ function ScenarioWorkspace() {
     try {
       const scenario = await prepareScenario(text, controller.signal, (progress) => {
         if (!controller.signal.aborted) setStage(progress.stage);
-      });
+      }, nextTone);
       if (controller.signal.aborted) return;
+      setToneByRun((previous) => ({ ...previous, [scenario.id]: scenario.tone ?? nextTone }));
       setRun(scenario);
       setElapsedSeconds(Math.floor((Date.now() - (preparingSince.current ?? Date.now())) / 1000));
       setLaunch({ status: "ready" });
@@ -91,7 +120,7 @@ function ScenarioWorkspace() {
           <span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span>
           <span>WORLD<span className="wordmark-slashes">//</span>SIM</span>
         </h1>
-        <span className="mode-label">Fictional simulation</span>
+        <span className="mode-label">{runTone === "straight" ? "Fictional simulation" : "Fictional simulation · satire"}</span>
       </header>
 
       <form className="scenario-launch" onSubmit={submit}>
@@ -121,6 +150,13 @@ function ScenarioWorkspace() {
             <ArrowRight size={16} aria-hidden="true" />
           </motion.button>
         </div>
+        <div className="scenario-tone-row">
+          <span id="tone-label">Tone</span>
+          <ToneSelector value={runTone} onChange={chooseTone} />
+          <span className="tone-hint">
+            {runTone === "straight" ? "Serious presentation." : "Satire is a fictional presentation layer. Facts and impact estimates stay unchanged."}
+          </span>
+        </div>
         <div className="scenario-launch-footer">
           <p className={launch.status === "failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
           <button className="demo-button" type="button" onClick={loadDemo} disabled={isDemo && launch.status === "idle"}>
@@ -129,7 +165,7 @@ function ScenarioWorkspace() {
         </div>
       </form>
 
-      <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo} />
+      <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo} tone={runTone} />
     </main>
   );
 }

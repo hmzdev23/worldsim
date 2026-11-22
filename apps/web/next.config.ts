@@ -10,6 +10,7 @@ const config: NextConfig = {
     return [
       { source: "/api/simulation/scenarios/:path*", destination: `${simulationUrl}/scenarios/:path*` },
       { source: "/api/simulation/stream", destination: `${simulationUrl}/stream` },
+      { source: "/api/simulation/satire", destination: `${simulationUrl}/satire` },
     ];
   },
 };

@@ -3,9 +3,11 @@ import { motion, useReducedMotion } from "motion/react";
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import feed from "../../../services/newsroom/feeds/japan-earthquake.json";
 import { japanDemo } from "../lib/earthquake";
-import { readScenarioNews, streamUrl } from "../lib/scenario-api";
-import { fallbackNewsItem, formatSimTime, pacingSummary, sameRun, type NewsItem, type Playback, type RunIdentity, type ScenarioEvent, type ScenarioRun, type StreamMessage } from "../lib/scenario";
+import { readSatire, readScenarioNews, streamUrl } from "../lib/scenario-api";
+import { fallbackNewsItem, formatSimTime, pacingSummary, sameRun, type NewsItem, type Playback, type RunIdentity, type SatireReport, type ScenarioEvent, type ScenarioRun, type StreamMessage, type Tone } from "../lib/scenario";
+import { AbsurdityIndex } from "./absurdity-index";
 import { HeadlineAlert } from "./headline-alert";
+import { SocialFeed } from "./social-feed";
 import { ImpactDashboard } from "./impact-dashboard";
 import { WorldMap, type WorldMapHandle } from "./world-map";
 import { WorldWire } from "./world-wire";
@@ -60,7 +62,41 @@ function useRunNews(run: ScenarioRun, events: EventState, isDemo: boolean) {
   }, [applied, identity, isDemo, news, revision]);
 }
 
-export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean }) {
+/**
+ * Satire layer for the current applied events. Fetched again whenever the applied
+ * set changes (play, seek, replay, reset) and filtered to that set, so jokes never
+ * run ahead of the clock. Presentation only: facts and impacts come from elsewhere.
+ */
+function useSatire(run: ScenarioRun, events: EventState, tone: Tone, isDemo: boolean) {
+  const { applied, revision } = events;
+  const [state, setState] = useState<{ key: string; report?: SatireReport }>();
+  const key = `${tone}|${revision}|${applied.length}`;
+
+  useEffect(() => {
+    if (tone === "straight" || applied.length === 0) return;
+    const controller = new AbortController();
+    const signal = AbortSignal.any([controller.signal, AbortSignal.timeout(5000)]);
+    readSatire(run, isDemo, tone, signal).then(
+      (report) => { if (!controller.signal.aborted) setState((previous) => ({ key, report: report ?? previous?.report })); },
+      () => { if (!controller.signal.aborted) setState((previous) => ({ key, report: previous?.report })); },
+    );
+    return () => controller.abort();
+  }, [applied, isDemo, key, run, tone]);
+
+  return useMemo(() => {
+    if (tone === "straight") return undefined;
+    const ids = new Set(applied.map((event) => event.id));
+    const report = state?.report?.tone === tone ? state.report : undefined;
+    return {
+      loading: applied.length > 0 && state?.key !== key,
+      items: new Map((report?.items ?? []).filter((item) => ids.has(item.event_id)).map((item) => [item.event_id, item as NewsItem])),
+      posts: (report?.posts ?? []).filter((post) => ids.has(post.event_id)),
+      absurdity: applied.length === 0 ? [] : report?.absurdity ?? [],
+    };
+  }, [applied, key, state, tone]);
+}
+
+export function RunConsole({ run, isDemo, tone = "straight" }: { run: ScenarioRun; isDemo: boolean; tone?: Tone }) {
   const mapRef = useRef<WorldMapHandle>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const seekFloorRef = useRef<number | undefined>(undefined);
@@ -69,7 +105,14 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
   const [playback, setPlayback] = useState<Playback>({ state: "paused", speed: 1 });
   const [events, setEvents] = useState<EventState>({ identity: run, revision: 0, applied: [], queue: [] });
   const reducedMotion = useReducedMotion();
-  const { items: reports, loading: newsLoading } = useRunNews(run, events, isDemo);
+  const { items: facts, loading: newsLoading } = useRunNews(run, events, isDemo);
+  const satire = useSatire(run, events, tone, isDemo);
+  const reports = useMemo(() => {
+    if (!satire) return facts;
+    const merged = new Map<string, NewsItem>();
+    for (const [id, item] of facts) merged.set(id, satire.items.get(id) ?? item);
+    return merged;
+  }, [facts, satire]);
   const connected = connection === "connected";
   const atEnd = simTime >= run.endMinute;
   const reportedHeadline = events.queue[0] && reports.get(events.queue[0].id);
@@ -185,7 +228,7 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
   const firstPlace = run.firstEvent.location.name;
 
   return (
-    <div className="workspace">
+    <div className="workspace" data-tone={tone}>
       <WorldMap
         ref={mapRef}
         elapsedSeconds={(simTime - run.startMinute) / (run.pacing?.mode === "relative" && run.pacing.minutes_per_tick > 0
@@ -220,7 +263,9 @@ export function RunConsole({ run, isDemo }: { run: ScenarioRun; isDemo: boolean 
           </button>
         </div>
         <ImpactDashboard events={events.applied} />
-        <WorldWire items={[...reports.values()].reverse()} loading={newsLoading} />
+        {satire && <AbsurdityIndex metrics={satire.absurdity} />}
+        <WorldWire items={[...reports.values()].reverse()} loading={newsLoading || Boolean(satire?.loading && satire.items.size === 0)} satire={Boolean(satire)} />
+        {satire && <SocialFeed posts={satire.posts} loading={satire.loading} />}
       </motion.aside>
 
       <section className="timeline" aria-label="Simulation playback">
