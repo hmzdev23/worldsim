@@ -70,7 +70,12 @@ def create_app(
     cors_origins: tuple[str, ...] = ("http://localhost:3000", "http://127.0.0.1:3000"),
     scenarios: ScenarioRegistry | None = None,
 ) -> FastAPI:
-    """`minutes_per_second` is the sim rate at 1×; speed multiplies it.
+    """Every `tick_seconds` the ticker advances each simulation by one tick.
+
+    The demo `sim` keeps its own pacing; with a fixed rate (the default) one
+    tick covers `minutes_per_second * tick_seconds` sim minutes at 1×. Scenario
+    runs use the registry's relative pacing (5% of the run per tick). Speed
+    multiplies either. A late tick counts as a fraction of a tick more.
 
     `scenarios` defaults to a registry that calls the real Director.
     """
@@ -78,6 +83,8 @@ def create_app(
         raise ValueError("tick_seconds must be a positive finite number")
     if not math.isfinite(minutes_per_second) or minutes_per_second <= 0:
         raise ValueError("minutes_per_second must be a positive finite number")
+    if sim.pace is None:
+        sim.minutes_per_tick = minutes_per_second * tick_seconds
     demo = Channel(sim)
     registry = scenarios if scenarios is not None else ScenarioRegistry()
 
@@ -87,10 +94,10 @@ def create_app(
         while True:
             await asyncio.sleep(tick_seconds)
             now = loop.time()
-            minutes = (now - last) * minutes_per_second
+            ticks = (now - last) / tick_seconds
             last = now
             for channel in [demo, *registry.channels()]:
-                await channel.broadcast(channel.sim.advance(minutes))
+                await channel.broadcast(channel.sim.tick(ticks))
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -107,6 +114,11 @@ def create_app(
     app.add_middleware(CORSMiddleware, allow_origins=list(cors_origins), allow_methods=["*"], allow_headers=["*"])
     app.state.sim = sim
     app.state.scenarios = registry
+
+    def with_tick(body: dict[str, Any]) -> dict[str, Any]:
+        if "pacing" in body:
+            body["pacing"] = {**body["pacing"], "tick_seconds": tick_seconds}
+        return body
 
     async def control(channel: Channel, body: Any) -> Message:
         try:
@@ -147,7 +159,7 @@ def create_app(
 
     @app.get("/timeline")
     async def timeline() -> dict[str, Any]:
-        return sim.timeline_view()
+        return with_tick(sim.timeline_view())
 
     @app.post("/events")
     async def events(batch: dict[str, Any] = Body(...)) -> dict[str, Any]:
@@ -195,11 +207,11 @@ def create_app(
             run = await registry.create(prompt.strip(), fixture)
         except RegistryFull as exc:
             return JSONResponse(status_code=429, content={"detail": str(exc)})
-        return run.to_json()
+        return with_tick(run.to_json())
 
     @app.get("/scenarios/{run_id}")
     async def scenario(run_id: str) -> dict[str, Any]:
-        return find(run_id).to_json()
+        return with_tick(find(run_id).to_json())
 
     @app.get("/scenarios/{run_id}/snapshot")
     async def scenario_snapshot(run_id: str) -> Message:
@@ -207,7 +219,7 @@ def create_app(
 
     @app.get("/scenarios/{run_id}/timeline")
     async def scenario_timeline(run_id: str) -> dict[str, Any]:
-        return ready(run_id).sim.timeline_view()
+        return with_tick(ready(run_id).sim.timeline_view())
 
     @app.get("/scenarios/{run_id}/news")
     async def scenario_news(run_id: str) -> dict[str, Any]:
