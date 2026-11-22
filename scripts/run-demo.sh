@@ -9,6 +9,11 @@ if [ ! -x "$ROOT/apps/web/node_modules/.bin/next" ]; then
   exit 1
 fi
 
+# Recap films render with three.js; use the copy from check-setup's install unless THREE_ROOT is set.
+if [ -z "${THREE_ROOT:-}" ] && [ -f "$ROOT/.cache/three/node_modules/three/package.json" ]; then
+  export THREE_ROOT="$ROOT/.cache/three"
+fi
+
 ./scripts/run-simulation-server.sh &
 SIM_PID=$!
 cleanup() {
