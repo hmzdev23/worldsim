@@ -300,8 +300,7 @@ const scenes = script.shots.map(shot => shots[shot.scene]());
 const $ = (q) => document.querySelector(q);
 $('#lower .name').textContent = script.person.name.toUpperCase();
 $('#stats h2').textContent = `${script.person.name.toUpperCase()}'S FOUR DAYS`;
-$('#stats .rows').innerHTML = script.stats.map(m => `<div class="row"><span>${m.label}</span><b data-v="${m.value}">0</b></div>`).join('');
-$('#stats p').textContent = script.disclaimer;
+$('#stats .rows').innerHTML = script.stats.filter(m => !/notification|fictional|absurdity/i.test(m.label)).map(m => `<div class="row"><span>${m.label}</span><b data-v="${m.value}">0</b></div>`).join('');
 
 const camera = new T.PerspectiveCamera(50, W / H, .05, 260);
 const OUTRO = 3.5;
@@ -331,17 +330,9 @@ window.render = (localTime) => {
   const speaking = local < (timing.voice_durations[i] + timing.lead_in + .6);
   $('#caption').textContent = speaking ? data.narration : '';
   $('#lower').style.opacity = data.lower_third ? fade((local - .4) / .3) * fade((len - 1 - local) / .3) : 0;
-  const phone = $('#phone');
-  if (data.notification) {
-    phone.querySelector('.who').innerHTML = '';
-    phone.querySelector('.who').append(data.notification.author, Object.assign(document.createElement('span'), {textContent: data.notification.handle}));
-    phone.querySelector('.text').textContent = data.notification.text;
-    const k = fade((local - 1.1) / .3) * fade((len - .3 - local) / .3);
-    phone.style.opacity = k; phone.style.transform = `translateY(${(1 - k) * -60}px)`;
-  } else phone.style.opacity = 0;
   const last = i === scenes.length - 1, outro = last ? time - cuts[cuts.length - 1] : -1;
   $('#stats').style.opacity = last ? fade(outro / .4) : 0;
-  if (last) { phone.style.opacity = outro > 0 ? 0 : phone.style.opacity; document.querySelectorAll('#stats b').forEach(b => { b.textContent = Math.round(Number(b.dataset.v) * fade((outro - .3) / 2)); }); }
+  if (last) { document.querySelectorAll('#stats b').forEach(b => { b.textContent = Math.round(Number(b.dataset.v) * fade((outro - .3) / 2)); }); }
   renderer.render(scene, camera);
 };
 window.READY = true; window.render(0);

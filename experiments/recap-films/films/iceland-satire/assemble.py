@@ -16,9 +16,9 @@ HERE = Path(__file__).resolve().parent
 AUDIO, OUT = HERE / "audio", HERE / "output"
 
 # (effect, shot index, offset into the shot, seconds, volume)
-EFFECTS = [("alert", 0, 0.0, 2.5, .30), ("rumble", 1, 0.0, 4.4, .32), ("siren", 2, 0.2, 3.4, .20),
+EFFECTS = [("rumble", 1, 0.0, 4.4, .32), ("siren", 2, 0.2, 3.4, .20),
            ("power", 3, 1.2, 2.8, .32), ("airport", 4, 0.0, 4.4, .25), ("crowd", 5, 0.0, 4.4, .16),
-           ("airport", 6, 0.0, 4.0, .18), ("alert", 7, 0.3, 2.5, .22)]
+           ("airport", 6, 0.0, 4.0, .18)]
 
 
 def main() -> int:

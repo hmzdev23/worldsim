@@ -19,7 +19,7 @@ test("runs keep the straight-faced experience", async ({ page }) => {
   await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("button", { name: "Play", exact: true }).click();
   const wire = page.getByRole("region", { name: "WORLD//WIRE" });
-  await expect(wire.getByRole("button").filter({ hasText: /earthquake strikes/i })).toContainText("SIMULATED");
+  await expect(wire.getByRole("button").filter({ hasText: /earthquake strikes/i })).toBeVisible();
   await expect(wire).not.toContainText("SATIRE");
   await expect(page.getByRole("region", { name: "Reactions" })).toHaveCount(0);
   await expect(page.getByRole("region", { name: "Absurdity index" })).toHaveCount(0);

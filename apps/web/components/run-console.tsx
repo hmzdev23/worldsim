@@ -483,7 +483,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         </div>
         {satire && <AbsurdityIndex metrics={satire.absurdity} />}
         <WorldWire items={[...reports.values()].reverse()} loading={newsLoading || Boolean(satire?.loading && satire.items.size === 0)}
-          satire={Boolean(satire)} selectedId={selectedId} onSelect={(item) => { setSelectedId(item.event_id); focusNewsItem(item); }} />
+          selectedId={selectedId} onSelect={(item) => { setSelectedId(item.event_id); focusNewsItem(item); }} />
         <ImpactDashboard events={events.applied} />
         {satire && <SocialFeed posts={satire.posts} loading={satire.loading} />}
       </motion.aside>

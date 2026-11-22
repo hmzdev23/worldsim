@@ -53,7 +53,7 @@ export function ImpactDashboard({ events }: { events: ScenarioEvent[] }) {
 
   return (
     <section className="impact-dashboard" aria-labelledby="impact-title">
-      <div className="inspector-heading"><h2 id="impact-title">Impact estimates</h2><span className="inspector-meta">Simulated</span></div>
+      <div className="inspector-heading"><h2 id="impact-title">Impact estimates</h2></div>
       {reportedCards.length > 0 && (
         <dl className="impact-grid">
           {reportedCards.map(({ card, value }) => {

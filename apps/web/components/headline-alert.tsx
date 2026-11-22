@@ -17,7 +17,7 @@ export function HeadlineAlert({
   return (
     <>
       <div className="headline-alert-announcement" aria-live="polite" aria-atomic="true">
-        {item && `Simulated headline. ${item.headline}. ${item.dek}`}
+        {item && `Headline. ${item.headline}. ${item.dek}`}
       </div>
       <AnimatePresence mode="wait">
       {item && (
@@ -28,8 +28,8 @@ export function HeadlineAlert({
           transition={{ duration: 0.22, ease: "easeOut" }}
           data-event-id={item.event_id} data-minute={item.sim_time_minutes} className="headline-alert" data-severity={item.severity >= 0.75 ? "high" : item.severity >= 0.4 ? "moderate" : "low"} aria-labelledby="map-headline-title">
           <header className="headline-alert-bar">
-            <span><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE <span className="headline-alert-live">LIVE</span></span>
-            <span>{item.severity >= .6 ? "BREAKING NEWS · " : "UPDATE · "}{item.label}</span>
+            <span><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE </span>
+            <span>{item.severity >= .6 ? "BREAKING NEWS" : "UPDATE"}</span>
           </header>
           <div className="headline-alert-story">
             <div className="headline-alert-meta">

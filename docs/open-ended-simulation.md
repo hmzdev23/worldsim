@@ -5,7 +5,7 @@ Branch: `feat/open-ended-sim`. WORLD//SIM is no longer a game. There are no role
 1. **Start:** type a situation, or pick one of ten starter scenarios.
 2. **Simulate:** the Director predicts the chain of events, and every run gets a new random seed.
 3. **Watch:** the run plays out by itself on the animated map, with WORLD//WIRE (and, if chosen, the satire layer).
-4. **Film:** the same run can be turned into a satirical recap film.
+4. **Film:** the same run can be turned into a recap film.
 
 Running the same prompt again gives a different, plausible future. Each run still stays causally coherent: every event happens after the events that caused it.
 
@@ -108,18 +108,13 @@ These came from #80, #82 and the onboarding work and are now deleted:
 
 ## Recap film for any run
 
-Code: `experiments/recap-films/films/run`, the same format as the satire 3D films.
+Code: `experiments/recap-films/films/run`.
 
-**Format:**
-- One invented local follows the run. Locals and names match the first place.
-- The protagonist always wears yellow.
-- The facts are narrated plainly.
-- The jokes arrive as phone notifications from `worldwire.satire` for that exact event. Each joke is used once per film.
-- Strikes and detonations are shown plainly, with no joke.
-- A running gag is picked by the seed and pays off at the end, followed by a stats card.
+The film opens on the triggering event and follows the run in order. Each shot
+shows the country, local place, and clock. Narration names the country at the
+start and when the story moves to a different country.
 
 **Rules:**
-- "SATIRE · FICTIONAL" stays on screen.
 - No casualty figures.
 - 50 seconds at most, with the voice `XA3P1cj7XJexe6Zq0ATX`.
 - Everything that moves faces its direction of travel.

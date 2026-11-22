@@ -1,4 +1,4 @@
-// A satirical recap of ONE simulation run, followed through one invented local.
+// A recap of ONE simulation run, followed through one invented local.
 // Every shot is one of the run's events, in the run's order (script.json, built by
 // make-script.py from GET /scenarios/{id}/result). Scenes are chosen by event type, so
 // any run can be filmed; place names, dates and the map come from the run itself.
@@ -133,8 +133,6 @@ function apartment(s) {
   const bulb = new T.PointLight(0xffd9a0, 6, 6); bulb.position.y = -.85; lamp.add(bulb);
   return {room, items, lamp};
 }
-// The running gag's prop: a note card on the table.
-const prop = (parent, lines) => sign(parent, lines, .9, .42, .45, .62, .2, {bg: '#ffffff', fg: '#10131b', size: 100, w: 768});
 
 function street(s, {cars = true, fog = 0xd9cbb6, ground = 0x7d7a6c} = {}) {
   // Road and buildings run 120 units into fog, over a ground plane that reaches the horizon.
@@ -176,18 +174,9 @@ function hall(s) {
 }
 
 // ---- shots -----------------------------------------------------------------
-// Each builder gets its shot from script.json (place, country, date, prop) and returns a
+// Each builder gets its shot from script.json (place, country, date) and returns a
 // scene with userData.tick(t) and userData.camera, or {split, tick, camera} for two beats.
 const shots = {};
-
-shots.home = (shot) => {
-  const s = new T.Scene(); s.background = new T.Color(0x2a2f3a); lights(s, {power: 1.4, from: [6, 9, 8]});
-  const a = apartment(s); prop(a.room, shot.prop);
-  const me = hero(a.room, .9, 1.1, Math.PI);
-  s.userData.tick = (t) => me.userData.pose('Idle', t);
-  s.userData.camera = {from: [3, 1.7, 3.9], to: [2.3, 1.5, 3.1], look: () => [1, .7, .3]};
-  return s;
-};
 
 shots.quake = () => {
   const s = new T.Scene(); s.background = new T.Color(0x2a2f3a); lights(s, {power: 1.4, from: [6, 9, 8]});
@@ -283,7 +272,7 @@ function waterStreet(shot, {rain = false} = {}) {
   const drops = []; if (rain) for (let i = 0; i < 260; i++) { const d = block(s, (rand(i) - .5) * 30, 0, -rand(i + 1) * 40 + 6, .02, .5, .02, new T.MeshBasicMaterial({color: 0xcfd8e0, transparent: true, opacity: .5})); d.castShadow = false; drops.push(d); }
   const sandbags = []; for (let i = 0; i < 8; i++) sandbags.push(block(s, -3 + i * .62, .12, 3.4, .58, .24, .4, 0xb89a6a));
   const me = hero(s, 1.2, 4.6, Math.PI, 'Idle');
-  sign(s, ['TEMPORARY LAKE', UP(shot.place)], -3.6, 3.4, -9.9, 4, 1.6, {bg: '#ffd23f', fg: '#0f1a33', size: 90, h: 360, w: 768});
+  sign(s, ['FLOODING', UP(shot.place)], -3.6, 3.4, -9.9, 4, 1.6, {bg: '#ffd23f', fg: '#0f1a33', size: 90, h: 360, w: 768});
   block(s, -4.4, 2, -10, .16, 4, .16, 0x555555); block(s, -2.8, 2, -10, .16, 4, .16, 0x555555);
   s.userData.tick = (t) => {
     water.position.y = -.25 + Math.min(.5, t * .12) + Math.sin(t * 2) * .02;
@@ -300,7 +289,7 @@ shots.outbreak = (shot) => {
   // A quiet street: few people, a pharmacy queue, a public-health banner.
   const s = new T.Scene(); sky(s, 0x9db3c2, 0xe3e6dc); lights(s, {power: 1.6}); street(s, {cars: false, fog: 0xc9d3cf});
   block(s, -4.4, 2.4, -10, .16, 4.8, .16, 0x555555); block(s, -2, 2.4, -10, .16, 4.8, .16, 0x555555);
-  sign(s, ['PUBLIC HEALTH NOTICE', 'STAY CALM · WASH HANDS', UP(shot.place)], -3.2, 4.2, -9.9, 4, 2.2, {bg: '#e8f4ee', fg: '#0f3a24', size: 80, h: 420, w: 768, accent: '#2f9e64'});
+  sign(s, ['PUBLIC HEALTH NOTICE', UP(shot.place)], -3.2, 4.2, -9.9, 4, 2.2, {bg: '#e8f4ee', fg: '#0f3a24', size: 80, h: 420, w: 768, accent: '#2f9e64'});
   const queue = []; for (let i = 0; i < 6; i++) queue.push(person(s, i % 2 ? 'man' : 'woman', 6.2, -2 - i * 1.6, Math.PI, crowdShirts[i % 6], 'Idle', i * .4));
   const me = hero(s, 1, -10, 0, 'Walk');
   s.userData.tick = (t) => { queue.forEach(p => p.userData.pose('Idle', t)); go(me, 1, -10, 0, 1, t * WALK); me.userData.pose('Walk', t); };
@@ -340,23 +329,22 @@ function briefing(lines, tvLines, {clap = false} = {}) {
   s.userData.camera = clap ? {from: [4.6, 1.9, 1.6], to: [3.6, 1.8, 1.1], look: () => [-6.7, 1.6, -1.5]} : {from: [.6, 1.6, 3.8], to: [.4, 1.4, 3], look: () => [0, .9, -3.5]};
   return s;
 }
-shots.committee = (shot) => briefing(['EMERGENCY MEETING', '(TO SCHEDULE EMERGENCY MEETING)'], ['LIVE', UP(shot.place)]);
-shots.tv = (shot) => briefing(['COMMITTEE FOR GLOBAL STABILITY', '(INTERIM)'], ['CEASEFIRE', `AGREED IN ${UP(shot.place)}`], {clap: true});
+shots.committee = (shot) => briefing(['EMERGENCY RESPONSE', UP(shot.country)], ['LIVE', UP(shot.place)]);
+shots.tv = (shot) => briefing(['CEASEFIRE BRIEFING', UP(shot.country)], ['CEASEFIRE', `AGREED IN ${UP(shot.place)}`], {clap: true});
 
 shots.aid = (shot) => {
   const s = new T.Scene(); s.background = new T.Color(0x2a3140); lights(s, {power: 1.3, ambient: 1.5, from: [8, 10, 6]});
-  const g = gym(s, {lit: true}), spot = g.spot;
-  const me = person(s, KIND, spot.position.x, spot.position.z, Math.PI * .1, HERO, 'Sitting');
-  block(s, spot.position.x + .05, .56, spot.position.z + .22, .26, .02, .34, 0xffffff);
-  const right = block(s, spot.position.x + .8, .05, spot.position.z - .2, .42, .1, .56, 0xf7f4ea);
-  sign(s, ['CUSTOMS FORM', 'PAGE 1 OF 600'], spot.position.x + .8, 1, spot.position.z + .09, .6, .2, {bg: '#ffffff', fg: '#10131b', size: 110, w: 768});
-  for (let j = 0; j < 6; j++) block(s, 5 + (j % 3) * .9, .4 + Math.floor(j / 3) * .8, -5.5, .8, .75, .8, 0x9c7b56);
-  sign(s, ['RELIEF', UP(shot.place)], 5.9, 2.3, -5.08, 2.6, .7, {bg: '#ffffff', fg: '#0f1a33', size: 90});
+  gym(s, {lit: true});
+  const worker = hero(s, 3.3, -4.9, Math.PI / 2, 'Walk');
+  for (let crate = 0; crate < 6; crate++) {
+    block(s, 5 + (crate % 3) * .9, .4 + Math.floor(crate / 3) * .8, -5.5, .8, .75, .8, 0x9c7b56);
+  }
+  sign(s, ['RELIEF SUPPLIES'], 5.9, 2.3, -5.08, 2.6, .7, {bg: '#ffffff', fg: '#0f1a33', size: 90});
   s.userData.tick = (t) => {
-    right.scale.y = 1 + Math.min(1, t / 4) * 12; right.position.y = .05 * right.scale.y;
-    g.crowd.forEach(p => p.userData.pose('Sitting', 1.2)); me.userData.pose('Sitting', 1.2);
+    go(worker, 3.3, -4.9, 1, 0, Math.min(1.2, t * WALK));
+    worker.userData.pose(t * WALK < 1.2 ? 'Walk' : 'Idle', t);
   };
-  s.userData.camera = {from: [spot.position.x + 1.2, 1.5, spot.position.z + 3.6], to: [spot.position.x + .9, 1.2, spot.position.z + 2.7], look: () => [spot.position.x + .3, .45, spot.position.z]};
+  s.userData.camera = {from: [1.2, 2.2, .4], to: [2.5, 1.9, -.7], look: () => [4.8, 1.1, -5.2]};
   return s;
 };
 
@@ -366,7 +354,7 @@ shots.evacuation = (shot) => {
   const queue = []; for (let i = 0; i < 14; i++) queue.push(person(s, i % 2 ? 'man' : 'woman', i % 2 ? 2.85 : 3.55, 4 - i * 1.25, Math.PI, i === 3 ? HERO : crowdShirts[i % 6], 'Walk', rand(i) * 2));
   const cars = []; for (let i = 0; i < 7; i++) { const c = model(i % 3 === 2 ? 'delivery' : 'sedan', 1.4, -1.6, 6 - i * 3.6, Math.PI); s.add(c); cars.push(c); }
   block(s, 5.4, 3, -9, .16, 6, .16, 0x555555); block(s, 8.2, 3, -9, .16, 6, .16, 0x555555);
-  sign(s, ['EVACUATE IN AN', 'ORDERLY QUEUE :)', UP(shot.place)], 6.8, 5.6, -8.9, 4.6, 2.5, {bg: '#ffd23f', fg: '#0f1a33', size: 86, h: 420, w: 768});
+  sign(s, ['EVACUATION ROUTE', UP(shot.place)], 6.8, 5.6, -8.9, 4.6, 2.5, {bg: '#ffd23f', fg: '#0f1a33', size: 86, h: 420, w: 768});
   const me = queue[3];
   s.userData.tick = (t) => {
     queue.forEach((p, i) => { go(p, i % 2 ? 2.85 : 3.55, 4 - i * 1.25, 0, -1, t * WALK); p.userData.pose('Walk', t); });
@@ -380,7 +368,7 @@ shots.market = (shot) => {
   // A city street under a market board that only ever says one thing.
   const s = new T.Scene(); sky(s, 0x7f98b0, 0xe2d6c2); lights(s); street(s);
   block(s, -4.4, 3, -12, .2, 6, .2, 0x555555); block(s, 4.4, 3, -12, .2, 6, .2, 0x555555);
-  const board = sign(s, ['MARKETS', '▼ ▼ ▼', `PLEASE REMAIN CALM · ${UP(shot.place)}`], 0, 6.4, -11.9, 9, 3.2, {bg: '#111', fg: '#ff4a3a', size: 96, h: 384});
+  const board = sign(s, ['MARKETS', '▼ ▼ ▼', UP(shot.place)], 0, 6.4, -11.9, 9, 3.2, {bg: '#111', fg: '#ff4a3a', size: 96, h: 384});
   const me = hero(s, -.6, -10, 0, 'Walk');
   const others = [0, 1, 2].map(i => person(s, i % 2 ? 'woman' : 'man', 2.4 - i * 2.6, -13 - i * 1.4, 0, crowdShirts[i + 2], 'Walk', i * .5));
   s.userData.tick = (t) => {
@@ -453,12 +441,12 @@ shots.map = (shot) => {
   return s;
 };
 
-shots['home-again'] = (shot) => {
-  // Two beats: walking back up the street, then home, where the running gag pays off.
+shots['home-again'] = () => {
+  // Two beats: a resident heads home as recovery begins.
   const out = new T.Scene(); sky(out, 0x8ec2e6, 0xfbe3c2); lights(out); street(out);
   const walker = hero(out, .6, -10, 0, 'Walk');
   const home = new T.Scene(); home.background = new T.Color(0x2a2f3a); lights(home, {power: 1.6, from: [6, 9, 8]});
-  const a = apartment(home); prop(a.room, shot.prop);
+  const a = apartment(home);
   const me = hero(a.room, 3.2, 1.6, 0, 'Walk');
   const split = 2.6, to = [.9, 1.1], walkLen = Math.hypot(to[0] - 3.2, to[1] - 1.6);
   const tick = (t) => {
@@ -476,11 +464,6 @@ const scenes = script.shots.map(shot => (shots[shot.scene] ?? shots.warning)(sho
 
 // ---- overlays ----------------------------------------------------------------
 const $ = (q) => document.querySelector(q);
-$('#lower .name').textContent = script.person.name.toUpperCase();
-$('#stats h2').textContent = script.stats_title;
-$('#stats .rows').innerHTML = script.stats.map(m => `<div class="row"><span>${m.label}</span><b data-v="${m.value}">0</b></div>`).join('');
-$('#stats p').textContent = script.disclaimer;
-
 const camera = new T.PerspectiveCamera(50, W / H, .05, 400);
 const OUTRO = script.outro_seconds;
 const cuts = timing.cuts, total = cuts[cuts.length - 1] + OUTRO;
@@ -489,7 +472,6 @@ const selected = shotParam === null ? -1 : Number(shotParam);
 if (selected !== -1 && !(Number.isInteger(selected) && selected >= 0 && selected < scenes.length)) throw new Error('Invalid shot');
 window.DUR = selected < 0 ? total : (selected === scenes.length - 1 ? cuts[selected + 1] + OUTRO : cuts[selected + 1]) - cuts[selected];
 const ease = (x) => x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
-const fade = (x) => Math.min(1, Math.max(0, x));
 
 window.render = (localTime) => {
   const time = selected < 0 ? localTime : cuts[selected] + localTime;
@@ -507,21 +489,11 @@ window.render = (localTime) => {
   camera.position.set(...cam.from.map((v, k) => v + (cam.to[k] - v) * f));
   camera.lookAt(...(typeof cam.look === 'function' ? cam.look() : cam.look));
 
+  $('#country').textContent = data.country;
+  $('#place').textContent = data.place === data.country ? '' : data.place;
   $('#date').textContent = data.date;
-  $('#caption').textContent = local < (timing.voice_durations[i] + timing.lead_in + .6) ? data.narration : '';
-  $('#lower').style.opacity = data.lower_third ? fade((local - .4) / .3) * fade((len - 1 - local) / .3) : 0;
+  $('#caption').textContent = data.narration;
   $('#flash').style.opacity = window.FLASH;
-  const phone = $('#phone');
-  if (data.notification) {
-    phone.querySelector('.who').replaceChildren(data.notification.author, Object.assign(document.createElement('span'), {textContent: data.notification.handle}));
-    phone.querySelector('.text').textContent = data.notification.text;
-    const k = fade((local - 1.1) / .3) * fade((len - .3 - local) / .3);
-    phone.style.opacity = k; phone.style.transform = `translateY(${(1 - k) * -60}px)`;
-  } else phone.style.opacity = 0;
-  const last = i === scenes.length - 1, outro = last ? time - cuts[cuts.length - 1] : -1;
-  $('#stats').style.opacity = last ? fade(outro / .4) : 0;
-  if (last && outro > 0) phone.style.opacity = 0;
-  if (last) document.querySelectorAll('#stats b').forEach(b => { b.textContent = Math.round(Number(b.dataset.v) * fade((outro - .3) / 2)); });
   renderer.render(scene, camera);
 };
 window.READY = true; window.render(0);

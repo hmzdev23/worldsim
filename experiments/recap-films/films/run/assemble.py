@@ -23,7 +23,6 @@ SCENE_EFFECTS = {
     "tv": [("crowd", 0.0, 4.4, .22)], "aid": [("aid", 0.0, 4.0, .2)], "evacuation": [("siren", 0.0, 3.4, .2)],
     "market": [("crowd", 0.0, 4.0, .14)], "street": [("jets", 0.4, 3.0, .22)], "map": [("rumble", 0.8, 3.6, .3)],
 }
-ALERT = ("alert", 1.1, 1.2, .22)  # the phone buzz whenever a notification arrives
 
 
 def main() -> int:
@@ -37,8 +36,6 @@ def main() -> int:
     for i, shot in enumerate(script["shots"]):
         for name, offset, dur, vol in SCENE_EFFECTS.get(shot["scene"], []):
             effects.append((name, i, offset, dur, vol))
-        if "notification" in shot:
-            effects.append((ALERT[0], i, *ALERT[1:]))
     lines = json.loads((AUDIO / "narration-lines.json").read_text())
     cuts, lead = timing["cuts"], timing["lead_in"]
     total = round(cuts[-1] + OUTRO, 2)

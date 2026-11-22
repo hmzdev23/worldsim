@@ -7,7 +7,7 @@ Describe a hypothetical crisis, watch it unfold on an animated world map, and fo
 Type a situation, or pick one of ten starter scenarios, and watch it unfold on the map.
 Every run rolls a new random seed, so the same prompt never plays out the same way twice.
 Run `./scripts/run-demo.sh` and open http://127.0.0.1:3000. Starters run offline, with no
-model or paid API. To film a run as a satirical recap, see
+model or paid API. To film a run as a recap, see
 [open-ended simulation](docs/open-ended-simulation.md).
 
 ## Install everything

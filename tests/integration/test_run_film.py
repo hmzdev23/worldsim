@@ -6,7 +6,6 @@ starter and many seeds, so they hold for whatever run a viewer just watched.
 """
 
 import importlib.util
-import json
 import re
 import sys
 import unittest
@@ -16,7 +15,6 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "services" / "director"), str(ROOT / "services" / "newsroom")]
 
 from worlddirector import RUN_FIXTURES, prepare_scenario  # noqa: E402
-from worldwire import satire_for_events  # noqa: E402
 
 spec = importlib.util.spec_from_file_location("run_film", ROOT / "experiments/recap-films/films/run/make-script.py")
 film = importlib.util.module_from_spec(spec)
@@ -36,7 +34,7 @@ class RunFilmTests(unittest.TestCase):
         for fixture in RUN_FIXTURES:
             for seed in SEEDS:
                 result = result_for(fixture, seed)
-                yield fixture, seed, result, film.build(result, "satirical")
+                yield fixture, seed, result, film.build(result)
 
     def test_shots_are_the_runs_events_in_the_runs_order(self):
         for fixture, seed, result, script in self.cases():
@@ -52,52 +50,44 @@ class RunFilmTests(unittest.TestCase):
                     event = by_id[shot["event_id"]]
                     self.assertEqual(shot["place"], event["location"]["name"])
                     self.assertEqual(shot["event_type"], event["type"])
-                    self.assertIn(event["location"]["name"], shot["narration"])
+                    self.assertEqual(shot["country"], event["location"]["country"])
 
-    def test_jokes_come_from_that_events_satire_and_are_never_repeated(self):
-        for fixture, seed, result, script in self.cases():
-            with self.subTest(fixture=fixture, seed=seed):
-                posts = satire_for_events(result["events"], "satirical")["posts"]
-                texts = []
-                for shot in script["shots"]:
-                    if "notification" not in shot:
-                        continue
-                    mine = [p["text"] for p in posts if p["event_id"] == shot["event_id"]]
-                    self.assertIn(shot["notification"]["text"], mine)
-                    texts.append(shot["notification"]["text"])
-                self.assertEqual(len(texts), len(set(texts)))
-
-    def test_strikes_and_detonations_carry_no_joke(self):
+    def test_narration_names_countries_when_the_location_changes(self):
         for fixture, seed, _, script in self.cases():
-            for shot in script["shots"]:
-                if shot.get("event_type") in ("nuclear_detonation", "military_strike"):
-                    self.assertNotIn("notification", shot, (fixture, seed))
+            with self.subTest(fixture=fixture, seed=seed):
+                previous_country = None
+                for shot in script["shots"]:
+                    country = shot["country"]
+                    if country != previous_country:
+                        self.assertRegex(shot["narration"], rf"^In (the )?{re.escape(country)},")
+                    self.assertNotIn("notification", shot)
+                    self.assertNotIn("prop", shot)
+                    previous_country = country
 
     def test_no_casualty_figures_and_a_film_under_fifty_seconds(self):
         for fixture, seed, _, script in self.cases():
             with self.subTest(fixture=fixture, seed=seed):
                 text = " ".join(s["narration"] for s in script["shots"])
                 self.assertNotRegex(text.lower(), r"\b(dead|deaths|killed|injured|casualties)\b")
-                self.assertLessEqual(len(script["shots"]), 1 + film.MAX_EVENT_SHOTS)
+                self.assertLessEqual(len(script["shots"]), film.MAX_EVENT_SHOTS)
                 seconds = sum(len(s["narration"].split()) * film.SECONDS_PER_WORD + film.SHOT_OVERHEAD
                               for s in script["shots"]) + film.OUTRO
                 self.assertLess(seconds, 50)
                 self.assertTrue(all(len(s["narration"].split()) <= 22 for s in script["shots"]))
 
     def test_two_runs_of_the_same_starter_make_different_films(self):
-        a = film.build(result_for("tsunami", 1), "satirical")
-        b = film.build(result_for("tsunami", 2), "satirical")
+        a = film.build(result_for("tsunami", 1))
+        b = film.build(result_for("tsunami", 2))
         self.assertNotEqual([s["narration"] for s in a["shots"]], [s["narration"] for s in b["shots"]])
 
-    def test_the_film_is_labelled_fictional_and_names_its_seed(self):
-        script = film.build(result_for("iceland-eruption", 5), "satirical")
-        self.assertIn("seed 5", script["disclaimer"])
-        self.assertIn("invented", script["disclaimer"])
+    def test_seed_stays_in_the_run_metadata(self):
+        script = film.build(result_for("iceland-eruption", 5))
+        self.assertNotIn("disclaimer", script)
         self.assertEqual(script["source"]["seed"], 5)
 
     def test_the_map_shows_the_runs_places(self):
         result = result_for("global-pandemic", 8)
-        script = film.build(result, "satirical")
+        script = film.build(result)
         self.assertEqual([p["name"] for p in script["map"]["places"]],
                          list(dict.fromkeys(e["location"]["name"] for e in result["events"])))
         self.assertTrue(script["map"]["countries"])

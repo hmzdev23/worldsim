@@ -24,8 +24,8 @@ function reportTitle(item: NewsItem) {
   return compactTitles[item.event_type] ?? "New development reported";
 }
 
-export function WorldWire({ items, loading, satire = false, selectedId, onSelect }: {
-  items: (NewsItem & { original_headline?: string })[]; loading: boolean; satire?: boolean;
+export function WorldWire({ items, loading, selectedId, onSelect }: {
+  items: NewsItem[]; loading: boolean;
   selectedId?: string; onSelect?: (item: NewsItem) => void;
 }) {
   const [focused, setFocused] = useState<NewsItem>();
@@ -34,8 +34,8 @@ export function WorldWire({ items, loading, satire = false, selectedId, onSelect
     <section className="world-wire" aria-labelledby="world-wire-title">
       <div className="inspector-heading">
         <h2 id="world-wire-title"><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE</h2>
-        <span className={satire ? "inspector-meta satire-stamp" : "inspector-meta"}>
-          {satire ? "Satire · " : ""}{items.length} {items.length === 1 ? "report" : "reports"}
+        <span className="inspector-meta">
+          {items.length} {items.length === 1 ? "report" : "reports"}
         </span>
       </div>
       {items.length === 0 ? (

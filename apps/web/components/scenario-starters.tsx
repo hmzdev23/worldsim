@@ -38,14 +38,13 @@ export function ScenarioStarters({ starters, loading, error, busy, onRetry, onLa
   return <section className="starters" aria-labelledby="starters-title">
     <div className="starters-heading">
       <h2 id="starters-title">Scenario library</h2>
-
     </div>
     {loading && <p role="status" className="setup-context">Loading starter scenarios…</p>}
     {error && <div className="setup-error" role="alert"><p>{error}</p><button type="button" onClick={onRetry}>Retry connection</button></div>}
     <div className="setup-scenarios" role="group" aria-label="Starter scenarios">
       {starters.map((s) => <button type="button" key={s.fixture} disabled={busy} aria-pressed={fixture === s.fixture}
         className="setup-scenario" onClick={() => setFixture(fixture === s.fixture ? "" : s.fixture)}>
-
+        <span className="setup-scenario-icon" aria-hidden="true">{s.icon}</span>
         <span className="setup-category">{s.category}</span><strong>{s.title}</strong>
         <span className="setup-selection" aria-hidden="true">{fixture === s.fixture && <Check size={14} />}</span>
       </button>)}

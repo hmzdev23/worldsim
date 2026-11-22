@@ -118,7 +118,6 @@ function ScenarioWorkspace() {
   return <main className={`simulation-shell view-${view}`}>
     <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span><span>WORLD<span className="wordmark-slashes">//</span>SIM</span></h1>
       <div className="masthead-actions">
-        <span className="mode-label">Fictional simulation</span>
         {view !== "home" && <button type="button" className="demo-button" disabled={busy} onClick={goHome}>New scenario</button>}
       </div>
     </header>

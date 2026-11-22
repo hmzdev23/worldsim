@@ -6,7 +6,6 @@ export function AbsurdityIndex({ metrics }: { metrics: AbsurdityMetric[] }) {
     <section className="absurdity-index" aria-labelledby="absurdity-title">
       <div className="inspector-heading">
         <h2 id="absurdity-title">Absurdity index</h2>
-        <span className="inspector-meta satire-stamp">Satire · not impact data</span>
       </div>
       {metrics.length === 0 ? (
         <p className="inspector-empty">Nothing absurd has happened yet.</p>

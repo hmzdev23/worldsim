@@ -45,9 +45,8 @@ def main() -> int:
     result_path.write_text(json.dumps(result, ensure_ascii=False), encoding="utf-8")
     python = os.environ.get("PYTHON_EXECUTABLE", "python3")
     node = os.environ.get("NODE_EXECUTABLE", "node")
-    film_tone = "satirical"
 
-    run([python, str(job_dir / "make-script.py"), "--result", str(result_path), "--tone", film_tone], "script")
+    run([python, str(job_dir / "make-script.py"), "--result", str(result_path)], "script")
     run([python, str(job_dir / "make-audio.py")], "narration")
     picture = job_dir / "output" / "picture.mp4"
     picture.parent.mkdir(parents=True, exist_ok=True)
