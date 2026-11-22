@@ -345,7 +345,8 @@ class ScenarioRegistry:
         first = sim.timeline[0]["sim_time_minutes"]
         run.start_minutes = max(0, first - 1)
         sim.start_minutes = run.start_minutes
-        sim.pace = self.pace
+        sim.pace = (1 / self.catalogue.spec(run.fixture).get("presentation", {}).get("steps", 20)
+                    if run.mode == "player" else self.pace)
         sim.seek(run.start_minutes)
         channel = Channel(sim)
         if run.mode == "player":

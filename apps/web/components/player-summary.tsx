@@ -11,6 +11,7 @@ type Props = {
   onTryAgain: () => void;
   onBranch: (decisionId: string) => void;
   onCompare: () => void;
+  onSelectRole?: () => void;
 };
 
 const choiceText: Record<string, string> = {
@@ -20,7 +21,7 @@ const choiceText: Record<string, string> = {
   free_text: "Own decision (not simulated offline)",
 };
 
-export function PlayerSummaryPanel({ summary, busy, onTryAgain, onBranch, onCompare }: Props) {
+export function PlayerSummaryPanel({ summary, busy, onTryAgain, onBranch, onCompare, onSelectRole }: Props) {
   const headingRef = useRef<HTMLHeadingElement>(null);
   useEffect(() => headingRef.current?.focus(), []);
   const { score } = summary;
@@ -72,7 +73,7 @@ export function PlayerSummaryPanel({ summary, busy, onTryAgain, onBranch, onComp
                   <span className="verdict" data-verdict={decision.verdict}>{decision.verdict}</span>
                 </div>
                 <p>
-                  <strong>{decision.trigger.headline || decision.trigger.place}</strong>
+                  <span className="alt-event-meta">{summary.role.title}</span> <strong>{decision.trigger.headline || decision.trigger.place}</strong>
                   {" · "}{choiceText[decision.choice ?? "do_nothing"]}: {decision.label}
                 </p>
                 {decision.caused.length > 0 && (
@@ -111,6 +112,8 @@ export function PlayerSummaryPanel({ summary, busy, onTryAgain, onBranch, onComp
       <div className="player-summary-actions">
         <button type="button" onClick={onCompare}>Open the alternate timeline</button>
         <button type="button" disabled={busy} onClick={onTryAgain}>Try again</button>
+        <button type="button" onClick={onSelectRole}>Try a different role</button>
+        <button type="button" onClick={onSelectRole}>Return to scenario selection</button>
       </div>
     </section>
   );

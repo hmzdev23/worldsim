@@ -1,0 +1,366 @@
+{
+  "events": [
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Sun Disappearing",
+      "impacts": null,
+      "type": "other_hazard",
+      "sim_time_minutes": 1440,
+      "location": {
+        "name": "Oslo",
+        "country": "Norway",
+        "country_code": "NOR",
+        "lat": 59.91,
+        "lon": 10.75
+      },
+      "severity": 0.45,
+      "description": "Simulated: The Sun mysteriously ceases to provide light: a fantastical premise, not a scientific prediction.",
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "Oslo",
+        "country": "Norway",
+        "country_code": "NOR",
+        "lat": 59.91,
+        "lon": 10.75
+      },
+      "severity": 0.45,
+      "description": "Simulated: International councils begin accessible briefings on the unexplained darkness.",
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 4320,
+      "location": {
+        "name": "Oslo",
+        "country": "Norway",
+        "country_code": "NOR",
+        "lat": 59.91,
+        "lon": 10.75
+      },
+      "severity": 0.7,
+      "description": "Simulated: Invented falling temperatures strain community heating and care services.",
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "extreme_weather",
+      "sim_time_minutes": 5760,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.51,
+        "lon": -0.13
+      },
+      "severity": 0.45,
+      "description": "Simulated: Game-model cold conditions disrupt daily life across a second region.",
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "economic_shock",
+      "sim_time_minutes": 7200,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.51,
+        "lon": -0.13
+      },
+      "severity": 0.45,
+      "description": "Simulated: Food and energy shortages increase pressure on household budgets.",
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 8640,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.51,
+        "lon": -0.13
+      },
+      "severity": 0.7,
+      "description": "Simulated: Urban food distribution and public facilities struggle under sustained darkness.",
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": "Sun Disappearing",
+      "impacts": null,
+      "type": "other_hazard",
+      "sim_time_minutes": 10080,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.35,
+        "lon": 103.82
+      },
+      "severity": 0.45,
+      "description": "Simulated: An invented ecosystem disruption affects a third region under continued darkness.",
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "civil_unrest",
+      "sim_time_minutes": 11520,
+      "location": {
+        "name": "London",
+        "country": "United Kingdom",
+        "country_code": "GBR",
+        "lat": 51.51,
+        "lon": -0.13
+      },
+      "severity": 0.45,
+      "description": "Simulated: Communities debate fair access to scarce warmth and food.",
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 12960,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.35,
+        "lon": 103.82
+      },
+      "severity": 0.7,
+      "description": "Simulated: Shelter networks report sustained pressure on supplies and care.",
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Geneva, Switzerland",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "international_aid",
+      "sim_time_minutes": 14400,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.35,
+        "lon": 103.82
+      },
+      "severity": 0.45,
+      "description": "Simulated: International partners pool available resources for community support.",
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 15840,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.35,
+        "lon": 103.82
+      },
+      "severity": 0.45,
+      "description": "Simulated: Councils agree on shared long-term support principles under continued darkness.",
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 17280,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.35,
+        "lon": 103.82
+      },
+      "severity": 0.15,
+      "description": "Simulated: Community services begin adapting within the invented rules of this scenario.",
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 18720,
+      "location": {
+        "name": "Singapore",
+        "country": "Singapore",
+        "country_code": "SGP",
+        "lat": 1.35,
+        "lon": 103.82
+      },
+      "severity": 0.15,
+      "description": "Simulated: The emergency chapter ends with a provisional community survival compact; the cosmic mystery remains.",
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

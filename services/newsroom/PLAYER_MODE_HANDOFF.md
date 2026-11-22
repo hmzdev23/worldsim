@@ -18,3 +18,7 @@ The feed fields are unchanged. The committed Japan feed is unchanged too, since 
 
 ## Tests
 `tests/newsroom/test_player_decisions.py` (4 tests): the single named story, the "Follows the decision" note, the repeat counting, and that only user events with a decision count.
+
+
+## Local gameplay expansion
+Existing templates render the seven new fixture chains. No newsroom source or contract changes were required. Review geographical wording, decision acknowledgment and consequence attribution in the expanded game. See ../../GAMEPLAY_EXPANSION_REVIEW.md. This expansion is uncommitted on codex/gameplay-expansion.

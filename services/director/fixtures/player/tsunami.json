@@ -1,0 +1,812 @@
+{
+  "schema_version": "0.1",
+  "fixture": "tsunami",
+  "title": "Tsunami",
+  "summary": "A fictional Pacific tsunami threatens coastal communities. Coordinate protection and relief as reports arrive.",
+  "label": "SIMULATED",
+  "category": "Coastal disaster",
+  "icon": "≋",
+  "briefing": "A fictional Pacific tsunami threatens coastal communities. Coordinate protection and relief as reports arrive.",
+  "variables": {
+    "fixed": {
+      "place": "Valparaiso coast (fictional setting)",
+      "hazard": "tsunami_warning",
+      "premise": "A fictional Pacific tsunami threatens coastal communities. Coordinate protection and relief as reports arrive."
+    },
+    "independent": [
+      {
+        "name": "crisis_policy",
+        "label": "National crisis coordinator priority",
+        "options": [
+          "Routine mandate",
+          "Coordinate essential services",
+          "Convene regional response councils",
+          "Request a joint relief mission"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "mayor_policy",
+        "label": "City mayor priority",
+        "options": [
+          "Routine mandate",
+          "Open community shelters",
+          "Support neighborhood councils",
+          "Fund local supply hubs"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "medical_policy",
+        "label": "Hospital director priority",
+        "options": [
+          "Routine mandate",
+          "Protect essential care capacity",
+          "Support community care teams",
+          "Coordinate medical mutual aid"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "aid_policy",
+        "label": "Humanitarian aid director priority",
+        "options": [
+          "Routine mandate",
+          "Coordinate relief partnerships",
+          "Support displaced communities",
+          "Fund local relief markets"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "infrastructure_policy",
+        "label": "Infrastructure minister priority",
+        "options": [
+          "Routine mandate",
+          "Prioritize essential-service repairs",
+          "Fund resilient public facilities",
+          "Coordinate utility mutual aid"
+        ],
+        "default": "Routine mandate"
+      }
+    ],
+    "dependent": [
+      {
+        "name": "severity_load",
+        "label": "Overall crisis severity",
+        "measure": "severity_load",
+        "better": "lower",
+        "scale": 0.3,
+        "weight": 2
+      },
+      {
+        "name": "time_to_first_aid",
+        "label": "Time to outside support",
+        "measure": "time_to_first_aid",
+        "better": "lower",
+        "scale": 0.5,
+        "weight": 1
+      },
+      {
+        "name": "affected_countries",
+        "label": "Countries reporting disruption",
+        "measure": "affected_countries",
+        "better": "lower",
+        "scale": 0.3,
+        "weight": 1
+      }
+    ]
+  },
+  "triggers": {
+    "rules": [
+      {
+        "id": "service_pressure",
+        "kind": "event_type",
+        "types": [
+          "infrastructure_failure"
+        ],
+        "label": "Essential services under pressure"
+      }
+    ],
+    "min_gap_minutes": 120,
+    "defer_minutes": 15,
+    "max_deferrals": 2
+  },
+  "roles": [
+    {
+      "id": "crisis",
+      "title": "National crisis coordinator",
+      "summary": "Fictional role: cross-agency priorities, public trust and continuity.",
+      "responsibilities": "Cross-agency priorities, public trust and continuity",
+      "perspective": "Prioritize cross-agency priorities, public trust and continuity in Tsunami.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "mayor",
+      "title": "City mayor",
+      "summary": "Fictional role: shelters, local access and neighborhood trust.",
+      "responsibilities": "Shelters, local access and neighborhood trust",
+      "perspective": "Prioritize shelters, local access and neighborhood trust in Tsunami.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "medical",
+      "title": "Hospital director",
+      "summary": "Fictional role: medical capacity, staff welfare and continuity of care.",
+      "responsibilities": "Medical capacity, staff welfare and continuity of care",
+      "perspective": "Prioritize medical capacity, staff welfare and continuity of care in Tsunami.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "aid",
+      "title": "Humanitarian aid director",
+      "summary": "Fictional role: equitable relief, displaced communities and partner capacity.",
+      "responsibilities": "Equitable relief, displaced communities and partner capacity",
+      "perspective": "Prioritize equitable relief, displaced communities and partner capacity in Tsunami.",
+      "emphasis": [
+        "time_to_first_aid"
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "title": "Infrastructure minister",
+      "summary": "Fictional role: essential services, repair priorities and continuity.",
+      "responsibilities": "Essential services, repair priorities and continuity",
+      "perspective": "Prioritize essential services, repair priorities and continuity in Tsunami.",
+      "emphasis": [
+        "severity_load"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "crisis_1",
+      "label": "Coordinate essential services",
+      "tradeoff": "Reduce cascading failures; central coordination takes resources.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates coordinate essential services for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate essential services leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Coordinate essential services"
+      }
+    },
+    {
+      "id": "crisis_2",
+      "label": "Convene regional response councils",
+      "tradeoff": "Reduce tensions; local deliberation takes time.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates convene regional response councils for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to convene regional response councils leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Convene regional response councils"
+      }
+    },
+    {
+      "id": "crisis_3",
+      "label": "Request a joint relief mission",
+      "tradeoff": "Bring aid forward; partners must agree on priorities.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -60
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates request a joint relief mission for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to request a joint relief mission leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Request a joint relief mission"
+      }
+    },
+    {
+      "id": "mayor_1",
+      "label": "Open community shelters",
+      "tradeoff": "Protect displaced families; municipal services lose staff.",
+      "roles": [
+        "mayor"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: city mayor coordinates open community shelters for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to open community shelters leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "mayor_policy": "Open community shelters"
+      }
+    },
+    {
+      "id": "mayor_2",
+      "label": "Support neighborhood councils",
+      "tradeoff": "Improve local coordination; assistance arrives unevenly.",
+      "roles": [
+        "mayor"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.72
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: city mayor coordinates support neighborhood councils for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support neighborhood councils leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "mayor_policy": "Support neighborhood councils"
+      }
+    },
+    {
+      "id": "mayor_3",
+      "label": "Fund local supply hubs",
+      "tradeoff": "Ease shortages; reserve funds become committed.",
+      "roles": [
+        "mayor"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.8
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: city mayor coordinates fund local supply hubs for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to fund local supply hubs leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "mayor_policy": "Fund local supply hubs"
+      }
+    },
+    {
+      "id": "medical_1",
+      "label": "Protect essential care capacity",
+      "tradeoff": "Reduce later service failures; elective care waits.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.72
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates protect essential care capacity for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to protect essential care capacity leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Protect essential care capacity"
+      }
+    },
+    {
+      "id": "medical_2",
+      "label": "Support community care teams",
+      "tradeoff": "Support local care access; staff and budgets must cover more services.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates support community care teams for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support community care teams leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Support community care teams"
+      }
+    },
+    {
+      "id": "medical_3",
+      "label": "Coordinate medical mutual aid",
+      "tradeoff": "Bring support forward; partners retain competing needs.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -60
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates coordinate medical mutual aid for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate medical mutual aid leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Coordinate medical mutual aid"
+      }
+    },
+    {
+      "id": "aid_1",
+      "label": "Coordinate relief partnerships",
+      "tradeoff": "Bring aid forward; local delivery remains difficult.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -60
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates coordinate relief partnerships for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate relief partnerships leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Coordinate relief partnerships"
+      }
+    },
+    {
+      "id": "aid_2",
+      "label": "Support displaced communities",
+      "tradeoff": "Reduce service strain; funds leave other programs.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.8
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates support displaced communities for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support displaced communities leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Support displaced communities"
+      }
+    },
+    {
+      "id": "aid_3",
+      "label": "Fund local relief markets",
+      "tradeoff": "Ease shortages; purchasing power is uneven.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates fund local relief markets for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to fund local relief markets leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Fund local relief markets"
+      }
+    },
+    {
+      "id": "infrastructure_1",
+      "label": "Prioritize essential-service repairs",
+      "tradeoff": "Reduce later outages; commercial repairs wait.",
+      "roles": [
+        "infrastructure"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 5,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.7
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: infrastructure minister coordinates prioritize essential-service repairs for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to prioritize essential-service repairs leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "infrastructure_policy": "Prioritize essential-service repairs"
+      }
+    },
+    {
+      "id": "infrastructure_2",
+      "label": "Fund resilient public facilities",
+      "tradeoff": "Reduce disruption; public budgets tighten.",
+      "roles": [
+        "infrastructure"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.8
+        },
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: infrastructure minister coordinates fund resilient public facilities for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to fund resilient public facilities leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "infrastructure_policy": "Fund resilient public facilities"
+      }
+    },
+    {
+      "id": "infrastructure_3",
+      "label": "Coordinate utility mutual aid",
+      "tradeoff": "Bring help forward; outside teams need accommodation.",
+      "roles": [
+        "infrastructure"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -60
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 20,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: infrastructure minister coordinates coordinate utility mutual aid for Tsunami."
+          },
+          {
+            "after_minutes": 30,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate utility mutual aid leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "infrastructure_policy": "Coordinate utility mutual aid"
+      }
+    }
+  ],
+  "phases": [
+    {
+      "at_minutes": 60,
+      "title": "Warning",
+      "summary": "A major fictional offshore disturbance prompts coastal tsunami warnings."
+    },
+    {
+      "at_minutes": 240,
+      "title": "Coastal impact",
+      "summary": "A later surge floods waterfront neighborhoods and displaces residents."
+    },
+    {
+      "at_minutes": 420,
+      "title": "Regional disruption",
+      "summary": "Fishing and port livelihoods suffer after repeated coastal disruption."
+    },
+    {
+      "at_minutes": 600,
+      "title": "Relief effort",
+      "summary": "Regional partners deliver support for shelters and damaged utilities."
+    },
+    {
+      "at_minutes": 780,
+      "title": "Recovery",
+      "summary": "The emergency phase concludes with a community-led rebuilding agreement."
+    }
+  ],
+  "presentation": {
+    "steps": 60,
+    "target_minutes": "5–10 including decisions"
+  }
+}

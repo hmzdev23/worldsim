@@ -694,3 +694,75 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 @media (max-width: 680px) {
   .chooser-label { width: 100%; }
 }
+/* Gameplay expansion: shared story and mission controls. */
+.scenario-library { gap: 16px; padding: 20px; }
+.scenario-library h2 { font-size: 28px; margin: 5px 0; }
+.scenario-grid { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 8px; }
+.scenario-choice { display: grid; align-content: start; gap: 7px; padding: 12px; min-width: 0; border: 1px solid var(--line); border-radius: 8px; text-align: left; background: var(--canvas); color: var(--text); }
+.scenario-choice > span:last-child { font-size: 12px; line-height: 1.5; color: var(--muted); }
+.scenario-choice strong { font-size: 16px; }
+.scenario-icon { color: var(--accent); font-size: 24px; }
+.scenario-choice[aria-pressed=true], .role-grid button[aria-pressed=true] { border-color: var(--accent); background: #2b211a; box-shadow: inset 0 2px 0 var(--accent); }
+.scenario-choice:hover, .role-grid button:hover { border-color: var(--accent); }
+.role-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 8px; }
+.role-grid button { display: grid; gap: 6px; text-align: left; padding: 12px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: var(--canvas); }
+.role-grid button span { color: var(--muted); font-size: 12px; line-height: 1.5; }
+.mission-briefing { display: grid; gap: 9px; padding: 16px; border: 1px solid #74563e; border-radius: 8px; background: #211c18; }
+.mission-briefing h3 { margin: 0; }
+.mission-briefing p { max-width: 95ch; line-height: 1.6; }
+.mission-briefing button { justify-self: start; min-height: 40px; }
+.story-toolbar { grid-column: 1/-1; display: grid; gap: 8px; }
+.presentation-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.presentation-controls > div:first-child { display: grid; gap: 3px; margin-right: auto; }
+.presentation-controls span { color: var(--muted); font-size: 11px; }
+.presentation-controls button { padding: 7px 10px; min-height: 34px; background: var(--canvas); color: var(--text); border: 1px solid var(--line); border-radius: 5px; }
+.presentation-controls button[aria-pressed=true] { background: #2b211a; border-color: #74563e; color: var(--accent); }
+.crisis-phase { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 5px 12px; border-left: 3px solid var(--accent); padding: 10px 12px; background: var(--surface); }
+.crisis-phase span { color: var(--muted); font-size: 11px; }
+.crisis-phase p { grid-row: 2; grid-column: 1/-1; margin: 0; font-size: 12px; color: var(--muted); }
+.crisis-phase progress { accent-color: var(--accent); width: 80px; height: 5px; }
+.wire-importance { color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: .05em; }
+.wire-card[aria-pressed=true] { border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+.event-marker[data-selected=true], .epicenter-marker[data-selected=true] { outline: 3px solid #ffe3b4; outline-offset: 5px; box-shadow: 0 0 0 10px #ffad6330; }
+.player-decision-marker { border-radius: 2px; border: 2px solid #ffe3b4; }
+.player-consequence-marker { border: 2px solid #92d6bb; }
+.player-summary-actions a { font-size: 12px; color: var(--accent); padding: 7px 0; }
+.decision-options button { min-height: 66px; transition: border-color .15s, background .15s; }
+.decision-options button:active { background: #3a2a1c; }
+@media (max-width: 1000px) { .scenario-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } .role-grid { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 680px) {
+ .scenario-library { padding: 12px; }
+ .scenario-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+ .scenario-choice { padding: 9px; }
+ .role-grid { grid-template-columns: minmax(0,1fr); }
+ .crisis-phase { grid-template-columns: minmax(0,1fr) auto; }
+ .crisis-phase span { grid-column: 1/-1; }
+ .crisis-phase p { grid-row: 3; }
+ .presentation-controls > div:first-child { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) { .decision-options button { transition: none; } html { scroll-behavior: auto; } }
+
+.workspace:has(.story-toolbar) { grid-template-areas: "story story" "map inspector" "timeline inspector"; }
+.story-toolbar { grid-area: story; }
+@media (max-width: 680px) { .workspace:has(.story-toolbar) { grid-template-areas: "story" "map" "timeline" "inspector"; } }
+
+.scenario-library details > summary { cursor: pointer; color: var(--accent); font-size: 14px; padding: 8px 0; }
+.scenario-library details[open] { display: grid; gap: 16px; }
+
+.player-summary { min-width: 0; overflow-wrap: anywhere; }
+.player-summary table { table-layout: fixed; }
+@media (max-width: 1000px) {
+ .workspace { grid-template-columns: minmax(0,1fr); grid-template-areas: "map" "timeline" "inspector"; }
+ .workspace:has(.story-toolbar) { grid-template-areas: "story" "map" "timeline" "inspector"; }
+ .inspector { max-height: none; }
+ .world-wire-list { max-height: 520px; overflow-y: auto; overscroll-behavior: contain; }
+}
+
+/* "You decide" inside the scenario chooser: #82's role cards and mission briefing. */
+.decide-panel { display: grid; gap: 10px; }
+.role-grid button[aria-checked=true] { border-color: var(--accent); background: #2b211a; box-shadow: inset 0 2px 0 var(--accent); }
+.role-grid button:disabled { opacity: 0.6; }
+.mission-briefing p { margin: 0; color: var(--muted); font-size: 13px; }
+.mission-briefing .play-role-button { min-height: 38px; padding: 0 14px; border: 0; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-weight: 650; }
+.mission-briefing .play-role-button:hover:enabled { background: #ffce9f; }
+.current-role { font-size: 13px; }

@@ -1,0 +1,816 @@
+{
+  "schema_version": "0.1",
+  "fixture": "nuclear-war",
+  "title": "Nuclear War",
+  "summary": "Fictional rival blocs enter a dangerous confrontation. Your mandate is civilian protection and cooperation, never military operations.",
+  "label": "SIMULATED",
+  "category": "Geopolitical fiction",
+  "icon": "◈",
+  "briefing": "Fictional rival blocs enter a dangerous confrontation. Your mandate is civilian protection and cooperation, never military operations.",
+  "variables": {
+    "fixed": {
+      "place": "Geneva (fictional setting)",
+      "hazard": "conflict_escalation",
+      "premise": "Fictional rival blocs enter a dangerous confrontation. Your mandate is civilian protection and cooperation, never military operations."
+    },
+    "independent": [
+      {
+        "name": "crisis_policy",
+        "label": "National crisis coordinator priority",
+        "options": [
+          "Routine mandate",
+          "Coordinate essential services",
+          "Convene regional response councils",
+          "Request a joint relief mission"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "diplomat_policy",
+        "label": "International diplomat priority",
+        "options": [
+          "Routine mandate",
+          "Open a neutral dialogue forum",
+          "Negotiate humanitarian cooperation",
+          "Publish shared diplomatic commitments"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "shelter_policy",
+        "label": "Emergency shelter coordinator priority",
+        "options": [
+          "Routine mandate",
+          "Expand community shelter support",
+          "Create a fair accommodation charter",
+          "Coordinate shelter supply partners"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "medical_policy",
+        "label": "Hospital director priority",
+        "options": [
+          "Routine mandate",
+          "Protect essential care capacity",
+          "Support community care teams",
+          "Coordinate medical mutual aid"
+        ],
+        "default": "Routine mandate"
+      },
+      {
+        "name": "aid_policy",
+        "label": "Humanitarian aid director priority",
+        "options": [
+          "Routine mandate",
+          "Coordinate relief partnerships",
+          "Support displaced communities",
+          "Fund local relief markets"
+        ],
+        "default": "Routine mandate"
+      }
+    ],
+    "dependent": [
+      {
+        "name": "severity_load",
+        "label": "Overall crisis severity",
+        "measure": "severity_load",
+        "better": "lower",
+        "scale": 0.3,
+        "weight": 2
+      },
+      {
+        "name": "time_to_first_aid",
+        "label": "Time to outside support",
+        "measure": "time_to_first_aid",
+        "better": "lower",
+        "scale": 0.5,
+        "weight": 1
+      },
+      {
+        "name": "affected_countries",
+        "label": "Countries reporting disruption",
+        "measure": "affected_countries",
+        "better": "lower",
+        "scale": 0.3,
+        "weight": 1
+      }
+    ]
+  },
+  "triggers": {
+    "rules": [
+      {
+        "id": "service_pressure",
+        "kind": "event_type",
+        "types": [
+          "infrastructure_failure"
+        ],
+        "label": "Essential services under pressure"
+      }
+    ],
+    "min_gap_minutes": 720,
+    "defer_minutes": 90,
+    "max_deferrals": 2
+  },
+  "roles": [
+    {
+      "id": "crisis",
+      "title": "National crisis coordinator",
+      "summary": "Fictional role: cross-agency priorities, public trust and continuity.",
+      "responsibilities": "Cross-agency priorities, public trust and continuity",
+      "perspective": "Prioritize cross-agency priorities, public trust and continuity in Nuclear War.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "diplomat",
+      "title": "International diplomat",
+      "summary": "Fictional role: dialogue, shared commitments and humanitarian cooperation.",
+      "responsibilities": "Dialogue, shared commitments and humanitarian cooperation",
+      "perspective": "Prioritize dialogue, shared commitments and humanitarian cooperation in Nuclear War.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "shelter",
+      "title": "Emergency shelter coordinator",
+      "summary": "Fictional role: safe accommodation, community care and fair allocation.",
+      "responsibilities": "Safe accommodation, community care and fair allocation",
+      "perspective": "Prioritize safe accommodation, community care and fair allocation in Nuclear War.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "medical",
+      "title": "Hospital director",
+      "summary": "Fictional role: medical capacity, staff welfare and continuity of care.",
+      "responsibilities": "Medical capacity, staff welfare and continuity of care",
+      "perspective": "Prioritize medical capacity, staff welfare and continuity of care in Nuclear War.",
+      "emphasis": [
+        "severity_load"
+      ]
+    },
+    {
+      "id": "aid",
+      "title": "Humanitarian aid director",
+      "summary": "Fictional role: equitable relief, displaced communities and partner capacity.",
+      "responsibilities": "Equitable relief, displaced communities and partner capacity",
+      "perspective": "Prioritize equitable relief, displaced communities and partner capacity in Nuclear War.",
+      "emphasis": [
+        "time_to_first_aid"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "id": "crisis_1",
+      "label": "Coordinate essential services",
+      "tradeoff": "Reduce cascading failures; central coordination takes resources.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates coordinate essential services for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate essential services leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Coordinate essential services"
+      }
+    },
+    {
+      "id": "crisis_2",
+      "label": "Convene regional response councils",
+      "tradeoff": "Reduce tensions; local deliberation takes time.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates convene regional response councils for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to convene regional response councils leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Convene regional response councils"
+      }
+    },
+    {
+      "id": "crisis_3",
+      "label": "Request a joint relief mission",
+      "tradeoff": "Bring aid forward; partners must agree on priorities.",
+      "roles": [
+        "crisis"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -360
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: national crisis coordinator coordinates request a joint relief mission for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to request a joint relief mission leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "crisis_policy": "Request a joint relief mission"
+      }
+    },
+    {
+      "id": "diplomat_1",
+      "label": "Open a neutral dialogue forum",
+      "tradeoff": "Reduce escalation; talks may be perceived as delay.",
+      "roles": [
+        "diplomat"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "conflict_escalation": 0.65,
+          "other_hazard": 0.85
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: international diplomat coordinates open a neutral dialogue forum for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to open a neutral dialogue forum leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "diplomat_policy": "Open a neutral dialogue forum"
+      }
+    },
+    {
+      "id": "diplomat_2",
+      "label": "Negotiate humanitarian cooperation",
+      "tradeoff": "Bring relief forward; negotiations require concessions.",
+      "roles": [
+        "diplomat"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -360
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: international diplomat coordinates negotiate humanitarian cooperation for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to negotiate humanitarian cooperation leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "diplomat_policy": "Negotiate humanitarian cooperation"
+      }
+    },
+    {
+      "id": "diplomat_3",
+      "label": "Publish shared diplomatic commitments",
+      "tradeoff": "Reduce public tensions; partners sacrifice flexibility.",
+      "roles": [
+        "diplomat"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.7
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: international diplomat coordinates publish shared diplomatic commitments for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to publish shared diplomatic commitments leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "diplomat_policy": "Publish shared diplomatic commitments"
+      }
+    },
+    {
+      "id": "shelter_1",
+      "label": "Expand community shelter support",
+      "tradeoff": "Reduce later service strain; other services lose resources.",
+      "roles": [
+        "shelter"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: emergency shelter coordinator coordinates expand community shelter support for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to expand community shelter support leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "shelter_policy": "Expand community shelter support"
+      }
+    },
+    {
+      "id": "shelter_2",
+      "label": "Create a fair accommodation charter",
+      "tradeoff": "Reduce tensions; individual preferences cannot all be met.",
+      "roles": [
+        "shelter"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "civil_unrest": 0.7
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: emergency shelter coordinator coordinates create a fair accommodation charter for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to create a fair accommodation charter leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "shelter_policy": "Create a fair accommodation charter"
+      }
+    },
+    {
+      "id": "shelter_3",
+      "label": "Coordinate shelter supply partners",
+      "tradeoff": "Bring aid forward; deliveries depend on external capacity.",
+      "roles": [
+        "shelter"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -360
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: emergency shelter coordinator coordinates coordinate shelter supply partners for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate shelter supply partners leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "shelter_policy": "Coordinate shelter supply partners"
+      }
+    },
+    {
+      "id": "medical_1",
+      "label": "Protect essential care capacity",
+      "tradeoff": "Reduce later service failures; elective care waits.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.72
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates protect essential care capacity for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to protect essential care capacity leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Protect essential care capacity"
+      }
+    },
+    {
+      "id": "medical_2",
+      "label": "Support community care teams",
+      "tradeoff": "Support local care access; staff and budgets must cover more services.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.78
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates support community care teams for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support community care teams leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Support community care teams"
+      }
+    },
+    {
+      "id": "medical_3",
+      "label": "Coordinate medical mutual aid",
+      "tradeoff": "Bring support forward; partners retain competing needs.",
+      "roles": [
+        "medical"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -360
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: hospital director coordinates coordinate medical mutual aid for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate medical mutual aid leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "medical_policy": "Coordinate medical mutual aid"
+      }
+    },
+    {
+      "id": "aid_1",
+      "label": "Coordinate relief partnerships",
+      "tradeoff": "Bring aid forward; local delivery remains difficult.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 2,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "shift": [
+          {
+            "type": "international_aid",
+            "minutes": -360
+          }
+        ],
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates coordinate relief partnerships for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to coordinate relief partnerships leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Coordinate relief partnerships"
+      }
+    },
+    {
+      "id": "aid_2",
+      "label": "Support displaced communities",
+      "tradeoff": "Reduce service strain; funds leave other programs.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 3,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "infrastructure_failure": 0.8
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates support displaced communities for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to support displaced communities leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Support displaced communities"
+      }
+    },
+    {
+      "id": "aid_3",
+      "label": "Fund local relief markets",
+      "tradeoff": "Ease shortages; purchasing power is uneven.",
+      "roles": [
+        "aid"
+      ],
+      "event_types": [
+        "*"
+      ],
+      "cost": 4,
+      "intervention": {
+        "type": "government_response",
+        "severity": 0.2
+      },
+      "effects": {
+        "severity_scale": {
+          "economic_shock": 0.75
+        },
+        "consequences": [
+          {
+            "after_minutes": 120,
+            "type": "government_response",
+            "kind": "benefit",
+            "severity": 0.15,
+            "description": "Simulated: humanitarian aid director coordinates fund local relief markets for Nuclear War."
+          },
+          {
+            "after_minutes": 180,
+            "type": "economic_shock",
+            "kind": "side_effect",
+            "severity": 0.08,
+            "description": "Simulated: resources committed to fund local relief markets leave less capacity for other programs."
+          }
+        ]
+      },
+      "sets": {
+        "aid_policy": "Fund local relief markets"
+      }
+    }
+  ],
+  "phases": [
+    {
+      "at_minutes": 360,
+      "title": "Diplomatic alarm",
+      "summary": "Fictional rival blocs suspend talks during an escalating international confrontation."
+    },
+    {
+      "at_minutes": 1440,
+      "title": "Humanitarian shock",
+      "summary": "Reports of a fictional nuclear exchange create a humanitarian emergency across unnamed conflict zones."
+    },
+    {
+      "at_minutes": 2520,
+      "title": "Displacement",
+      "summary": "Fictional contamination concerns interrupt regional trade and food access."
+    },
+    {
+      "at_minutes": 3600,
+      "title": "International response",
+      "summary": "International partners organize coordinated civilian relief."
+    },
+    {
+      "at_minutes": 4680,
+      "title": "Stabilization",
+      "summary": "Emergency talks conclude with a fragile civilian protection agreement."
+    }
+  ],
+  "presentation": {
+    "steps": 60,
+    "target_minutes": "5–10 including decisions"
+  }
+}

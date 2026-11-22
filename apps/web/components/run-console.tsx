@@ -9,7 +9,7 @@ import {
   branchFromDecision, controlRun, PlayerRequestError, readPlayerState, readPlayerSummary, submitDecision,
   type PlayerState, type PlayerSummary,
 } from "../lib/player-api";
-import { fallbackNewsItem, formatSimTime, pacingSummary, sameRun, sameRunOrBranch, type NewsItem, type Playback, type RunIdentity, type ScenarioEvent, type ScenarioRun, type StreamMessage } from "../lib/scenario";
+import { fallbackNewsItem, focusNewsItem, formatSimTime, pacingSummary, sameRun, sameRunOrBranch, type NewsItem, type Playback, type RunIdentity, type ScenarioEvent, type ScenarioRun, type StreamMessage } from "../lib/scenario";
 import { AlternateTimeline } from "./alternate-timeline";
 import { DecisionCard } from "./decision-card";
 import { HeadlineAlert } from "./headline-alert";
@@ -17,6 +17,8 @@ import { ImpactDashboard } from "./impact-dashboard";
 import { PlayerSummaryPanel } from "./player-summary";
 import { WorldMap, type WorldMapHandle } from "./world-map";
 import { WorldWire } from "./world-wire";
+import { PresentationControls } from "./presentation-controls";
+import { beatDelay, headlineDelay, type PresentationSpeed } from "../lib/presentation";
 
 const speeds = [1, 2, 4];
 const rate = Number(process.env.NEXT_PUBLIC_SIMULATION_MINUTES_PER_SECOND ?? 60);
@@ -72,13 +74,15 @@ function useRunNews(run: ScenarioRun, events: EventState, isDemo: boolean) {
 function usePlayer(run: ScenarioRun) {
   const [state, setState] = useState<PlayerState>();
   const [summary, setSummary] = useState<PlayerSummary>();
+  const requestNumber = useRef(0);
   const refresh = useCallback(async () => {
     if (!run.player) return;
     try {
+      const serial = ++requestNumber.current;
       const next = await readPlayerState(run.id);
-      setState(next);
-      if (next.finished) setSummary(await readPlayerSummary(run.id));
-      else setSummary(undefined);
+      const summary = next.finished ? await readPlayerSummary(run.id) : undefined;
+      if (serial !== requestNumber.current) return;
+      setState(next); setSummary(summary);
     } catch {
       // The run may have been evicted; the stream status says so.
     }
@@ -94,7 +98,7 @@ function usePlayer(run: ScenarioRun) {
   return { state, summary, refresh };
 }
 
-export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDemo: boolean; onRestart?: () => void }) {
+export function RunConsole({ run, isDemo, onRestart, onSelectRole }: { run: ScenarioRun; isDemo: boolean; onRestart?: () => void; onSelectRole?: () => void }) {
   const mapRef = useRef<WorldMapHandle>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const seekFloorRef = useRef<number | undefined>(undefined);
@@ -127,8 +131,77 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
   const [playerError, setPlayerError] = useState<string>();
   const pending = player.state?.pending ?? null;
   const cardWaiting = Boolean(pending?.waiting);
-  const finished = Boolean(run.player && player.summary?.finished);
+  const finished = Boolean(run.player && player.summary?.finished && events.queue.length === 0);
   const [compareOpen, setCompareOpen] = useState(false);
+  const [presentationSpeed, setPresentationSpeed] = useState<PresentationSpeed>("normal");
+  const [reading, setReading] = useState(false);
+  const [wantPlaying, setWantPlaying] = useState(false);
+  const [beatReady, setBeatReady] = useState(true);
+  const [autoFollow, setAutoFollow] = useState(true);
+  const [followSuspended, setFollowSuspended] = useState(false);
+  const [manualSerial, setManualSerial] = useState(0);
+  useEffect(() => {
+    if (!followSuspended) return;
+    const timer = setTimeout(() => setFollowSuspended(false), 20000);
+    return () => clearTimeout(timer);
+  }, [manualSerial, followSuspended]);
+  const [selectedId, setSelectedId] = useState<string>();
+  const lastBeat = useRef(run.startMinute);
+  const [beatSerial, setBeatSerial] = useState(0);
+  const followLocation = cardWaiting ? events.applied.find(e => e.id === pending?.trigger.event_id)?.location
+    : events.applied.find(e => e.id === selectedId)?.location;
+  const highlightedCountry = followLocation?.country_code ?? run.firstEvent.location.country_code;
+  const lastFocus = useRef<string | undefined>(undefined);
+  const advanceStory = useCallback(() => {
+    mapRef.current?.stopMotion();
+    setEvents(previous => ({...previous, queue: previous.queue.slice(1)}));
+    setBeatReady(true);
+  }, []);
+
+  // Snapshot boundaries cancel pending cosmetic work; they never replay old reports.
+  useEffect(() => { setBeatReady(true); lastBeat.current = simTime; }, [events.revision]);
+  useEffect(() => {
+    if (!run.player || simTime <= lastBeat.current) return;
+    lastBeat.current = simTime;
+    if (wantPlaying && !atEnd && !cardWaiting && presentationSpeed !== "fast") {
+      sendControl({action: "pause"});
+      setBeatReady(false);
+      setBeatSerial(n => n + 1);
+    }
+  }, [simTime, wantPlaying, atEnd, cardWaiting, presentationSpeed, run.player]);
+  useEffect(() => {
+    if (beatReady) return;
+    const timer = setTimeout(() => setBeatReady(true), beatDelay(presentationSpeed));
+    return () => clearTimeout(timer);
+  }, [beatSerial, beatReady, presentationSpeed]);
+  useEffect(() => {
+    if (!run.player || !reportedHeadline || reading || cardWaiting || !wantPlaying) return;
+    const timer = setTimeout(advanceStory, headlineDelay(presentationSpeed, reportedHeadline.severity));
+    return () => clearTimeout(timer);
+  }, [reportedHeadline?.event_id, reading, cardWaiting, wantPlaying, presentationSpeed, advanceStory, run.player]);
+  useEffect(() => {
+    if (run.player && wantPlaying && beatReady && !reading && !cardWaiting && !atEnd && !player.state?.finished &&
+        events.queue.length === 0 && playback.state === "paused" && connected) sendControl({action: "play"});
+  }, [wantPlaying, beatReady, reading, cardWaiting, atEnd, player.state?.finished, events.queue.length, playback.state, connected, run.player]);
+  useEffect(() => {
+    if (run.player && reading) sendControl({action: "pause"});
+  }, [reading, run.player]);
+  useEffect(() => {
+    if (reportedHeadline && !cardWaiting) setSelectedId(reportedHeadline.event_id);
+  }, [reportedHeadline?.event_id, cardWaiting]);
+  useEffect(() => {
+    if (followSuspended || !autoFollow) { lastFocus.current = undefined; return; }
+    if (run.player && followLocation && (cardWaiting || !reading)) {
+      const key = `${followLocation.lat.toFixed(1)},${followLocation.lon.toFixed(1)}`;
+      if (key !== lastFocus.current || cardWaiting) {
+        mapRef.current?.focusLocation(followLocation, presentationSpeed === "fast");
+        lastFocus.current = key;
+      }
+    }
+  }, [selectedId, pending?.id, autoFollow, followSuspended, cardWaiting, presentationSpeed]);
+  useEffect(() => {
+    if (run.player) document.querySelector(".workspace")?.scrollIntoView({block: "start"});
+  }, [run.id]);
   const compareHeadingRef = useRef<HTMLHeadingElement>(null);
   const madeDecisions = (player.state?.decisions ?? []).filter((d) => d.status === "resolved").length;
 
@@ -176,7 +249,10 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
             identity: { simulation_id: data.simulation_id, branch_id: data.branch_id },
             revision: previous.revision + 1,
             applied: data.events,
-            queue: [],
+            queue: run.player && previous.identity.branch_id !== data.branch_id
+              ? [...previous.queue.filter(e => data.events.some(n => n.id === e.id)),
+                 ...data.events.filter(e => !previous.applied.some(old => old.id === e.id))]
+              : run.player && previous.applied.length === 0 ? data.events : [],
           }));
         } else if (!initialized) {
           return;
@@ -228,6 +304,7 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
   }
 
   function seek(minute: number) {
+    setWantPlaying(false); setReading(false); setBeatReady(true);
     seekFloorRef.current = minute;
     if (run.player) {
       void playerSeek(minute);
@@ -266,6 +343,7 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
       let at = player.state?.sim_time_minutes ?? simTime;
       if (playback.state === "playing") at = (await controlRun(run.id, { action: "pause" })).sim_time_minutes;
       await submitDecision(run.id, { decision_id: pending.id, at_minutes: at, ...body });
+      setWantPlaying(true); setReading(false); setBeatReady(true);
     } catch (error) {
       setPlayerError(error instanceof PlayerRequestError || error instanceof Error ? error.message : "That decision failed.");
     } finally {
@@ -277,6 +355,7 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
   async function branchFrom(decisionId: string) {
     setPlayerBusy(true);
     try {
+      setWantPlaying(false); setReading(false);
       await branchFromDecision(run.id, decisionId);
       setCompareOpen(false);
       mapRef.current?.focusLocation(run.firstEvent.location);
@@ -290,8 +369,9 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
   }
 
   function togglePlayback() {
-    if (playback.state === "playing") {
+    if (run.player ? wantPlaying : playback.state === "playing") {
       stopAtRef.current = undefined;
+      setWantPlaying(false);
       sendControl({ action: "pause" });
       return;
     }
@@ -300,7 +380,7 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
       seekFloorRef.current = run.startMinute;
       void playerSeek(run.startMinute).then((done) => {
         if (!done) return;
-        focusFirstEvent();
+        focusFirstEvent(); setWantPlaying(true); setReading(false);
         sendControl({ action: "play" });
       });
       return;
@@ -308,6 +388,7 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
     if (atEnd) seek(run.startMinute);
     if (simTime <= run.startMinute || atEnd) focusFirstEvent();
     stopAtRef.current = stopEachStep ? nextBoundary(atEnd ? run.startMinute : simTime) : undefined;
+    setWantPlaying(true); setReading(false);
     sendControl({ action: "play" });
   }
 
@@ -323,8 +404,9 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
     if (simTime <= run.startMinute && direction > 0) focusFirstEvent();
     if (run.player && direction > 0) {
       // A seek would jump over decision points, so play to the next step instead:
-      // the server still stops at any decision on the way.
+      // the server still stops at any decision on the way, and the story pacing still applies.
       stopAtRef.current = target;
+      setWantPlaying(true); setReading(false); setBeatReady(true);
       if (playback.state !== "playing") sendControl({ action: "play" });
       return;
     }
@@ -339,13 +421,16 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
 
   // "Stop at each step": pause as soon as the clock reaches the next step,
   // snapping back to the step if a fast tick went past it.
+  // In player runs the story pacing pauses the server between beats, so "moving" is wantPlaying.
   useEffect(() => {
     const target = stopAtRef.current;
-    if (target === undefined || playback.state !== "playing" || simTime < target) return;
+    const moving = run.player ? wantPlaying : playback.state === "playing";
+    if (target === undefined || !moving || simTime < target) return;
     stopAtRef.current = undefined;
+    if (run.player) setWantPlaying(false);
     sendControl({ action: "pause" });
     if (simTime > target && target < run.endMinute) seek(target);
-  }, [playback.state, run.endMinute, simTime]);
+  }, [playback.state, run.endMinute, run.player, simTime, wantPlaying]);
 
   // Keyboard: Space plays or pauses; the arrow keys (or , and .) step. The
   // listener reads the latest render's handlers, updated before paint.
@@ -370,7 +455,7 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  const playbackLabel = playback.state === "playing" ? "Pause" : atEnd ? "Replay" : "Play";
+  const playbackLabel = (run.player ? wantPlaying && !cardWaiting && !finished : playback.state === "playing") ? "Pause" : atEnd ? "Replay" : "Play";
   const status = {
     connected: "Live stream connected",
     connecting: "Connecting to stream",
@@ -381,13 +466,28 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
 
   return (
     <div className="workspace">
+      {run.player && <div className="story-toolbar">
+        <PresentationControls speed={presentationSpeed} onSpeed={setPresentationSpeed}
+          held={reading} onHold={() => setReading(v => !v)} onSkip={advanceStory}
+          autoFollow={autoFollow} suspended={followSuspended} onFollow={() => {
+            if (followSuspended) { setFollowSuspended(false); setAutoFollow(true); }
+            else setAutoFollow(v => !v);
+          }} />
+        {player.state?.phase && <section className="crisis-phase" aria-label="Current crisis phase" aria-live="polite">
+          <span>Phase {player.state.phase.index} / {player.state.phase.total} · {formatSimTime(simTime)}</span>
+          <strong>{player.state.phase.title}</strong><p>{player.state.phase.summary}</p>
+          <progress aria-label="Crisis phase progress" value={player.state.phase.index} max={player.state.phase.total} />
+        </section>}
+      </div>}
       <WorldMap
         ref={mapRef}
         elapsedSeconds={(simTime - run.startMinute) / (run.pacing?.mode === "relative" && run.pacing.minutes_per_tick > 0
           ? run.pacing.minutes_per_tick / run.pacing.tick_seconds
           : minutesPerSecond)}
         events={events.applied}
-        focusCountry={run.firstEvent.location.country_code}
+        focusCountry={highlightedCountry}
+        selectedEventId={cardWaiting ? pending?.trigger.event_id : selectedId}
+        onManualInteraction={() => { setFollowSuspended(true); setManualSerial(n => n + 1); }}
       >
         {finished && !cardWaiting && (
           <section className="run-complete" aria-label="Run complete">
@@ -402,10 +502,10 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
         )}
         <HeadlineAlert
           // While a decision card waits it has the floor; queued headlines show after.
-          item={cardWaiting || finished ? undefined : reportedHeadline}
+          item={cardWaiting || (finished && events.queue.length === 0) ? undefined : reportedHeadline}
           queuedCount={Math.max(0, events.queue.length - 1)}
-          onAdvance={() => setEvents((previous) => ({ ...previous, queue: previous.queue.slice(1) }))}
-          onDismiss={() => setEvents((previous) => ({ ...previous, queue: previous.queue.slice(1) }))}
+          onAdvance={advanceStory}
+          onDismiss={advanceStory}
         />
       </WorldMap>
 
@@ -416,9 +516,9 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.18 }}
       >
-        {run.player && player.summary && (
+        {run.player && player.summary && finished && (
           <PlayerSummaryPanel summary={player.summary} busy={playerBusy}
-            onTryAgain={() => onRestart?.()} onBranch={(id) => branchFrom(id)} onCompare={showComparison} />
+            onTryAgain={() => onRestart?.()} onSelectRole={onSelectRole} onBranch={(id) => branchFrom(id)} onCompare={showComparison} />
         )}
         <div className="scenario-summary">
           <div className="scenario-status">
@@ -437,7 +537,8 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
           </button>
         </div>
         <ImpactDashboard events={events.applied} />
-        <WorldWire items={[...reports.values()].reverse()} loading={newsLoading} />
+        <WorldWire items={[...reports.values()].reverse()} loading={newsLoading} selectedId={selectedId}
+          onSelect={(item) => { setSelectedId(item.event_id); if (!cardWaiting) focusNewsItem(item); }} />
       </motion.aside>
 
       <section className="timeline" aria-label="Simulation playback">
@@ -524,8 +625,8 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
           </div>
           {pacing && (
             <p className="timeline-pacing" aria-label="Playback pacing">
-              <span>{pacing.rate}</span>
-              <span>{pacing.left}</span>
+              <span>{run.player ? `Simulation clock · ${playback.speed}×` : pacing.rate}</span>
+              <span>{run.player ? (atEnd ? "at the end" : "Story pace controls reading time") : pacing.left}</span>
             </p>
           )}
         </div>
@@ -539,7 +640,7 @@ export function RunConsole({ run, isDemo, onRestart }: { run: ScenarioRun; isDem
         </div>
       </section>
 
-      {run.player && player.summary && compareOpen && (
+      {run.player && player.summary && finished && compareOpen && (
         <AlternateTimeline ref={compareHeadingRef} comparison={player.summary.comparison} score={player.summary.score}
           busy={playerBusy} onClose={() => {
             setCompareOpen(false);

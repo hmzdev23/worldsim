@@ -13,8 +13,9 @@ import { along, deriveMapEffects, describeEffects, type AidRoute, type MapEffect
 import effectStyles from "./map-effects.module.css";
 
 export type WorldMapHandle = {
-  focusLocation: (location: MapLocation) => void;
+  focusLocation: (location: MapLocation, instant?: boolean) => void;
   fitEvents: (events: ScenarioEvent[]) => void;
+  stopMotion: () => void;
 };
 
 function fitMapToEvents(map: MapLibreMap, events: ScenarioEvent[]) {
@@ -251,8 +252,15 @@ function transitionDuration(duration: number) {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : duration;
 }
 
-function focusMapLocation(map: MapLibreMap, { lat, lon, zoom = 4.65 }: MapLocation) {
-  map.flyTo({ center: [lon, lat], zoom, duration: transitionDuration(1500) });
+function validLocation(location: Partial<MapLocation> | undefined): location is MapLocation {
+  return !!location && Number.isFinite(location.lat) && Number.isFinite(location.lon) &&
+    Math.abs(location.lat!) <= 90 && Math.abs(location.lon!) <= 180;
+}
+
+function focusMapLocation(map: MapLibreMap, location: MapLocation, instant = false) {
+  if (!validLocation(location)) return;
+  const { lat, lon, zoom = 4.65 } = location;
+  map.flyTo({ center: [lon, lat], zoom, duration: instant ? 0 : transitionDuration(1500) });
 }
 
 export function WorldMap({
@@ -260,14 +268,19 @@ export function WorldMap({
   elapsedSeconds,
   events,
   focusCountry,
-  ref,
+  ref, selectedEventId, onManualInteraction,
 }: {
+  selectedEventId?: string;
+  onManualInteraction?: () => void;
   children?: ReactNode;
   elapsedSeconds: number;
   events: ScenarioEvent[];
   focusCountry: string;
   ref: Ref<WorldMapHandle>;
 }) {
+  events = useMemo(() => events.filter(e => validLocation(e.location)), [events]);
+  const manualCallback = useRef(onManualInteraction);
+  manualCallback.current = onManualInteraction;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const [mapReady, setMapReady] = useState(false);
@@ -280,12 +293,13 @@ export function WorldMap({
   const effectList = useMemo(() => describeEffects(effects), [effects]);
 
   useImperativeHandle(ref, () => ({
-    focusLocation(location) {
-      if (mapRef.current) focusMapLocation(mapRef.current, location);
+    focusLocation(location, instant) {
+      if (mapRef.current) focusMapLocation(mapRef.current, location, instant);
     },
     fitEvents(items) {
       if (mapRef.current) fitMapToEvents(mapRef.current, items);
     },
+    stopMotion() { mapRef.current?.stop(); },
   }), []);
 
   useEffect(() => {
@@ -311,6 +325,9 @@ export function WorldMap({
       return;
     }
     mapRef.current = map;
+    const manual = (event: { originalEvent?: unknown }) => { if (event.originalEvent) manualCallback.current?.(); };
+    map.on("movestart", manual);
+    map.on("zoomstart", manual);
     map.getCanvas().setAttribute("aria-label", "World map. Arrow keys pan; plus and minus zoom.");
     map.touchZoomRotate.disableRotation();
 
@@ -380,6 +397,8 @@ export function WorldMap({
       const element = document.createElement("div");
       element.className = event.type === "earthquake" ? "epicenter-marker" : `event-marker event-marker-${event.type}`;
       element.title = `${event.type.replaceAll("_", " ")} · ${event.location.name}`;
+      if (event.provenance?.source === "user") element.classList.add("player-decision-marker");
+      if (event.payload?.decision_effect) element.classList.add("player-consequence-marker");
       eventMarkers.current.set(event.id, new Marker({ element })
         .setLngLat([event.location.lon, event.location.lat]).addTo(map));
     }
@@ -474,6 +493,10 @@ export function WorldMap({
     }
   }, [effects, elapsedSeconds, mapReady]);
 
+  useEffect(() => {
+    for (const [id, marker] of eventMarkers.current) marker.getElement().dataset.selected = String(id === selectedEventId);
+  }, [selectedEventId, events, mapReady]);
+
   return (
     <section className="map-panel" aria-label="Interactive world map">
       <div className="map-canvas" ref={containerRef} />
@@ -483,11 +506,11 @@ export function WorldMap({
       </div>
       <div className="map-controls" aria-label="Map controls">
         <button type="button" title="Zoom in" aria-label="Zoom in" disabled={!mapReady}
-          onClick={() => mapRef.current?.zoomIn({ duration: transitionDuration(240) })}>
+          onClick={() => { manualCallback.current?.(); mapRef.current?.zoomIn({ duration: transitionDuration(240) }); }}>
           <Plus size={19} />
         </button>
         <button type="button" title="Zoom out" aria-label="Zoom out" disabled={!mapReady}
-          onClick={() => mapRef.current?.zoomOut({ duration: transitionDuration(240) })}>
+          onClick={() => { manualCallback.current?.(); mapRef.current?.zoomOut({ duration: transitionDuration(240) }); }}>
           <Minus size={19} />
         </button>
         <button type="button" title="Fit scenario" aria-label="Fit scenario" disabled={!mapReady || events.length === 0}

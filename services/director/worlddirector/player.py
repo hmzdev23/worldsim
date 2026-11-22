@@ -79,7 +79,11 @@ def list_player_specs() -> list[dict]:
             "fixture": spec["fixture"],
             "title": spec["title"],
             "summary": spec.get("summary", ""),
-            "roles": [{"id": r["id"], "title": r["title"], "summary": r.get("summary", "")} for r in spec["roles"]],
+            "display_title": spec.get("display_title", spec["title"]),
+            "category": spec.get("category", "Fictional crisis"), "icon": spec.get("icon", "*"),
+            "briefing": spec.get("briefing", spec.get("summary", "")),
+            "roles": [dict(r) for r in spec["roles"]],
+            "outcomes": [{"name": v["name"], "label": v["label"]} for v in spec["variables"]["dependent"]],
         })
     return out
 
@@ -92,6 +96,14 @@ def validate_spec(spec: dict) -> None:
     for key in ("fixture", "title", "label", "variables", "triggers", "roles", "actions"):
         if key not in spec:
             bad(f"missing {key}")
+    roles_list = spec["roles"]
+    if not 1 <= len(roles_list) <= 5 or len({r["id"] for r in roles_list}) != len(roles_list):
+        bad("a scenario needs one to five unique roles")
+    phases = spec.get("phases", [])
+    if any(not isinstance(p.get("at_minutes"), int) or p["at_minutes"] < 0 or not p.get("title") for p in phases):
+        bad("phases need a valid minute and title")
+    if phases != sorted(phases, key=lambda p: p["at_minutes"]):
+        bad("phases must be chronological")
     variables = spec["variables"]
     names = set()
     for var in variables.get("independent", []):

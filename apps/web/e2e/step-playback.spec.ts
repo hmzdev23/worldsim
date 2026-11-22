@@ -17,15 +17,14 @@ async function openSample(page: Page, label: string, title: string) {
 }
 
 test("a run is split into twenty 5% steps", () => {
-  const steps = stepBoundaries({ startMinute: 100, endMinute: 300, pacing: undefined });
+  const steps = stepBoundaries({ startMinute: 100, endMinute: 300 });
   expect(steps).toHaveLength(21);
   expect(steps[1]).toBe(110);
   expect(steps.at(-1)).toBe(300);
-  const paced = stepBoundaries({
-    startMinute: 0, endMinute: 100,
-    pacing: { mode: "relative", fraction_per_tick: 0.1, span_minutes: 100, minutes_per_tick: 10, tick_seconds: 1 },
-  });
-  expect(paced).toEqual([0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]);
+  // Player runs tick in 60 beats; steps stay at 5%.
+  const paced = stepBoundaries({ startMinute: 0, endMinute: 100 });
+  expect(paced).toHaveLength(21);
+  expect(paced[1]).toBe(5);
 });
 
 test("a Pacific run is framed across the Pacific, not around the world", () => {

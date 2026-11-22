@@ -41,8 +41,10 @@ function ScenarioWorkspace() {
   const [mode, setMode] = useState<Mode>("default");
   const [playable, setPlayable] = useState<PlayableScenario[]>([]);
   const [role, setRole] = useState("");
+  const [rolesOpen, setRolesOpen] = useState(true);  // collapses while you play a role
   const sample = sampleScenarios.find((item) => item.fixture === selected) ?? sampleScenarios[0];
-  const playableScenario = playable.find((item) => item.fixture === selected);
+  // "You decide" plays the scenario's playable chain (#82), not its default timeline.
+  const playableScenario = playable.find((item) => item.fixture === sample.playerFixture);
   const roles = playableScenario?.roles ?? [];
   const chosenRole = roles.find((item) => item.id === role) ?? roles[0];
   const prompted = !isDemo && !run.fixture;
@@ -77,25 +79,22 @@ function ScenarioWorkspace() {
   }
 
   function playAsRole(item = sample, roleId = chosenRole?.id) {
-    const scenario = playable.find((entry) => entry.fixture === item.fixture);
+    const scenario = playable.find((entry) => entry.fixture === item.playerFixture);
     const picked = scenario?.roles.find((entry) => entry.id === roleId);
     if (!scenario || !picked) return;
     setSelected(item.fixture);
     setMode("decide");
     setRole(picked.id);
-    void launchRun(`${item.title} · you decide as ${picked.title}`, {
+    void launchRun(`${scenario.display_title || scenario.title} · you decide as ${picked.title}`, {
       player: { fixture: scenario.fixture, role: picked.id, roleTitle: picked.title, scenarioTitle: scenario.title },
     });
   }
 
   function chooseHazard(item: SampleScenario) {
-    const canDecide = playable.some((entry) => entry.fixture === item.fixture);
-    if (mode === "decide" && canDecide) {
-      const firstRole = playable.find((entry) => entry.fixture === item.fixture)?.roles[0]?.id;
-      playAsRole(item, firstRole);
-    } else {
-      playDefault(item);
-    }
+    // A new scenario always opens on its default timeline; in "You decide" the
+    // role cards for it appear, ready to start.
+    playDefault(item);
+    if (mode === "decide" && playable.some((entry) => entry.fixture === item.playerFixture)) setMode("decide");
   }
 
   async function launchRun(text: string, options: { fixture?: string; player?: ScenarioRun["player"] } = {}) {
@@ -112,6 +111,7 @@ function ScenarioWorkspace() {
       }, options.player, options.fixture);
       if (controller.signal.aborted) return;
       setRun(scenario);
+      setRolesOpen(!scenario.player);
       setElapsedSeconds(Math.floor((Date.now() - (preparingSince.current ?? Date.now())) / 1000));
       setLaunch({ status: "ready" });
     } catch (error) {
@@ -188,29 +188,46 @@ function ScenarioWorkspace() {
             </button>
             <button type="button" role="radio" aria-checked={mode === "decide"} disabled={generating || roles.length === 0}
               title={roles.length === 0 ? "No decisions are written for this scenario yet" : undefined}
-              onClick={() => setMode("decide")}>
+              onClick={() => { setMode("decide"); setRolesOpen(true); }}>
               You decide
             </button>
           </div>
-          {mode === "decide" && roles.length > 0 && (
-            <div className="decide-options">
-              <label>
-                Your role
-                <select value={chosenRole?.id ?? ""} disabled={generating}
-                  onChange={(event) => setRole(event.currentTarget.value)}>
-                  {roles.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}
-                </select>
-              </label>
-              <button type="button" className="play-role-button" disabled={generating || !chosenRole}
-                onClick={() => playAsRole()}>
-                {run.player?.fixture === selected && run.player.role === chosenRole?.id ? "Restart with my decisions" : "Start with my decisions"}
-              </button>
-            </div>
-          )}
         </div>
+        {mode === "decide" && run.player && !rolesOpen && (
+          <div className="chooser-row">
+            <span className="chooser-label">Your role</span>
+            <strong className="current-role">{run.player.roleTitle}</strong>
+            <button type="button" className="demo-button" onClick={() => setRolesOpen(true)}>Change role</button>
+          </div>
+        )}
+        {mode === "decide" && playableScenario && chosenRole && (!run.player || rolesOpen) && (
+          <div className="decide-panel" id="scenario-roles">
+            <div className="role-grid" role="radiogroup" aria-label="Your role">
+              {roles.map((item) => (
+                <button key={item.id} type="button" role="radio" aria-checked={item.id === chosenRole.id} disabled={generating}
+                  onClick={() => setRole(item.id)}>
+                  <strong>{item.title}</strong><span>{item.responsibilities || item.summary}</span>
+                </button>
+              ))}
+            </div>
+            <section className="mission-briefing" aria-label="Mission briefing">
+              <p className="alt-kicker">SIMULATED · {playableScenario.display_title || playableScenario.title} · your decisions</p>
+              <h3>Your mission as {chosenRole.title}</h3>
+              <p>{playableScenario.briefing || playableScenario.summary}</p>
+              <p>{chosenRole.perspective || chosenRole.summary} The run stops when something big happens; your choices
+                rewrite what comes next, and at the end you see your timeline next to the one where nobody intervenes.</p>
+              {chosenRole.emphasis && chosenRole.emphasis.length > 0 && (
+                <p>Watch: {chosenRole.emphasis.map((name) => playableScenario.outcomes?.find((o) => o.name === name)?.label || name).join(", ")}.</p>
+              )}
+              <button type="button" className="play-role-button" disabled={generating} onClick={() => playAsRole()}>
+                {run.player?.fixture === playableScenario.fixture && run.player.role === chosenRole.id ? "Restart with my decisions" : "Start with my decisions"}
+              </button>
+            </section>
+          </div>
+        )}
         <p className="chooser-note">
           {mode === "decide" && chosenRole
-            ? <>The run stops when something big happens. Your choices rewrite what comes next, and at the end you see your timeline next to the default one. {chosenRole.summary}</>
+            ? <>Choose a role, read the briefing, then start. You can switch back to the default timeline at any time.</>
             : playingDefault
               ? <>Playing the default timeline: no one intervenes. Choose <strong>You decide</strong> to change how it plays out.</>
               : <>Pick a scenario to play its default timeline.</>}
@@ -254,8 +271,18 @@ function ScenarioWorkspace() {
       </form>
 
       <RunConsole key={isDemo ? "demo" : run.id} run={run} isDemo={isDemo}
+        onSelectRole={() => {
+          const item = sampleScenarios.find((entry) => entry.playerFixture === run.player?.fixture);
+          if (item) setSelected(item.fixture);
+          setMode("decide");
+          setRolesOpen(true);
+          requestAnimationFrame(() => {
+            document.querySelector(".scenario-chooser")?.scrollIntoView({ behavior: "auto", block: "start" });
+            document.querySelector<HTMLButtonElement>('#scenario-roles [role="radio"][aria-checked="true"]')?.focus();
+          });
+        }}
         onRestart={run.player ? () => {
-          const item = sampleScenarios.find((entry) => entry.fixture === run.player?.fixture);
+          const item = sampleScenarios.find((entry) => entry.playerFixture === run.player?.fixture);
           if (item) playAsRole(item, run.player?.role);
         } : undefined} />
     </main>

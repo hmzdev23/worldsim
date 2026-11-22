@@ -18,10 +18,11 @@ test("pandemic as health minister: skip, two decisions, score and summary", asyn
   await chooser.getByRole("button", { name: "Pandemic", exact: true }).click();
   await expect(page.getByRole("heading", { name: "A new virus spreads from Singapore" })).toBeVisible({ timeout: 20_000 });
   await chooser.getByRole("radio", { name: "You decide" }).click();
-  await chooser.getByLabel("Your role").selectOption({ label: "Regional health minister" });
+  await chooser.getByRole("radiogroup", { name: "Your role" }).getByRole("radio", { name: /^Regional health minister/ }).click();
   await chooser.getByRole("button", { name: "Start with my decisions" }).click();
   await expect(page.getByRole("heading", { name: "Novel virus outbreak · Regional health minister" })).toBeVisible();
 
+  await page.getByRole("button", { name: "Fast", exact: true }).click();
   const playback = page.getByRole("region", { name: "Simulation playback" });
   await playback.getByRole("button", { name: "4×" }).click();
   await playback.getByRole("button", { name: "Play", exact: true }).click();

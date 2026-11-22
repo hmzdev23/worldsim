@@ -2,16 +2,13 @@
 
 import { formatSimTime, type ScenarioEvent, type ScenarioRun } from "./scenario";
 
-// Playback moves in steps of 5% of the run (SIM-005 pacing). Runs paced by the
-// server use its own fraction, so a step is exactly one clock tick at 1×.
-const defaultStepFraction = 0.05;
+// Playback moves in steps of 5% of the run: twenty steps, whatever the server's
+// clock tick (watch runs tick 5% at 1×; player runs tick in 60 smaller beats).
+const stepFraction = 0.05;
 
 /** Run minutes at every 5% step, from the start (step 0) to the end. */
-export function stepBoundaries(run: Pick<ScenarioRun, "startMinute" | "endMinute" | "pacing">) {
-  const fraction = run.pacing?.mode === "relative" && run.pacing.fraction_per_tick > 0
-    ? run.pacing.fraction_per_tick
-    : defaultStepFraction;
-  const count = Math.max(1, Math.round(1 / fraction));
+export function stepBoundaries(run: Pick<ScenarioRun, "startMinute" | "endMinute">) {
+  const count = Math.round(1 / stepFraction);
   const span = Math.max(0, run.endMinute - run.startMinute);
   const minutes = Array.from({ length: count + 1 }, (_, index) => run.startMinute + Math.round((span * index) / count));
   return minutes.filter((minute, index) => index === 0 || minute > minutes[index - 1]);
@@ -27,7 +24,8 @@ export function eventPins(applied: ScenarioEvent[], run: Pick<ScenarioRun, "star
     if (last && left - last.left < 0.015) last.events.push(event);
     else pins.push({ left, events: [event], label: "" });
   }
-  const describe = (event: ScenarioEvent) => `${event.type.replaceAll("_", " ")}, ${event.location.name}`;
+  const describe = (event: ScenarioEvent) =>
+    `${event.type.replaceAll("_", " ")}, ${event.location?.name || event.location?.country || "no location"}`;
   for (const pin of pins) {
     const when = formatSimTime(pin.events[0].sim_time_minutes);
     pin.label = pin.events.length === 1
@@ -42,6 +40,8 @@ export function eventPins(applied: ScenarioEvent[], run: Pick<ScenarioRun, "star
  * two ways round the globe, so a Pacific run frames the Pacific (east may be > 180).
  */
 export function eventBounds(events: Pick<ScenarioEvent, "location">[]): [[number, number], [number, number]] | undefined {
+  // Reports without a usable location are left out, never guessed.
+  events = events.filter(({ location }) => location && Number.isFinite(location.lat) && Number.isFinite(location.lon));
   if (!events.length) return undefined;
   const lats = events.map((event) => event.location.lat);
   const lons = events.map((event) => event.location.lon);

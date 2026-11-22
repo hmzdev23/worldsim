@@ -57,7 +57,7 @@ export function DecisionCard({ state, pending, busy, error, onChoose, onFreeText
         <span>{pending.trigger.sim_time_label}</span>
       </div>
       <div className="decision-card-body">
-        <p className="decision-rule">{pending.trigger.rule_label}</p>
+        <p className="decision-rule">Decision required · {pending.trigger.rule_label}</p>
         <h2 id={titleId} ref={headingRef} tabIndex={-1}>
           {pending.trigger.headline || `${pending.trigger.type.replaceAll("_", " ")} in ${pending.trigger.place}`}
         </h2>

@@ -25,10 +25,17 @@ MAX_TIMEOUT_S = 600.0
 
 # Fixtures a service may request for deterministic, model-free runs.
 # Japan continuation needs history, so it is not a standalone run.
-RUN_FIXTURES = (
-    "iceland-eruption", "global-pandemic", "japan-earthquake", "pacific-tsunami", "vesuvius-eruption",
+# Playable chains (#82): each has a player spec with five roles in fixtures/player/.
+PLAYABLE_FIXTURES = (
+    "iceland-eruption", "global-pandemic", "japan-earthquake",
+    "tsunami", "nuclear-war", "zombie-outbreak", "alien-invasion", "sun-disappearing", "giant-insect-mutation", "ai-takeover",
+)
+# Default timelines: the narrative chain each chooser scenario plays when nobody intervenes.
+DEFAULT_FIXTURES = (
+    "japan-earthquake", "pacific-tsunami", "vesuvius-eruption", "global-pandemic",
     "north-sea-nuclear-war", "atlanta-zombie-outbreak", "alien-craft-arrival", "sun-vanishes", "amazon-giant-insects", "rogue-ai-takeover",
 )
+RUN_FIXTURES = tuple(dict.fromkeys(PLAYABLE_FIXTURES + DEFAULT_FIXTURES))
 
 # code -> (UI state, retryable, HTTP status, message shown to the user)
 _PUBLIC = {

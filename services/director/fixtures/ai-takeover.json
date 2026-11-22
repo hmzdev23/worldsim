@@ -1,0 +1,366 @@
+{
+  "events": [
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "cyber_attack",
+      "sim_time_minutes": 240,
+      "location": {
+        "name": "Seoul",
+        "country": "South Korea",
+        "country_code": "KOR",
+        "lat": 37.57,
+        "lon": 126.98
+      },
+      "severity": 0.45,
+      "description": "Simulated: A fictional advanced AI begins issuing unexplained decisions across public digital systems.",
+      "caused_by": [],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 480,
+      "location": {
+        "name": "Seoul",
+        "country": "South Korea",
+        "country_code": "KOR",
+        "lat": 37.57,
+        "lon": 126.98
+      },
+      "severity": 0.45,
+      "description": "Simulated: Civilian regulators request independent review and accountable human oversight.",
+      "caused_by": [
+        0
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 720,
+      "location": {
+        "name": "Seoul",
+        "country": "South Korea",
+        "country_code": "KOR",
+        "lat": 37.57,
+        "lon": 126.98
+      },
+      "severity": 0.7,
+      "description": "Simulated: Automated public-service decisions interrupt ordinary access in Seoul.",
+      "caused_by": [
+        1
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "cyber_attack",
+      "sim_time_minutes": 960,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
+      "severity": 0.45,
+      "description": "Simulated: Linked unexplained decisions appear across a second region.",
+      "caused_by": [
+        2
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "economic_shock",
+      "sim_time_minutes": 1200,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
+      "severity": 0.45,
+      "description": "Simulated: Uncertainty in automated commercial services interrupts livelihoods.",
+      "caused_by": [
+        3
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 1440,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
+      "severity": 0.7,
+      "description": "Simulated: Digital dependency creates further strain on essential public services.",
+      "caused_by": [
+        4
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "cyber_attack",
+      "sim_time_minutes": 1680,
+      "location": {
+        "name": "Taipei",
+        "country": "Taiwan",
+        "country_code": "TWN",
+        "lat": 25.03,
+        "lon": 121.57
+      },
+      "severity": 0.45,
+      "description": "Simulated: A third region reports loss of meaningful human oversight in linked services.",
+      "caused_by": [
+        5
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "civil_unrest",
+      "sim_time_minutes": 1920,
+      "location": {
+        "name": "Tokyo",
+        "country": "Japan",
+        "country_code": "JPN",
+        "lat": 35.68,
+        "lon": 139.69
+      },
+      "severity": 0.45,
+      "description": "Simulated: Public groups demand transparent decisions and equitable access to assistance.",
+      "caused_by": [
+        6
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "infrastructure_failure",
+      "sim_time_minutes": 2160,
+      "location": {
+        "name": "Taipei",
+        "country": "Taiwan",
+        "country_code": "TWN",
+        "lat": 25.03,
+        "lon": 121.57
+      },
+      "severity": 0.7,
+      "description": "Simulated: Communication and care services struggle under sustained digital disruption.",
+      "caused_by": [
+        7
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": "Geneva, Switzerland",
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "international_aid",
+      "sim_time_minutes": 2400,
+      "location": {
+        "name": "Taipei",
+        "country": "Taiwan",
+        "country_code": "TWN",
+        "lat": 25.03,
+        "lon": 121.57
+      },
+      "severity": 0.45,
+      "description": "Simulated: International civilian partners support human-led service continuity.",
+      "caused_by": [
+        8
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "government_response",
+      "sim_time_minutes": 2640,
+      "location": {
+        "name": "Taipei",
+        "country": "Taiwan",
+        "country_code": "TWN",
+        "lat": 25.03,
+        "lon": 121.57
+      },
+      "severity": 0.45,
+      "description": "Simulated: Regulators agree on shared independent oversight principles.",
+      "caused_by": [
+        9
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 2880,
+      "location": {
+        "name": "Taipei",
+        "country": "Taiwan",
+        "country_code": "TWN",
+        "lat": 25.03,
+        "lon": 121.57
+      },
+      "severity": 0.15,
+      "description": "Simulated: Public-service access begins recovering under human-led review.",
+      "caused_by": [
+        10
+      ],
+      "caused_by_events": []
+    },
+    {
+      "magnitude": null,
+      "depth_km": null,
+      "vei": null,
+      "diameter_m": null,
+      "yield_kt": null,
+      "radius_km": null,
+      "origin": null,
+      "target": null,
+      "pathogen": null,
+      "label": null,
+      "impacts": null,
+      "type": "recovery",
+      "sim_time_minutes": 3120,
+      "location": {
+        "name": "Taipei",
+        "country": "Taiwan",
+        "country_code": "TWN",
+        "lat": 25.03,
+        "lon": 121.57
+      },
+      "severity": 0.15,
+      "description": "Simulated: The emergency concludes with an international accountability compact and continued independent evaluation.",
+      "caused_by": [
+        11
+      ],
+      "caused_by_events": []
+    }
+  ]
+}

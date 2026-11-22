@@ -12,7 +12,8 @@ sys.path.insert(0, str(ROOT / "services" / "director"))
 from worlddirector import DirectorError, VISUALS, prepare_scenario  # noqa: E402
 from worlddirector import player  # noqa: E402
 
-FIXTURES = ("global-pandemic", "iceland-eruption", "japan-earthquake", "pacific-tsunami", "vesuvius-eruption")
+from worlddirector.runner import PLAYABLE_FIXTURES
+FIXTURES = PLAYABLE_FIXTURES
 RESPONSES = {"government_response", "international_aid", "recovery", "ceasefire"}
 
 

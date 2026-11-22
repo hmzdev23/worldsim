@@ -35,3 +35,7 @@ No existing Director file was edited. Model selection, credentials and the `gpt-
 - bad specs are rejected
 - free-text checks
 - the model-path prompt
+
+
+## Local gameplay expansion
+Seven raw fixture chains and player specs extend RUN_FIXTURES to ten. Existing three specs gain metadata and roles without changing original actions or dependent variables. Review authored policies and the reporting-hub location of the fictional nuclear exchange. See ../../GAMEPLAY_EXPANSION_REVIEW.md. This expansion is uncommitted on codex/gameplay-expansion.
