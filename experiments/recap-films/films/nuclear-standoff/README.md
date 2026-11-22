@@ -10,6 +10,7 @@ A satirical, clearly fictional UK–France nuclear standoff, followed through on
 - **The facts:** events come from `services/director/fixtures/nuclear-standoff.json` through the real Director validator, and are narrated plainly.
 - **The detonation:** a single French warning detonation over open water at the southern edge of the Celtic Sea, away from every coastline. It's shown once from high above with real Natural Earth coastlines, and it carries no joke.
 - **Jokes:** they're aimed at institutions and arrive on Tom's phone or in the shelter. Casualty estimates are never shown or joked about.
+- **Look:** characters look like plausible Londoners, a real-world mix weighted toward lighter tones with varied hair, and Tom has a fixed look.
 - **Labels:** "SATIRE · FICTIONAL" is on screen throughout.
 - **Format:** at most 50 seconds (this cut is about 43), with the voice `XA3P1cj7XJexe6Zq0ATX`. Everything that moves faces its direction of travel, and the sets reach the horizon.
 

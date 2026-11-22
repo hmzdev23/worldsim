@@ -68,11 +68,20 @@ function lights(scene, {sun = 0xffe2b3, power = 2.2, ambient = 1.8, from = [-10,
 // mixer.setTime(t) poses them, so any frame renders the same in any order.
 const HERO = 0xffc53d;  // the protagonist always wears yellow
 const CLIP = (kind, base) => `HumanArmature|${kind === 'man' ? 'Man' : 'Female'}_${base}`;
-function person(parent, kind, x, z, rot, shirt, clip = 'Idle', phase = 0) {
+// Plausible Londoners: a real-world mix, weighted toward lighter tones, varied hair.
+const LOCALS = {skin: [0xf3d0b5, 0xedc3a4, 0xf0c9ad, 0xe2b090, 0xc98e66, 0x9a6644, 0x6e4630], hair: [0x2b1d14, 0x4a3020, 0x8a5a32, 0xb5874f, 0x15110e, 0x9a4b26]};
+const HERO_LOOK = {skin: 0xefc6a6, hair: 0x5a3a22};
+let lookSeed = 0;
+function person(parent, kind, x, z, rot, shirt, clip = 'Idle', phase = 0, look = null) {
   const asset = people[kind], p = cloneSkeleton(asset.scene);
   p.scale.setScalar(.29); p.position.set(x, 0, z); p.rotation.y = rot; parent.add(p);
+  // Shirt, skin and hair are recoloured per person: the protagonist has a fixed look and
+  // everyone else is drawn from the setting's palette (seeded, so every frame matches).
+  const n = ++lookSeed, pick = (list, k) => list[Math.floor(rand(n * 7.3 + k) * list.length)];
+  look = look ?? (shirt === HERO ? HERO_LOOK : {skin: pick(LOCALS.skin, 1), hair: pick(LOCALS.hair, 2)});
+  const colours = {Shirt: shirt, Skin: look.skin, Hair: look.hair, HairBase: look.hair};
   p.traverse(o => { if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true;
-    const fix = (m) => { if (m.name !== 'Shirt') return m; const c = m.clone(); c.color.setHex(shirt); return c; };
+    const fix = (m) => { if (!(m.name in colours)) return m; const c = m.clone(); c.color.setHex(colours[m.name]); return c; };
     o.material = Array.isArray(o.material) ? o.material.map(fix) : fix(o.material); });
   const mixer = new T.AnimationMixer(p), actions = {};
   for (const name of ['Idle', 'Walk', 'Run', 'Sitting', 'Standing', 'Clapping']) {

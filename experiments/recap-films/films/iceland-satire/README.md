@@ -1,4 +1,6 @@
-# Iceland satire recap (local experiment)
+# Iceland satire recap (local experiment, superseded)
+
+> Replaced by `../iceland-resident/`, which follows one person like the other films so every video shares the same humor. Kept for reference.
 
 A 45-second, 1080×1920 satirical recap of the Iceland eruption fixture, styled as an alternate-reality news broadcast. It has a WORLD//WIRE SATIRE chyron, fictional social posts, an absurdity index and a ticker. Every headline, post and number comes from `worldwire.satire` run over `services/director/fixtures/iceland-eruption.json`, so the film says exactly what the live app's Satirical tone says. Impact estimates (deaths, injuries and so on) are never used for jokes and don't appear.
 

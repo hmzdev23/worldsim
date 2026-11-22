@@ -65,13 +65,23 @@ function lights(scene, {sun = 0xffe2b3, power = 2.2, ambient = 1.8, from = [-10,
 
 // People: Quaternius CC0 characters. Every clip is played with weight 0 or 1 and
 // mixer.setTime(t) poses them, so any frame renders the same in any order.
-const MIKA = 0xffc53d;
+const HERO = 0xffc53d;  // Mika's yellow shirt
+const MIKA = HERO;
 const CLIP = (kind, base) => `HumanArmature|${kind === 'man' ? 'Man' : 'Female'}_${base}`;
-function person(parent, kind, x, z, rot, shirt, clip = 'Idle', phase = 0) {
+// Plausible locals for Ishinomaki: East Asian skin tones, dark hair, natural variety.
+const LOCALS = {skin: [0xf0c8a0, 0xe6b98f, 0xdcae86, 0xeac2a0, 0xd9a77f], hair: [0x15110e, 0x221a14, 0x2e2219, 0x1d1612]};
+const HERO_LOOK = {skin: 0xe9bf98, hair: 0x17120f};
+let lookSeed = 0;
+function person(parent, kind, x, z, rot, shirt, clip = 'Idle', phase = 0, look = null) {
   const asset = people[kind], p = cloneSkeleton(asset.scene);
   p.scale.setScalar(.29); p.position.set(x, 0, z); p.rotation.y = rot; parent.add(p);
+  // Shirt, skin and hair are recoloured per person: the protagonist has a fixed look and
+  // everyone else is drawn from the setting's palette (seeded, so every frame matches).
+  const n = ++lookSeed, pick = (list, k) => list[Math.floor(rand(n * 7.3 + k) * list.length)];
+  look = look ?? (shirt === HERO ? HERO_LOOK : {skin: pick(LOCALS.skin, 1), hair: pick(LOCALS.hair, 2)});
+  const colours = {Shirt: shirt, Skin: look.skin, Hair: look.hair, HairBase: look.hair};
   p.traverse(o => { if (!o.isMesh) return; o.castShadow = true; o.receiveShadow = true;
-    const fix = (m) => { if (m.name !== 'Shirt') return m; const c = m.clone(); c.color.setHex(shirt); return c; };
+    const fix = (m) => { if (!(m.name in colours)) return m; const c = m.clone(); c.color.setHex(colours[m.name]); return c; };
     o.material = Array.isArray(o.material) ? o.material.map(fix) : fix(o.material); });
   const mixer = new T.AnimationMixer(p), actions = {};
   for (const name of ['Idle', 'Walk', 'Run', 'Sitting', 'Standing']) {
