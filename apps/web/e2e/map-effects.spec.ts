@@ -174,6 +174,7 @@ test("outbreaks accumulate, disasters ring, and only a supported aid route is dr
   ]);
   await expect(effects).toContainText("Routes are inferred");
   await expect(effects).toContainText("Outbreak circles mark reported places only.");
+  await expect(map.locator('[data-effect="volcano"]')).toHaveCount(1);
   // One route: Germany has an earlier event (Frankfurt); Norway has none, so no route to Reykjavik.
   await expect(map.locator('[data-effect="aid-marker"]')).toHaveCount(1);
   await expect(map.locator('[data-effect="aid-marker"]')).toHaveAttribute("data-event-id", "evt-0004");
@@ -189,6 +190,7 @@ test("outbreaks accumulate, disasters ring, and only a supported aid route is dr
   await expect(effects).toHaveCount(0);
   await expect(map.locator('[data-effect="aid-marker"]')).toHaveCount(0);
   await expect(map.locator('[data-effect="route-label"]')).toHaveCount(0);
+  await expect(map.locator('[data-effect="volcano"]')).toHaveCount(0);
 
   // Replaying brings them back, and switching runs clears them.
   await playback.getByRole("button", { name: "Play", exact: true }).click();

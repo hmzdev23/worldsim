@@ -244,6 +244,8 @@ function focusMapLocation(map: MapLibreMap, location: MapLocation, instant = fal
 export function WorldMap({
   children,
   elapsedSeconds,
+  playing,
+  initialFocus,
   events,
   focusCountry,
   ref, selectedEventId, onManualInteraction,
@@ -252,6 +254,8 @@ export function WorldMap({
   onManualInteraction?: () => void;
   children?: ReactNode;
   elapsedSeconds: number;
+  playing: boolean;
+  initialFocus?: MapLocation;
   events: ScenarioEvent[];
   focusCountry: string;
   ref: Ref<WorldMapHandle>;
@@ -268,6 +272,7 @@ export function WorldMap({
   const aidMarkers = useRef(new Map<string, { route: AidRoute; marker: Marker; label: Marker }>());
   const cueMarkers = useRef<Marker[]>([]);
   const tornadoMarkers = useRef<Marker[]>([]);
+  const volcanoMarkers = useRef<Marker[]>([]);
   const quake = events.findLast((event) => event.type === "earthquake");
   const effects = useMemo(() => deriveMapEffects(events), [events]);
   const effectList = useMemo(() => describeEffects(effects), [effects]);
@@ -327,6 +332,7 @@ export function WorldMap({
       });
       map.on("mouseleave", "land", clearHover);
       setMapReady(true);
+      if (initialFocus && validLocation(initialFocus)) focusMapLocation(map, initialFocus, true);
     });
 
     const focusFromNewsroom = (event: Event) => {
@@ -475,6 +481,24 @@ export function WorldMap({
     });
     return () => { cueMarkers.current.forEach(marker => marker.remove()); cueMarkers.current = []; };
   }, [effects.cues, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    volcanoMarkers.current = effects.shockwaves.filter(item => item.visual === "ash_plume").map(item => {
+      const element = document.createElement("div");
+      element.className = effectStyles.volcano;
+      element.dataset.effect = "volcano";
+      element.setAttribute("aria-hidden", "true");
+      element.innerHTML = '<span class="' + effectStyles.ash + '"></span><span class="' + effectStyles.mountain + '"></span><span class="' + effectStyles.lava + '"></span>';
+      return new Marker({ element, anchor: "bottom" }).setLngLat([item.lon, item.lat]).addTo(map);
+    });
+    return () => { volcanoMarkers.current.forEach(marker => marker.remove()); volcanoMarkers.current = []; };
+  }, [effects.shockwaves, mapReady]);
+
+  useEffect(() => {
+    volcanoMarkers.current.forEach(marker => { marker.getElement().dataset.playing = String(playing); });
+  }, [effects.shockwaves, mapReady, playing]);
 
   // Animation follows the clock: pulses, rings and aid markers move only while
   // the simulation plays, and hold still with reduced motion.
