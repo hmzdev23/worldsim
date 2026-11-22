@@ -49,14 +49,18 @@ class PromptTest(unittest.TestCase):
         self.assertIn("satire: null for every event", prompt)
         self.assertNotIn("INVENTED", prompt)
 
-    def test_satirical_and_unhinged_prompts(self):
-        for tone in ("satirical", "unhinged"):
+    def test_satirical_prompt(self):
+        for tone in ("satirical",):
             prompt = build_prompt("A volcano erupts in Iceland", tone=tone)
             self.assertIn(f"satire: a {tone} presentation layer", prompt)
             self.assertIn("never joke", prompt.lower())
             self.assertIn("INVENTED", prompt)
             self.assertIn("type,\n  times, places, description and impacts stay plain and serious", prompt)
-        self.assertIn("escalate", build_prompt("x", tone="unhinged"))
+        self.assertNotIn("escalate", build_prompt("x", tone="satirical"))
+
+    def test_unhinged_is_gone(self):
+        with self.assertRaises(DirectorError):
+            build_prompt("x", tone="unhinged")
 
     def test_bad_tone(self):
         with self.assertRaises(DirectorError) as ctx:
@@ -135,7 +139,7 @@ class RunnerTest(unittest.TestCase):
         self.assertEqual(ctx.exception.code, "invalid_request")
 
     def test_fixture_runs_accept_any_tone(self):
-        batch = prepare_scenario("x", simulation_id="run-s", tone="unhinged", fixture="iceland-eruption")
+        batch = prepare_scenario("x", simulation_id="run-s", tone="satirical", fixture="iceland-eruption")
         self.assertEqual(len(batch["events"]), 8)
 
 

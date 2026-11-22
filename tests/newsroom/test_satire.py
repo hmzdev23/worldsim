@@ -37,12 +37,14 @@ class ToneTest(unittest.TestCase):
     def test_unknown_tone(self):
         with self.assertRaises(ValueError):
             satire_for_events(applied("iceland-eruption"), "spicy")
-        self.assertEqual(TONES, ("straight", "satirical", "unhinged"))
+        self.assertEqual(TONES, ("straight", "satirical"))
+        with self.assertRaises(ValueError):
+            satire_for_events(applied("iceland-eruption"), "unhinged")
 
     def test_every_event_gets_labelled_satire_and_posts(self):
         for name in FIXTURES:
             events = applied(name)
-            for tone in ("satirical", "unhinged"):
+            for tone in ("satirical",):
                 with self.subTest(fixture=name, tone=tone):
                     layer = satire_for_events(events, tone)
                     self.assertEqual({i["event_id"] for i in layer["items"]}, {e["id"] for e in events})
@@ -56,8 +58,6 @@ class ToneTest(unittest.TestCase):
                         self.assertEqual(post["label"], POST_LABEL)
                         self.assertNotIn("{", post["text"])
                     self.assertTrue(all(n >= 2 for n in per_event.values()), per_event)
-                    if tone == "unhinged":
-                        self.assertTrue(all(n == 3 for n in per_event.values()))
 
     def test_original_report_is_kept_next_to_the_joke(self):
         events = applied("iceland-eruption")
@@ -70,14 +70,14 @@ class ToneTest(unittest.TestCase):
         base = applied("iceland-eruption")[0]
         for i, kind in enumerate(EVENT_TYPES):
             event = {**copy.deepcopy(base), "id": f"evt-{i + 1:04d}", "type": kind, "sim_time_minutes": i}
-            for tone in ("satirical", "unhinged"):
+            for tone in ("satirical",):
                 item = satire_for_events([event], tone)["items"][0]
                 self.assertNotIn("{", item["headline"], kind)
 
     def test_only_invented_authors(self):
         handles = {h for _, h, _ in ENTITIES.values()}
         for name in FIXTURES:
-            for post in satire_for_events(applied(name), "unhinged")["posts"]:
+            for post in satire_for_events(applied(name), "satirical")["posts"]:
                 self.assertIn(post["handle"], handles)
 
 
@@ -100,7 +100,7 @@ class SafetyTest(unittest.TestCase):
                     if isinstance(value, int) and value > 9:
                         figures.add(f"{value:,}")
                         figures.add(str(value))
-            layer = satire_for_events(events, "unhinged")
+            layer = satire_for_events(events, "satirical")
             text = json.dumps([[i["headline"], i["dek"]] for i in layer["items"]] + [p["text"] for p in layer["posts"]])
             for figure in figures:  # whole numbers only: "15" in "15:00" or "SORRY15" is not a casualty figure
                 self.assertIsNone(re.search(rf"(?<![\w:]){re.escape(figure)}(?![\w:%])", text), figure)
@@ -119,7 +119,7 @@ class ClockTest(unittest.TestCase):
     def test_earlier_satire_never_changes_as_time_moves_on(self):
         """Seek and replay: the layer at time T is the same however you got there."""
         events = applied("iceland-eruption")
-        for tone in ("satirical", "unhinged"):
+        for tone in ("satirical",):
             full = satire_for_events(events, tone)
             for k in range(1, len(events)):
                 part = satire_for_events(events[:k], tone)
@@ -129,7 +129,7 @@ class ClockTest(unittest.TestCase):
 
     def test_deterministic(self):
         events = applied("global-pandemic")
-        self.assertEqual(satire_for_events(events, "unhinged"), satire_for_events(copy.deepcopy(events), "unhinged"))
+        self.assertEqual(satire_for_events(events, "satirical"), satire_for_events(copy.deepcopy(events), "satirical"))
 
     def test_bad_snapshot(self):
         with self.assertRaises(ValueError):
@@ -156,7 +156,7 @@ class AbsurdityTest(unittest.TestCase):
         events = applied("japan-earthquake")
         previous = None
         for k in range(1, len(events) + 1):
-            values = {m["key"]: m["value"] for m in satire_for_events(events[:k], "unhinged")["absurdity"]}
+            values = {m["key"]: m["value"] for m in satire_for_events(events[:k], "satirical")["absurdity"]}
             if previous:
                 for key, value in values.items():
                     self.assertGreaterEqual(value, previous[key], key)

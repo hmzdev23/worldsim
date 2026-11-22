@@ -10,7 +10,7 @@ export const maxDuration = 900;
 
 const root = findProjectRoot();
 const runIdPattern = /^[a-zA-Z0-9_-]{1,100}$/;
-const tonePattern = /^(straight|satirical|unhinged)$/;
+const tonePattern = /^(straight|satirical)$/;
 
 function response(runId: string, job: RecapFilmJob) {
   return NextResponse.json({ runId, ...job });

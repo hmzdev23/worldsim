@@ -51,11 +51,10 @@ export type Pacing =
   | { mode: "fixed"; minutes_per_tick: number; tick_seconds: number };
 
 // Presentation tone (satire layer). "straight" is the original, serious experience.
-export type Tone = "straight" | "satirical" | "unhinged";
+export type Tone = "straight" | "satirical";
 export const tones: { value: Tone; label: string }[] = [
   { value: "straight", label: "Straight-faced" },
   { value: "satirical", label: "Satirical" },
-  { value: "unhinged", label: "Unhinged" },
 ];
 
 /** A starter scenario from GET /starters. */

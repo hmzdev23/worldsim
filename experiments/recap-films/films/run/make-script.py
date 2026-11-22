@@ -17,7 +17,7 @@ Casualty estimates are never used, and strikes or detonations carry no joke.
     python3 make-script.py --run RUN_ID [--server http://127.0.0.1:8765]
     python3 make-script.py --result result.json
     python3 make-script.py --fixture tsunami [--seed 1234]     # offline, like a starter run
-    options: [--tone satirical|unhinged] [--name NAME]
+    options: [--tone satirical] [--name NAME]
 """
 from __future__ import annotations
 
@@ -327,11 +327,11 @@ def main() -> int:
     src.add_argument("--fixture", help="offline: a starter fixture, varied by --seed like a real run")
     parser.add_argument("--server", default="http://127.0.0.1:8765")
     parser.add_argument("--seed", type=int)
-    parser.add_argument("--tone", choices=("satirical", "unhinged"))
+    parser.add_argument("--tone", choices=("satirical",))
     parser.add_argument("--name")
     args = parser.parse_args()
     result = load_result(args)
-    tone = args.tone or (result.get("tone") if result.get("tone") in ("satirical", "unhinged") else "satirical")
+    tone = args.tone or (result.get("tone") if result.get("tone") == "satirical" else "satirical")
     script = build(result, tone, args.name)
     (HERE / "script.json").write_text(json.dumps(script, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"{script['title']} · seed {result.get('seed')} · {len(script['shots'])} shots")

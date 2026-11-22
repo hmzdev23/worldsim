@@ -71,7 +71,7 @@ def prepare_scenario(
              (one of RUN_FIXTURES); the prompt is still validated.
     stages: optional `timing.Stages` to record per-stage wall time and hear
             when each stage starts (prompt, model, parse, validate).
-    tone: "straight" | "satirical" | "unhinged"; non-straight tones add the
+    tone: "straight" | "satirical"; satirical adds the
           optional payload.satire layer in the same model call.
     engine: "claude" (default: Claude Code on Haiku, low effort) or "codex";
             unset reads $WORLDSIM_DIRECTOR_ENGINE.

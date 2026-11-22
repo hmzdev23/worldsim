@@ -1,10 +1,9 @@
 """Satirical presentation layer for WORLD//WIRE (local experiment).
 
-An optional layer on top of a run's applied events, in one of three tones:
+An optional layer on top of a run's applied events, in one of two tones:
 
 * ``straight``  - the original experience: no satire at all.
 * ``satirical`` - plausible events, absurd institutional reactions, deadpan copy.
-* ``unhinged``  - the same, escalating as the run goes on.
 
 Everything here is presentation. The event's facts, description and
 ``payload.impacts`` are never read for jokes about victims and never changed.
@@ -26,7 +25,7 @@ from typing import Any, Iterable
 from .live import SCHEMA_VERSION, released_events
 from .wire import Event, derive_news, format_sim_time
 
-TONES = ("straight", "satirical", "unhinged")
+TONES = ("straight", "satirical")
 DEFAULT_TONE = "straight"
 SATIRE_LABEL = "SATIRE · FICTIONAL"
 POST_LABEL = "FICTIONAL"
@@ -55,24 +54,16 @@ HEADLINES: dict[str, dict[str, list[tuple[str, str]]]] = {
             ("Officials confirm earthquake {at} was 'not on the calendar'",
              "A spokesperson said the shaking had not been approved in advance. A review of the calendar is under way."),
         ],
-        "unhinged": [
-            ("Government files formal complaint against tectonic plate {at}",
-             "The plate has been given 30 days to respond. Its lawyers are expected to plead subduction."),
-        ],
     },
     "aftershock": {
         "satirical": [("Aftershock {at} ruled 'technically part of the original earthquake'",
                        "Officials say this means the earthquake is still covered by the earlier press release."),
                       ("Aftershock {at} described as 'a sequel nobody asked for'",
                        "Officials stress the original earthquake remains the definitive edition.")],
-        "unhinged": [("Aftershock {at} announces it is 'just getting started'",
-                      "Seismologists have asked it to stop giving interviews.")],
     },
     "tsunami_warning": {
         "satirical": [("Coastal authorities ask the ocean to 'stay where it is' {at}",
                        "Sirens sounded on schedule. A pamphlet titled 'The Sea: Know Your Limits' is being printed.")],
-        "unhinged": [("Ministry issues cease-and-desist letter to the sea {at}",
-                      "The sea has not acknowledged receipt. Lawyers describe its silence as 'tidal'.")],
     },
     "volcanic_eruption": {
         "satirical": [
@@ -81,30 +72,22 @@ HEADLINES: dict[str, dict[str, list[tuple[str, str]]]] = {
             ("Volcano {at} erupts without filing the required paperwork",
              "Officials say permits for lava were 'never even requested'."),
         ],
-        "unhinged": [("Volcano {at} appoints itself head of regional air traffic control",
-                      "The ash cloud has issued its first notice to pilots. It just says 'no'.")],
     },
     "meteor_impact": {
         "satirical": [("Meteor lands {at}, well outside its designated landing zone",
                        "The Department of Situational Awareness says it will 'have a word'.")],
-        "unhinged": [("Space rock {at} asked to show proof of residency",
-                      "Immigration officials say the meteor 'arrived in an irregular manner'.")],
     },
     "extreme_weather": {
         "satirical": [("Forecasters {at} apologise for the weather, deny all involvement",
                        "A spokesperson said the forecast was 'right in spirit'."),
                       ("Weather {at} officially rated 'extremely weather'",
                        "Forecasters add that umbrellas remain 'technically an option'.")],
-        "unhinged": [("Government announces it will no longer recognize the weather {at}",
-                      "The weather continues regardless. Officials call this 'disrespectful'.")],
     },
     "flooding": {
         "satirical": [("Ministry {at} reminds floodwater that it requires a permit to be there",
                        "Floodwater has not applied. Enforcement options are being reviewed."),
                       ("Officials {at} confirm water is 'wetter than anticipated'",
                        "A task force has been asked to establish where all of it came from.")],
-        "unhinged": [("Flooded district {at} rebranded as 'waterfront community'",
-                      "Property listings went up within the hour. Snorkel not included.")],
     },
     "disease_outbreak": {
         "satirical": [("Outbreak confirmed {at}; officials 'deeply surprised' for the third time this month",
@@ -113,135 +96,86 @@ HEADLINES: dict[str, dict[str, list[tuple[str, str]]]] = {
                        "The slogan tested well with a focus group of one minister."),
                       ("Health officials {at} urge the public to 'simply not catch it'",
                        "The official hand-washing infographic has been redesigned for the fourth time this week.")],
-        "unhinged": [("Officials {at} declare the virus 'not welcome here', virus unbothered",
-                      "A second, more strongly worded declaration is being drafted."),
-                     ("Ministry announces outbreak {at} will be 'handled with a strongly worded memo'",
-                      "Early drafts of the memo are reportedly also spreading.")],
     },
     "military_strike": {
         "satirical": [("Defence ministries {at} exchange strongly worded press releases",
                        "Analysts say the choice of font suggests further escalation.")],
-        "unhinged": [("Both sides {at} claim victory in the war of the press releases",
-                      "A third press release has been drafted to clarify the second.")],
     },
     "conflict_escalation": {
         "satirical": [("Diplomats {at} escalate to using bold text in official statements",
                        "Observers warn italics could follow within hours.")],
-        "unhinged": [("Diplomats {at} escalate to ALL CAPS",
-                      "The international community has urged both parties to 'lower their voices, typographically'.")],
     },
     "nuclear_detonation": {
         "satirical": [("International committee schedules emergency meeting to schedule an emergency meeting",
                        "Delegates agree the situation is serious and that lunch will be provided.")],
-        "unhinged": [("Emergency summit postponed after delegates fail to agree on seating chart",
-                      "A sub-summit on chairs has been convened. The situation remains fluid.")],
     },
     "cyber_attack": {
         "satirical": [("Officials {at} ask hackers to 'turn it off and on again'",
                        "IT has opened a ticket. Estimated response time: three to five business days.")],
-        "unhinged": [("Government responds to cyberattack {at} by printing the internet",
-                      "Copies are available at the ministry, Tuesdays only, by appointment.")],
     },
     "alien_contact": {
         "satirical": [("Visitors over {country} asked to fill out customs form in triplicate",
                        "Officials confirm the craft has no valid passport but describe it as 'very shiny'.")],
-        "unhinged": [("Aliens over {country} placed on hold by the visa hotline",
-                      "Estimated wait time: 400 years. Their call is important to us.")],
     },
     "other_hazard": {
         "satirical": [("{label} {at} added to official list of things that can happen",
                        "Officials say the list is 'comprehensive' and 'now slightly longer'.")],
-        "unhinged": [("{label} {at} given its own ministry, mascot and theme song",
-                      "The theme song is reportedly 'very catchy, unfortunately'.")],
     },
     "infrastructure_failure": {
         "satirical": [("Officials {at} assure residents the grid is 'mostly theoretical right now'",
                        "Engineers say the lights are 'resting'."),
                       ("Utility {at} confirms outage is 'a feature, not a bug'",
                        "Customers are reminded that darkness is extremely energy-efficient.")],
-        "unhinged": [("Ministry {at} replaces failed network with a single very long extension cord",
-                      "The cord is reportedly holding up 'about as well as the plan'."),
-                     ("Power company {at} launches 'Darkness Premium' subscription",
-                      "Subscribers get the same darkness, but with a monthly newsletter.")],
     },
     "government_response": {
         "satirical": [("Officials {at} launch emergency plan, mostly a font change",
                        "Critics say the new font is 'robust but unreadable'."),
                       ("Government {at} responds to crisis by announcing that it is responding",
                        "A spokesperson called the response 'robust, agile and ongoing'.")],
-        "unhinged": [("Government {at} names a Minister for the Crisis, who names a Deputy Minister for the Crisis",
-                      "The Deputy has already scheduled a crisis about staffing."),
-                     ("Government {at} deploys task force to locate previous task force",
-                      "The original task force was last seen at a press conference.")],
     },
     "international_aid": {
         "satirical": [("Aid from {origin} lands {at}; officials hold welcome ceremony for the boxes",
                        "The boxes were reportedly 'very well received'. Opening them is scheduled for later."),
                       ("Aid from {origin} arrives {at}, along with a 600-page customs form",
                        "Officials say the supplies will be released as soon as the correct stamp is located.")],
-        "unhinged": [("Aid from {origin} lands {at}, followed by a film crew filming it landing",
-                      "The documentary is expected before the supplies are unpacked."),
-                     ("Aid from {origin} arrives {at}; committee forms to admire it",
-                      "Unloading is scheduled to begin once the ribbon-cutting ceremony has been rehearsed.")],
     },
     "evacuation": {
         "satirical": [("Residents {at} evacuated in orderly queues, according to the brochure",
                        "Officials say the brochure is 'aspirational'."),
                       ("Evacuation {at} 'went smoothly', says official who was not there",
                        "Residents report the evacuation map was printed upside down 'for security reasons'.")],
-        "unhinged": [("Evacuation {at} paused so officials can evacuate the evacuation plan",
-                      "The plan is now safe. Officials are monitoring its condition.")],
     },
     "contamination": {
         "satirical": [("Contamination {at} officially downgraded to 'a vibe'",
                        "Residents are urged to avoid the vibe until further notice."),
                       ("Officials {at} reclassify contaminated zone as 'experiential'",
                        "Visitors are advised not to touch, eat or think about anything inside it.")],
-        "unhinged": [("Contaminated zone {at} nominated for heritage status",
-                      "Tour operators are offering guided walks of the fence.")],
     },
     "economic_shock": {
         "satirical": [("Economists {at} agree the economy is 'doing a thing'",
                        "Further analysis is expected to confirm it is doing it quite a lot."),
                       ("Markets react to crisis {at} by panicking, as is tradition",
                        "Economists predict things will improve, worsen or stay roughly the same.")],
-        "unhinged": [("Stock market {at} closes early 'to have a little lie down'",
-                      "Analysts describe the market's mood as 'beige, with notes of dread'.")],
     },
     "civil_unrest": {
         "satirical": [("Protesters {at} demand answers; officials offer a pamphlet instead",
                        "The pamphlet answers several questions nobody asked.")],
-        "unhinged": [("Officials {at} respond to protests by protesting the protests",
-                      "Both crowds agree the coffee situation is unacceptable.")],
     },
     "ceasefire": {
         "satirical": [("Ceasefire {at} holds while both sides argue over the shape of the table",
                        "A round table was rejected as 'too round'.")],
-        "unhinged": [("Ceasefire {at} signed on a napkin, napkin now under armed guard",
-                      "Historians are already arguing about the napkin.")],
     },
     "recovery": {
         "satirical": [("Officials {at} cut ribbon on recovery, then ask where the recovery is",
                        "The ribbon has been described as 'the most finished thing in town'."),
                       ("Recovery {at} declared 'basically finished' on day one of recovery",
                        "Crews on the ground described the announcement as 'brave'.")],
-        "unhinged": [("Officials {at} unveil statue celebrating the recovery, which is ongoing",
-                      "The statue is reportedly further along than the recovery.")],
     },
 }
 GENERIC = {
     "satirical": [("Something happens {at}; officials confirm they are aware of it",
                    "A spokesperson said the situation remains fluid.")],
-    "unhinged": [("Officials {at} form committee to decide whether a committee is needed",
-                  "Its first act was to rename itself. The situation remains fluid.")],
 }
-# Unhinged mode escalates: after the first few events these replace the dek.
-ESCALATION = (
-    "Committee count now stands at {n}. The situation remains fluid.",
-    "A minister insisted everything is fine while standing in it.",
-    "Officials have announced a press conference to announce more press conferences.",
-    "The crisis has been assigned a mascot. The mascot has resigned.",
-)
 
 # Posts: (entity, text, tags). Placeholders as above plus {n} (event number in the run).
 POSTS: dict[str, list[tuple[str, str, tuple[str, ...]]]] = {
@@ -287,13 +221,6 @@ GENERAL_POSTS: list[tuple[str, str, tuple[str, ...]]] = [
     ("anchor", "We are now live from the scene, which I'm told is somewhere behind me.", ()),
     ("think_tank", "Our experts confirm this is unprecedented, apart from the precedents.", ()),
     ("brand", "We apologise for our earlier post. Use code SORRY15 for 15% off.", ("apology", "profiteer")),
-]
-UNHINGED_POSTS: list[tuple[str, str, tuple[str, ...]]] = [
-    ("committee", "The Subcommittee on Subcommittees has voted to create subcommittee #{n}.", ("committee",)),
-    ("startup", "Introducing the Apocalypse Bundle™: three crises for the price of two.", ("profiteer",)),
-    ("ministry", "The minister says things have never been better. Aides confirm the minister is standing on a desk. The situation remains fluid.", ("press_conference", "fluid")),
-    ("insurer", "Shrug Mutual apologises for the crisis, which we did not cause, and for our premiums, which we did.", ("apology", "profiteer")),
-    ("resident", "update: the committee knocked on my door to ask if I'd like to join a committee", ("committee",)),
 ]
 
 # Tags are also detected in Director-written posts, so the absurdity index
@@ -371,13 +298,11 @@ def _template_copy(event: Event, tone: str, n: int, used: dict[str, int], commit
     headline, dek = options[(start + used.get(kind, 0)) % len(options)]
     fields = _fields(event, n)
     dek = _fill(dek, fields)
-    if tone == "unhinged" and n > 3:  # escalate: each later event adds one more absurd line
-        dek += " " + _fill(ESCALATION[(n - 4) % len(ESCALATION)], {**fields, "n": str(committees)})
     return _fill(headline, fields), dek
 
 
 def _template_posts(event: Event, tone: str, n: int, repeat: int) -> list[tuple[str, str, tuple[str, ...]]]:
-    """One type-specific post (rotating on repeats), one general, one escalating in unhinged mode.
+    """One type-specific post (rotating on repeats) and one general post.
 
     General posts step through the list (3 is coprime with its length), so a
     run never shows the same general post twice in a row.
@@ -385,8 +310,6 @@ def _template_posts(event: Event, tone: str, n: int, repeat: int) -> list[tuple[
     specific = POSTS.get(event["type"], [])
     chosen = [specific[repeat % len(specific)]] if specific else []
     chosen.append(GENERAL_POSTS[(n * 3) % len(GENERAL_POSTS)])
-    if tone == "unhinged":
-        chosen.append(UNHINGED_POSTS[(n - 1) % len(UNHINGED_POSTS)])
     return chosen
 
 

@@ -4,13 +4,12 @@ Owner: Mathys. Branch: `feat/satire-recap-films`. This adds a satirical presenta
 
 ## 1. Satire mode in the app
 
-**Tone selector:** a new control next to the prompt bar offers three tones.
+**Tone selector:** a control next to the prompt bar offers two tones.
 
 | Tone | What you see |
 | --- | --- |
 | **Straight-faced** (default) | The original experience, unchanged. |
 | **Satirical** | Deadpan WORLD//WIRE headlines, a fictional social feed and an absurdity index. |
-| **Unhinged** | The same, but it escalates as the run goes on (committees for committees, and so on). |
 
 **What changes on screen:**
 - **Satirical WORLD//WIRE:** each card shows the joke headline with the real headline underneath ("Original report: …"). The map's headline alert uses the satirical copy.
@@ -28,7 +27,7 @@ Owner: Mathys. Branch: `feat/satire-recap-films`. This adds a satirical presenta
 | Layer | Change |
 | --- | --- |
 | Contract | Optional `payload.satire` (`headline`, `dek`, up to 4 `posts`). It's additive, and existing batches stay valid. |
-| Director | Takes a `tone`. In Satirical or Unhinged, the **same model call** also writes `payload.satire`; there is no extra AI call. Satire is validated like everything else (lengths, `@handle` format, post kinds), and a bad satire block rejects the whole batch. The CLI gets `--tone`. |
+| Director | Takes a `tone`. In Satirical, the **same model call** also writes `payload.satire`; there is no extra AI call. Satire is validated like everything else (lengths, `@handle` format, post kinds), and a bad satire block rejects the whole batch. The CLI gets `--tone`. |
 | Newsroom | `worldwire/satire.py`: Director satire when present, otherwise deterministic templates keyed by event type, so sample fixtures get satire with no model. `satire_response(snapshot, tone)` mirrors `news_response`. |
 | Simulation | `POST /scenarios` accepts `tone` and stores it on the run. New `GET /scenarios/{id}/satire?tone=` and `GET /satire?tone=` (demo) endpoints serve released events only. |
 | Web | `ToneSelector`, `SocialFeed` and `AbsurdityIndex` components; `useSatire` in the run console; a `/api/simulation/satire` rewrite. |
@@ -36,7 +35,7 @@ Owner: Mathys. Branch: `feat/satire-recap-films`. This adds a satirical presenta
 ### Try it
 
 ```sh
-./scripts/run-demo.sh          # then pick Satirical or Unhinged and press Play on the Japan demo
+./scripts/run-demo.sh          # then pick Satirical and press Play on the Japan demo
 ```
 
 ## 2. Recap films (experiments/recap-films/films)
