@@ -39,17 +39,18 @@ function kmRadius(scale: number, min = 5): ExpressionSpecification {
 }
 
 function effectData(effects: MapEffects) {
-  const points = <T extends { id: string; lon: number; lat: number; radiusKm: number }>(items: T[]) => ({
+  const points = <T extends { id: string; lon: number; lat: number; radiusKm: number; zombie?: boolean; flooding?: boolean }>(items: T[]) => ({
     type: "FeatureCollection" as const,
     features: items.map((item) => ({
       type: "Feature" as const,
-      properties: { id: item.id, radiusKm: item.radiusKm },
+      properties: { id: item.id, radiusKm: item.radiusKm, zombie: item.zombie ?? false, flooding: item.flooding ?? false },
       geometry: { type: "Point" as const, coordinates: [item.lon, item.lat] },
     })),
   });
   return {
     outbreaks: points(effects.outbreaks),
     shockwaves: points(effects.shockwaves),
+    water: points(effects.water),
     routes: {
       type: "FeatureCollection" as const,
       features: effects.routes.map((route) => ({
@@ -101,6 +102,7 @@ const mapStyle: StyleSpecification = {
     },
     "effect-outbreaks": { type: "geojson", data: emptyCollection },
     "effect-shockwaves": { type: "geojson", data: emptyCollection },
+    "effect-water": { type: "geojson", data: emptyCollection },
     "effect-routes": { type: "geojson", data: emptyCollection },
   },
   layers: [
@@ -174,8 +176,8 @@ const mapStyle: StyleSpecification = {
       type: "circle",
       source: "effect-outbreaks",
       paint: {
-        "circle-color": outbreakColor, "circle-opacity": 0.16, "circle-radius": kmRadius(1),
-        "circle-stroke-color": outbreakColor, "circle-stroke-width": 1, "circle-stroke-opacity": 0.7,
+        "circle-color": ["case", ["get", "zombie"], "#9ecb62", outbreakColor], "circle-opacity": 0.16, "circle-radius": kmRadius(1),
+        "circle-stroke-color": ["case", ["get", "zombie"], "#9ecb62", outbreakColor], "circle-stroke-width": 1, "circle-stroke-opacity": 0.7,
       },
     },
     {
@@ -184,9 +186,17 @@ const mapStyle: StyleSpecification = {
       source: "effect-outbreaks",
       paint: {
         "circle-opacity": 0, "circle-radius": kmRadius(1),
-        "circle-stroke-color": outbreakColor, "circle-stroke-width": 1.5, "circle-stroke-opacity": 0,
+        "circle-stroke-color": ["case", ["get", "zombie"], "#9ecb62", outbreakColor], "circle-stroke-width": 1.5, "circle-stroke-opacity": 0,
       },
     },
+    { id: "effect-water-area", type: "circle", source: "effect-water", paint: {
+      "circle-color": "#4cafe0", "circle-opacity": ["case", ["get", "flooding"], 0.2, 0.08],
+      "circle-radius": kmRadius(1, 9),
+    } },
+    { id: "effect-water-wave", type: "circle", source: "effect-water", paint: {
+      "circle-opacity": 0, "circle-radius": kmRadius(1, 12), "circle-stroke-color": "#8dd8f4",
+      "circle-stroke-width": 1.5, "circle-stroke-opacity": 0.5,
+    } },
     {
       id: "effect-shockwave-core",
       type: "circle",
@@ -256,6 +266,8 @@ export function WorldMap({
   const [country, setCountry] = useState("");
   const eventMarkers = useRef(new Map<string, Marker>());
   const aidMarkers = useRef(new Map<string, { route: AidRoute; marker: Marker; label: Marker }>());
+  const cueMarkers = useRef<Marker[]>([]);
+  const tornadoMarkers = useRef<Marker[]>([]);
   const quake = events.findLast((event) => event.type === "earthquake");
   const effects = useMemo(() => deriveMapEffects(events), [events]);
   const effectList = useMemo(() => describeEffects(effects), [effects]);
@@ -404,6 +416,7 @@ export function WorldMap({
     const data = effectData(effects);
     map.getSource<GeoJSONSource>("effect-outbreaks")?.setData(data.outbreaks);
     map.getSource<GeoJSONSource>("effect-shockwaves")?.setData(data.shockwaves);
+    map.getSource<GeoJSONSource>("effect-water")?.setData(data.water);
     map.getSource<GeoJSONSource>("effect-routes")?.setData(data.routes);
 
     const current = new Set(effects.routes.map((route) => route.id));
@@ -433,6 +446,36 @@ export function WorldMap({
     }
   }, [effects, mapReady]);
 
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    tornadoMarkers.current = effects.tornadoes.map((tornado) => {
+      const element = document.createElement("div");
+      element.className = effectStyles.tornado;
+      element.setAttribute("aria-hidden", "true");
+      element.dataset.effect = "tornado";
+      element.innerHTML = "<span></span><span></span><span></span>";
+      return new Marker({ element }).setLngLat([tornado.lon, tornado.lat]).addTo(map);
+    });
+    return () => { tornadoMarkers.current.forEach(marker => marker.remove()); tornadoMarkers.current = []; };
+  }, [effects.tornadoes, mapReady]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    const symbols = { alien: "✦", insects: "✳", ai: "◇", darkness: "◒", nuclear: "☢" };
+    cueMarkers.current = effects.cues.map((cue) => {
+      const element = document.createElement("div");
+      element.className = effectStyles.scenarioCue;
+      element.dataset.kind = cue.kind;
+      element.dataset.effect = cue.kind;
+      element.setAttribute("aria-hidden", "true");
+      element.textContent = symbols[cue.kind];
+      return new Marker({ element }).setLngLat([cue.lon, cue.lat]).addTo(map);
+    });
+    return () => { cueMarkers.current.forEach(marker => marker.remove()); cueMarkers.current = []; };
+  }, [effects.cues, mapReady]);
+
   // Animation follows the clock: pulses, rings and aid markers move only while
   // the simulation plays, and hold still with reduced motion.
   useEffect(() => {
@@ -444,6 +487,14 @@ export function WorldMap({
     map.setPaintProperty("effect-outbreak-pulse", "circle-stroke-opacity", still ? 0 : 0.8 * (1 - phase));
     map.setPaintProperty("effect-shockwave-ring", "circle-radius", kmRadius(still ? 1 : 0.3 + phase * 1.4, 10));
     map.setPaintProperty("effect-shockwave-ring", "circle-stroke-opacity", still ? 0.5 : 0.85 * (1 - phase));
+    map.setPaintProperty("effect-water-wave", "circle-radius", kmRadius(still ? 1 : 0.5 + phase, 12 + phase * 10));
+    map.setPaintProperty("effect-water-wave", "circle-stroke-opacity", still ? 0.45 : 0.55 * (1 - phase));
+    for (const marker of cueMarkers.current) {
+      marker.getElement().style.scale = still ? "1" : String(1 + 0.08 * Math.sin(elapsedSeconds * 2));
+    }
+    for (const marker of tornadoMarkers.current) {
+      marker.getElement().style.rotate = still ? "0deg" : `${5 * Math.sin(elapsedSeconds * 2)}deg`;
+    }
     let index = 0;
     for (const { route, marker } of aidMarkers.current.values()) {
       marker.setLngLat(along(route, still ? 1 : ((elapsedSeconds / 5) + index * 0.37) % 1));
@@ -482,7 +533,7 @@ export function WorldMap({
           <h3>On the map</h3>
           <ul>
             {effectList.map((item) => (
-              <li key={item.id} data-kind={item.kind}>{item.text}</li>
+              <li key={`${item.kind}-${item.id}`} data-kind={item.kind}>{item.text}</li>
             ))}
           </ul>
           {effects.routes.length > 0 && (
@@ -491,6 +542,7 @@ export function WorldMap({
           {effects.outbreaks.length > 0 && (
             <p className={effectStyles.note}>Outbreak circles mark reported places only.</p>
           )}
+          {effects.water.length > 0 && <p className={effectStyles.note}>Water effects illustrate reported locations, not a predicted flood boundary.</p>}
         </div>
       )}
       <div className="map-credit">

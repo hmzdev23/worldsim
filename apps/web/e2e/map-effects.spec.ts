@@ -38,16 +38,21 @@ const runs = [
   { id: "quiet", title: "Quiet recovery", events: quiet },
 ].map((run) => ({ ...run, identity: { schema_version: "0.1", simulation_id: `sim-${run.id}`, branch_id: "main" } }));
 
-async function mockScenarioService(page: Page) {
+async function mockScenarioService(page: Page, special = false) {
+  const runsForTest = special ? [{ id: "special", title: "Special effects", identity: { schema_version: "0.1", simulation_id: "sim-special", branch_id: "main" }, events: [
+    evt("water", 10, "tsunami_warning", "weather_disaster", loc("Valparaiso", "Chile", "CHL", -33.05, -71.62)),
+    evt("alien", 20, "alien_contact", "weather_disaster", loc("Nairobi", "Kenya", "KEN", -1.29, 36.82)),
+    evt("tornado", 30, "other_hazard", "weather_disaster", loc("Toronto", "Canada", "CAN", 43.65, -79.38), { label: "Tornado" }),
+  ] }] : runs;
   let submissions = 0;
   await page.route(/\/api\/simulation\/scenarios(?:\/.*)?$/, async (route) => {
     const [, path] = new URL(route.request().url()).pathname.split("/scenarios");
     if (!path) {
-      const run = runs[submissions++];
+      const run = runsForTest[submissions++];
       return route.fulfill({ status: 202, json: { id: run.id, ...run.identity, status: "generating" } });
     }
     const [, id, endpoint] = path.split("/");
-    const run = runs.find((item) => item.id === id)!;
+    const run = runsForTest.find((item) => item.id === id)!;
     if (endpoint === "timeline") {
       return route.fulfill({ json: { ...run.identity, sim_time_minutes: start, end_minutes: end, events: run.events } });
     }
@@ -58,7 +63,7 @@ async function mockScenarioService(page: Page) {
   });
 
   await page.routeWebSocket(/\/scenarios\/[^/]+\/stream$/, (socket) => {
-    const run = runs.find((item) => new URL(socket.url()).pathname.includes(`/${item.id}/`))!;
+    const run = runsForTest.find((item) => new URL(socket.url()).pathname.includes(`/${item.id}/`))!;
     let minute = start;
     let state: "paused" | "playing" = "paused";
     const send = (data: object) => socket.send(JSON.stringify({ ...run.identity, sim_time_minutes: minute, ...data }));
@@ -98,10 +103,55 @@ test.beforeEach(({}, testInfo) => {
   test.skip(testInfo.project.name !== "desktop", "Map effects are covered by the desktop project.");
 });
 
+test("special effects appear on the map and clear on rewind", async ({ page }) => {
+  await mockScenarioService(page, true);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Watch a simulation", exact: true }).click();
+  await generate(page, "A hypothetical chain of events", "Special effects");
+  const map = page.getByRole("region", { name: "Interactive world map" });
+  const playback = page.getByRole("region", { name: "Simulation playback" });
+  await playback.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(map.getByRole("group", { name: "Map effects" })).toContainText("Tsunami warning");
+  await expect(map.locator('[data-effect="alien"]')).toHaveCount(1);
+  await expect(map.locator('[data-effect="tornado"]')).toHaveCount(1);
+  await playback.getByRole("slider").press("Home");
+  await expect(map.locator('[data-effect="alien"]')).toHaveCount(0);
+  await expect(map.locator('[data-effect="tornado"]')).toHaveCount(0);
+});
+
 test("an outbreak without a reported radius stays a point pulse", () => {
   const event = evt("evt-no-radius", 10, "disease_outbreak", "contagion_spread",
     loc("Quebec City", "Canada", "CAN", 46.81, -71.21), { pathogen: "unknown pathogen" });
   expect(deriveMapEffects([event]).outbreaks[0]).toMatchObject({ id: "evt-no-radius", radiusKm: 0 });
+});
+
+test("water, zombie and tornado effects follow applied events without inventing an extent", () => {
+  const location = loc("Toronto", "Canada", "CAN", 43.65, -79.38);
+  const tsunami = evt("wave", 1, "tsunami_warning", "weather_disaster", location);
+  const flood = evt("flood", 2, "flooding", "weather_disaster", location, { radius_km: 3 });
+  const zombie = evt("zombie", 3, "disease_outbreak", "contagion_spread", location, { pathogen: "Fictional Z-series" });
+  const tornado = evt("tornado", 4, "other_hazard", "weather_disaster", location, { label: "Tornado" });
+  const effects = deriveMapEffects([tsunami, flood, zombie, tornado]);
+  expect(effects.water).toMatchObject([{ id: "wave", radiusKm: 0, flooding: false }, { id: "flood", radiusKm: 3, flooding: true }]);
+  expect(effects.outbreaks[0]).toMatchObject({ id: "zombie", zombie: true, radiusKm: 0 });
+  expect(effects.tornadoes).toMatchObject([{ id: "tornado" }]);
+  expect(deriveMapEffects([tsunami]).tornadoes).toHaveLength(0);
+  expect(deriveMapEffects([{ ...flood, status: "proposed" }]).water).toHaveLength(0);
+});
+
+test("special scenarios get identifiable cues at their reported locations", () => {
+  const location = loc("Nairobi", "Kenya", "KEN", -1.29, 36.82);
+  const cases = [
+    ["alien_contact", "Alien contact is reported", "alien"],
+    ["cyber_attack", "Automated services fail", "ai"],
+    ["other_hazard", "Giant Insect Mutation", "insects"],
+    ["other_hazard", "The Sun mysteriously ceases to provide light", "darkness"],
+    ["other_hazard", "Monitors report a nuclear exchange in unnamed conflict zones", "nuclear"],
+  ];
+  for (const [type, description, kind] of cases) {
+    const result = deriveMapEffects([evt(kind, 1, type, "weather_disaster", location, { description })]);
+    expect(result.cues).toMatchObject([{ id: kind, kind, place: "Nairobi" }]);
+  }
 });
 
 test("outbreaks accumulate, disasters ring, and only a supported aid route is drawn", async ({ page }) => {
