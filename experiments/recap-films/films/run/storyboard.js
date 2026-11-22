@@ -196,6 +196,24 @@ shots.quake = () => {
   return s;
 };
 
+shots.aftershock = () => {
+  const scene = new T.Scene();
+  sky(scene, 0x7a96ad, 0xd2c8ad);
+  lights(scene);
+  const ground = new T.Group();
+  scene.add(ground);
+  street(ground, { cars: false });
+  const resident = hero(scene, 1.4, -3.5, Math.PI, 'Idle');
+  scene.userData.tick = (t) => {
+    const shaking = Math.max(0, 1 - Math.abs(t - 1.5) / 1.25);
+    ground.position.x = Math.sin(t * 36) * shaking * .13;
+    ground.rotation.z = Math.sin(t * 27) * shaking * .007;
+    resident.userData.pose('Idle', t);
+  };
+  scene.userData.camera = {from: [4, 2.0, 5], to: [2.4, 1.9, 3.7], look: () => [0, 1.4, -10]};
+  return scene;
+};
+
 function beaconStreet(s, label, lines) {
   block(s, 4, 3.1, -6, .15, 6.2, .15, 0x595959); block(s, 4, 6, -6, .7, .7, .6, 0xcea64f);
   const beacon = block(s, 4, 6.5, -6, .9, .5, .7, 0xb84331);
@@ -444,7 +462,18 @@ shots.map = (shot) => {
       window.FLASH = f > 0 && f < .25 ? 1 - f / .25 : 0;
     }
   };
-  s.userData.camera = {from: [hx, 34, hz + 18], to: [hx, 28, hz + 14], look: () => [hx, 0, hz]};
+  // Later map shots shift framing so a new report does not replay the same camera move.
+  const mapAngles = [
+    [[0, 34, 18], [0, 28, 14]],
+    [[-5, 24, 10], [3, 21, 6]],
+    [[4, 20, 10], [-3, 34, 19]],
+  ];
+  const [from, to] = mapAngles[(shot.scene_take ?? 0) % mapAngles.length];
+  s.userData.camera = {
+    from: [hx + from[0], from[1], hz + from[2]],
+    to: [hx + to[0], to[1], hz + to[2]],
+    look: () => [hx, 0, hz],
+  };
   return s;
 };
 

@@ -42,11 +42,12 @@ def build(argv: list[str] | None = None):
                         help="percent of a scenario run's length per tick at 1x (default 6: the clock crosses a run in about 17 s, plus a stop on each event)")
     args = parser.parse_args(argv)
 
-    from .scenarios import ScenarioRegistry
+    from .scenarios import ScenarioRegistry, set_story_headlines
     from .server import create_app
 
     batch = json.loads(args.fixture.read_text(encoding="utf-8"))
     sim = Simulation.from_batch(batch, speed=args.speed, state="paused" if args.paused else "playing")
+    set_story_headlines(sim)
     sim.seek(args.start_minutes)
     if not 0 < args.scenario_pace <= 100:
         parser.error("--scenario-pace must be a percent in (0, 100]")

@@ -995,3 +995,14 @@ body { font-family: Inter, "Helvetica Neue", Arial, sans-serif; }
 .generate-button:hover:enabled, .play-button:hover:enabled { background: #42474e; border-color: #42474e; color: #fff; }
 .setup-primary { box-shadow: none; }
 .scenario-launch-footer .launch-error, .watch-inputs .watch-input-note { color: #ffb2aa; }
+
+/* The home screen uses navy surfaces. The map workspace has its own palette. */
+body:has(.view-home) { background: #101929; }
+.view-home {
+  --canvas: #101929;
+  --surface: #182338;
+  --raised: #22314a;
+  --line: #34465f;
+  --muted: #b7c1d1;
+}
+.view-home .sim-intro { background: #202e46; }

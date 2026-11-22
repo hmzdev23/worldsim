@@ -101,7 +101,7 @@ These came from #80, #82 and the onboarding work and are now deleted:
 **Kept:**
 - The ten scenario fixtures, now offered as starters (`GET /starters`, `fixtures/starters.json`).
 - The nuclear country picker and "change the starting conditions", now optional exploration.
-- Playback starts in manual mode. **Continue simulation** on a headline steps to the next event. **Play** on the timeline advances headlines every six seconds. The speed buttons control the simulation clock between events.
+- Playback starts in manual mode and stops at up to eight headlines. Other events still update the map and impact figures. **Continue simulation** on a headline steps to the next event. **Play** on the timeline advances headlines every six seconds. The speed buttons control the simulation clock between events.
 - Hamza's map effects.
 
 #79 and #81 also add player mode. They are superseded by this branch.
@@ -110,13 +110,13 @@ These came from #80, #82 and the onboarding work and are now deleted:
 
 Code: `experiments/recap-films/films/run`.
 
-The film opens on the triggering event and follows the run in order. Each shot
+The film covers five or six of the walkthrough’s headlines in order, with a shorter selection only if the run has fewer headlines. Each shot
 shows the country, local place, and clock. Narration names the country at the
 start and when the story moves to a different country.
 
 **Rules:**
 - No casualty figures.
-- 50 seconds at most, with the voice `XA3P1cj7XJexe6Zq0ATX`.
+- 40 to 50 seconds, with the voice `XA3P1cj7XJexe6Zq0ATX`.
 - Everything that moves faces its direction of travel.
 - Sets reach the horizon.
 

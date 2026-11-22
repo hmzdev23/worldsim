@@ -13,23 +13,25 @@ import random
 import re
 import sys
 import urllib.request
+from collections import Counter
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = next(p for p in HERE.parents if (p / "services" / "newsroom").is_dir())
 sys.path[:0] = [str(ROOT / "services" / "newsroom"), str(ROOT / "services" / "director")]
 
+from worlddirector.story import headline_events  # noqa: E402
 from worldwire.wire import format_sim_time  # noqa: E402
 
 COUNTRIES = ROOT / "apps" / "web" / "public" / "countries.geojson"  # the live map's own country shapes
-MAX_EVENT_SHOTS = 6
+MIN_EVENT_SHOTS, MAX_EVENT_SHOTS = 5, 6
 SECONDS_PER_WORD, SHOT_OVERHEAD, OUTRO = .36, .8, 3.5
 BUDGET = 46.0             # estimated seconds before make-audio.py's hard 50-second check
 
 # Event type -> (scene, what happened). Scenes are drawn by storyboard.js; phrases are plain facts.
 EVENTS = {
     "earthquake": ("quake", "an earthquake struck{at}"),
-    "aftershock": ("quake", "a strong aftershock struck{at}"),
+    "aftershock": ("aftershock", "a strong aftershock struck{at}"),
     "tsunami_warning": ("warning", "tsunami warnings went out{at}"),
     "volcanic_eruption": ("eruption", "a volcano erupted{at}"),
     "meteor_impact": ("sky", "a meteor came down{at}"),
@@ -162,24 +164,29 @@ def caption_chunks(line: str) -> list[str]:
     return chunks
 
 
-def pick_events(events: list[dict]) -> list[dict]:
-    """The first and last events plus the most severe in between (distinct types first), in run order."""
-    if len(events) <= MAX_EVENT_SHOTS:
+def pick_events(events: list[dict], limit: int) -> list[dict]:
+    """Keep the opening and outcome, and prefer a different scene for each beat."""
+    if len(events) <= limit:
         return list(events)
-    first, last, middle = events[0], events[-1], events[1:-1]
-    ranked = sorted(middle, key=lambda e: -e["severity"])
-    chosen, types = [], {(first["type"], first["location"]["country_code"]),
-                         (last["type"], last["location"]["country_code"])}
-    for e in ranked:  # one per type first, then the rest by severity
-        key = (e["type"], e["location"]["country_code"])
-        if key not in types and len(chosen) < MAX_EVENT_SHOTS - 2:
-            chosen.append(e)
-            types.add(key)
-    for e in ranked:
-        if e not in chosen and len(chosen) < MAX_EVENT_SHOTS - 2:
-            chosen.append(e)
-    keep = {id(e) for e in chosen}
-    return [first] + [e for e in middle if id(e) in keep] + [last]
+
+    scene_keys = [scene_for(event, event_detail(event))[0] for event in events]
+    selected = {0, len(events) - 1}
+    used_scenes = Counter(scene_keys[index] for index in selected)
+    used_types = {events[index]["type"] for index in selected}
+
+    def score(index: int) -> tuple:
+        event = events[index]
+        distance = min(abs(index - other) for other in selected) / len(events)
+        return (-used_scenes[scene_keys[index]],
+                event["type"] not in used_types,
+                event["severity"] + distance)
+
+    while len(selected) < limit:
+        index = max((i for i in range(1, len(events) - 1) if i not in selected), key=score)
+        selected.add(index)
+        used_scenes[scene_keys[index]] += 1
+        used_types.add(events[index]["type"])
+    return [events[index] for index in sorted(selected)]
 
 
 def countries_near(events: list[dict], margin: float = 12.0) -> dict:
@@ -227,17 +234,25 @@ def build(result: dict, name: str | None = None) -> dict:
     region = REGIONS[region_for(origin["country_code"])]
     person_name, kind = rng.choice(region["names"])
     person_name = name or person_name
-    chosen = pick_events(events)
+    headline_ids = result.get("headline_event_ids")
+    beats = [event for event in events if event["id"] in headline_ids] if headline_ids else headline_events(events)
+    chosen = pick_events(beats, MAX_EVENT_SHOTS)
 
-    def build_shots() -> list[dict]:
+    def build_shots(brief_ids: set[str]) -> list[dict]:
         shots = []
         previous = None
+        scene_counts: Counter = Counter()
         for event in chosen:
             detail = event_detail(event)
             scene, title = scene_for(event, detail)
+            scene_counts[scene] += 1
+            spoken = detail
+            if event["id"] in brief_ids:
+                spoken = f"{title.rstrip('.')}." if scene == "departures" else ""
             shots.append({
                 "scene": scene,
                 "title": title,
+                "scene_take": scene_counts[scene] - 1,
                 "event_id": event["id"],
                 "event_type": event["type"],
                 "date": format_sim_time(event["sim_time_minutes"]),
@@ -245,7 +260,7 @@ def build(result: dict, name: str | None = None) -> dict:
                 "country": event["location"]["country"],
                 "lat": event["location"]["lat"],
                 "lon": event["location"]["lon"],
-                "narration": narrate(event, previous, detail),
+                "narration": narrate(event, previous, spoken),
             })
             previous = event
         return shots
@@ -254,11 +269,18 @@ def build(result: dict, name: str | None = None) -> dict:
         return sum(max(3.5, len(shot["narration"].split()) * SECONDS_PER_WORD + SHOT_OVERHEAD)
                    for shot in shots) + OUTRO
 
-    shots = build_shots()
-    while estimate(shots) > BUDGET and len(chosen) > 2:
-        drop = min(chosen[1:-1], key=lambda event: event["severity"])
-        chosen = [event for event in chosen if event is not drop]
-        shots = build_shots()
+    brief_ids: set[str] = set()
+    shots = build_shots(brief_ids)
+    if estimate(shots) > BUDGET and len(chosen) > MIN_EVENT_SHOTS:
+        chosen = pick_events(beats, MIN_EVENT_SHOTS)
+        shots = build_shots(brief_ids)
+    while estimate(shots) > BUDGET:
+        candidates = [shot for shot in shots if shot["event_id"] not in brief_ids]
+        if not candidates:
+            break
+        longest = max(candidates, key=lambda shot: len(shot["narration"].split()))
+        brief_ids.add(longest["event_id"])
+        shots = build_shots(brief_ids)
 
     # One optional aside about something actually visible in the scene.
     # Keep narration factual on response and high-impact shots.

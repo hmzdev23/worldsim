@@ -4,7 +4,7 @@ import { ArrowClockwise, ArrowRight, GlobeHemisphereWest } from "@phosphor-icons
 import { MotionConfig } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { japanDemo } from "../lib/earthquake";
-import { listStarters, pauseRun, prepareScenario } from "../lib/scenario-api";
+import { listStarters, pauseRun, prepareScenario, readDemoHeadlines } from "../lib/scenario-api";
 import { generationStageLabel, type ScenarioRun, type Starter, type Tone } from "../lib/scenario";
 import { enableHeadlineSound } from "../lib/headline-sound";
 import { RunConsole } from "./run-console";
@@ -40,7 +40,7 @@ function ScenarioWorkspace() {
   const lastRequest = useRef<Request | null>(null);
   const preparingSince = useRef<number | undefined>(undefined);
   const busy = launch.status === "generating";
-  const isDemo = run === japanDemo;
+  const isDemo = run.id === japanDemo.id;
   const runTone = RUN_TONE;
   const nextTone = RUN_TONE;
 
@@ -94,15 +94,19 @@ function ScenarioWorkspace() {
   function runAgain() {
     if (lastRequest.current) void start({ ...lastRequest.current, tone: runTone });
   }
-  // The fixed Japan earthquake run is no longer on the home screen; tests open it with /?demo=japan.
+  // The reference Japan run is available at /?demo=japan.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("demo") === "japan") loadDemo();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (new URLSearchParams(window.location.search).get("demo") !== "japan") return;
+    const controller = new AbortController();
+    void readDemoHeadlines(controller.signal).catch(() => undefined).then(headlineEventIds => {
+      if (controller.signal.aborted || request.current) return;
+      setRun({ ...japanDemo, headlineEventIds });
+      setAutoStart(false);
+      setLaunch({ status: "idle" });
+      setView("watch");
+    });
+    return () => controller.abort();
   }, []);
-  function loadDemo() {
-    pauseCurrent(); request.current?.abort(); request.current = null; lastRequest.current = null;
-    setRun(japanDemo); setAutoStart(false); setLaunch({ status: "idle" }); setView("watch");
-  }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     // An empty box runs the example shown in it, so Enter alone starts a run.

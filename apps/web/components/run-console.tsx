@@ -128,6 +128,11 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
     for (const [id, item] of facts) merged.set(id, satire.items.get(id) ?? item);
     return merged;
   }, [facts, satire]);
+  const headlineIds = useMemo(() => run.headlineEventIds && new Set(run.headlineEventIds), [run.headlineEventIds]);
+  const appliedHeadlines = useMemo(
+    () => events.applied.filter(event => !headlineIds || headlineIds.has(event.id)),
+    [events.applied, headlineIds],
+  );
   const connected = connection === "connected";
   const atEnd = simTime >= run.endMinute;
   const reportedHeadline = events.queue[0] && reports.get(events.queue[0].id);
@@ -288,9 +293,9 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
             // A story run opens on its first report; stepping back shows that event's report
             // again; otherwise a snapshot never replays old reports.
             queue: story && replay
-              ? data.events.filter((e) => e.id === replay)
+              ? data.events.filter((e) => e.id === replay && (!headlineIds || headlineIds.has(e.id)))
               : story && !seeking ? [...previous.queue.filter(e => data.events.some(a => a.id === e.id)),
-                  ...data.events.filter(e => !previous.applied.some(a => a.id === e.id))] : [],
+                  ...data.events.filter(e => (!headlineIds || headlineIds.has(e.id)) && !previous.applied.some(a => a.id === e.id))] : [],
           }));
           if (replay) waitingForHeadline.current = true;
         } else if (!initialized) {
@@ -298,7 +303,8 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         } else if (data.kind === "event" && data.event.status === "applied") {
           const { event } = data;
           if (seekFloorRef.current !== undefined && event.sim_time_minutes <= seekFloorRef.current) return;
-          if (story) {
+          const headline = !headlineIds || headlineIds.has(event.id);
+          if (story && headline) {
             // Do not rely only on the server's stop-at-event flag: the direct pause
             // closes the event/clock message race and keeps playback stopped locally.
             socket.send(JSON.stringify({ action: "pause" }));
@@ -310,7 +316,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
             return {
               ...previous,
               applied: [...previous.applied, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence),
-              queue: [...previous.queue, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence),
+              queue: headline ? [...previous.queue, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence) : previous.queue,
             };
           });
         } else if (data.kind === "clock") {
@@ -343,7 +349,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
       socketRef.current?.close();
       socketRef.current = null;
     };
-  }, [isDemo, run]);
+  }, [headlineIds, isDemo, run]);
 
   function sendControl(control: { action: "play"; until_next_event?: boolean } | { action: "pause" } | { action: "speed"; speed: number } | { action: "seek"; sim_time_minutes: number }) {
     const socket = socketRef.current;
@@ -402,9 +408,9 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
 
   /** Step back: rewind to the event before the current one and show its headline again. */
   function previousEvent() {
-    const current = events.queue[0] ?? events.applied.at(-1);
-    const index = current ? events.applied.findIndex((e) => e.id === current.id) : -1;
-    const target = index > 0 ? events.applied[index - 1] : undefined;
+    const current = events.queue[0] ?? appliedHeadlines.at(-1);
+    const index = current ? appliedHeadlines.findIndex((e) => e.id === current.id) : -1;
+    const target = index > 0 ? appliedHeadlines[index - 1] : undefined;
     if (!target) return;
     sendControl({ action: "pause" });
     replayHeadline.current = target.id;
@@ -412,8 +418,8 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   }
 
   const currentIndex = (() => {
-    const current = events.queue[0] ?? events.applied.at(-1);
-    return current ? events.applied.findIndex((e) => e.id === current.id) : -1;
+    const current = events.queue[0] ?? appliedHeadlines.at(-1);
+    return current ? appliedHeadlines.findIndex((e) => e.id === current.id) : -1;
   })();
 
   const playbackLabel = story
@@ -503,7 +509,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
           </button>
         </div>
         {satire && <AbsurdityIndex metrics={satire.absurdity} />}
-        <WorldWire items={[...reports.values()].reverse()} loading={newsLoading || Boolean(satire?.loading && satire.items.size === 0)}
+        <WorldWire items={[...reports.values()].filter(item => !headlineIds || headlineIds.has(item.event_id)).reverse()} loading={newsLoading || Boolean(satire?.loading && satire.items.size === 0)}
           selectedId={selectedId} onSelect={(item) => { setSelectedId(item.event_id); focusNewsItem(item); }} />
         <ImpactDashboard events={events.applied} />
         {satire && <SocialFeed posts={satire.posts} loading={satire.loading} />}

@@ -14,11 +14,17 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "services" / "director"), str(ROOT / "services" / "newsroom")]
 
-from worlddirector import RUN_FIXTURES, prepare_scenario  # noqa: E402
+from worlddirector import RUN_FIXTURES, headline_events, prepare_scenario  # noqa: E402
 
 spec = importlib.util.spec_from_file_location("run_film", ROOT / "experiments/recap-films/films/run/make-script.py")
 film = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(film)
+
+audio_spec = importlib.util.spec_from_file_location(
+    "run_audio", ROOT / "experiments/recap-films/films/run/make-audio.py"
+)
+audio = importlib.util.module_from_spec(audio_spec)
+audio_spec.loader.exec_module(audio)
 
 SEEDS = (3, 17, 404, 9001)
 
@@ -65,11 +71,14 @@ class RunFilmTests(unittest.TestCase):
                     previous_country = country
 
     def test_no_casualty_figures_and_a_film_under_fifty_seconds(self):
-        for fixture, seed, _, script in self.cases():
+        for fixture, seed, result, script in self.cases():
             with self.subTest(fixture=fixture, seed=seed):
                 text = " ".join(s["narration"] for s in script["shots"])
                 self.assertNotRegex(text.lower(), r"\b(dead|deaths|killed|injured|casualties)\b")
-                self.assertLessEqual(len(script["shots"]), film.MAX_EVENT_SHOTS)
+                headline_ids = {event["id"] for event in headline_events(result["events"])}
+                self.assertTrue(all(shot["event_id"] in headline_ids for shot in script["shots"]))
+                self.assertGreaterEqual(len(script["shots"]), min(5, len(headline_ids)))
+                self.assertLessEqual(len(script["shots"]), 6)
                 seconds = sum(len(s["narration"].split()) * film.SECONDS_PER_WORD + film.SHOT_OVERHEAD
                               for s in script["shots"]) + film.OUTRO
                 self.assertLess(seconds, 50)
@@ -86,10 +95,17 @@ class RunFilmTests(unittest.TestCase):
         self.assertEqual(len(departures), 1)
         self.assertIn("closes North Atlantic airspace", departures[0]["narration"])
         self.assertEqual(departures[0]["country"], "United Kingdom")
-        self.assertEqual(sum("Short read, long wait." in s["narration"] for s in script["shots"]), 1)
-        contamination = next(s for s in script["shots"] if s["event_type"] == "contamination")
-        self.assertEqual(contamination["scene"], "map")
-        self.assertIn("volcanic gas plume", contamination["narration"])
+        self.assertLessEqual(sum("Short read, long wait." in s["narration"] for s in script["shots"]), 1)
+        contamination = next(e for e in result_for("iceland-eruption", 42)["events"] if e["type"] == "contamination")
+        detail = film.event_detail(contamination)
+        self.assertEqual(film.scene_for(contamination, detail)[0], "map")
+        self.assertIn("volcanic gas plume", detail)
+
+    def test_short_narration_gets_a_forty_second_cut_without_extra_shots(self):
+        cuts = audio.shot_cuts([1.4, 2.2, 3.0, 4.2, 2.5], film.OUTRO)
+        self.assertEqual(len(cuts), 6)
+        self.assertGreaterEqual(cuts[-1] + film.OUTRO, 40.0)
+        self.assertEqual(cuts, sorted(cuts))
 
     def test_seed_stays_in_the_run_metadata(self):
         script = film.build(result_for("iceland-eruption", 5))

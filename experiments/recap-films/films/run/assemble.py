@@ -17,6 +17,7 @@ AUDIO, OUT = HERE / "audio", HERE / "output"
 
 # Scene -> effects (name, offset into the shot, seconds, volume), reused from the team's films.
 SCENE_EFFECTS = {
+    "aftershock": [("quake", 0.2, 3.0, .24)],
     "quake": [("quake", 0.2, 4.0, .36)], "eruption": [("rumble", 0.0, 4.4, .34)], "warning": [("siren", 0.0, 3.6, .22)],
     "sky": [("rumble", 0.0, 4.0, .2)], "storm": [("rumble", 0.0, 4.0, .18)], "flood": [("crowd", 0.0, 4.0, .12)],
     "outbreak": [("crowd", 0.0, 4.0, .12)], "outage": [("power", 1.5, 2.8, .32)], "committee": [("crowd", 0.0, 4.0, .14)],

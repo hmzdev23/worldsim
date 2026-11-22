@@ -220,6 +220,7 @@ class Run:
             "start_minutes": self.start_minutes,
             "end_minutes": view["end_minutes"],
             "events": view["events"],
+            "headline_event_ids": view["headline_event_ids"],
         }
 
     def to_json(self) -> dict[str, Any]:
@@ -266,6 +267,11 @@ def _title(prompt: str) -> str:
     return text if len(text) <= 80 else text[:79].rstrip() + "…"
 
 
+def set_story_headlines(sim: Simulation) -> None:
+    story = _import("worlddirector", "director")
+    sim.headline_event_ids = frozenset(event["id"] for event in story.headline_events(sim.timeline))
+
+
 def simulation_for(run_id: str, batch: Any) -> Simulation:
     """A paused simulation holding every event of the batch, or GenerationError."""
     if not isinstance(batch, dict) or not isinstance(batch.get("events"), list) or not batch["events"]:
@@ -275,6 +281,7 @@ def simulation_for(run_id: str, batch: Any) -> Simulation:
     if rejected:
         details = "; ".join(f"{r.id}: {', '.join(r.reasons)}" for r in rejected)
         raise GenerationError("invalid_events", f"{len(rejected)} event(s) rejected: {details}")
+    set_story_headlines(sim)
     return sim
 
 
