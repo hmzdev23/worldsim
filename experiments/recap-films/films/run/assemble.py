@@ -21,7 +21,8 @@ SCENE_EFFECTS = {
     "sky": [("rumble", 0.0, 4.0, .2)], "storm": [("rumble", 0.0, 4.0, .18)], "flood": [("crowd", 0.0, 4.0, .12)],
     "outbreak": [("crowd", 0.0, 4.0, .12)], "outage": [("power", 1.5, 2.8, .32)], "committee": [("crowd", 0.0, 4.0, .14)],
     "tv": [("crowd", 0.0, 4.4, .22)], "aid": [("aid", 0.0, 4.0, .2)], "evacuation": [("siren", 0.0, 3.4, .2)],
-    "market": [("crowd", 0.0, 4.0, .14)], "street": [("jets", 0.4, 3.0, .22)], "map": [("rumble", 0.8, 3.6, .3)],
+    "market": [("crowd", 0.0, 4.0, .14)], "street": [("crowd", 0.0, 4.0, .14)],
+    "departures": [("airport", 0.0, 4.0, .14)],
 }
 
 
@@ -32,12 +33,17 @@ def main() -> int:
         raise SystemExit("timing.json is an estimate: run make-audio.py (without --estimate) first")
     script = json.loads((HERE / "script.json").read_text(encoding="utf-8"))
     OUTRO = float(script.get("outro_seconds", 3.5))
+    cuts, lead = timing["cuts"], timing["lead_in"]
     effects = []
     for i, shot in enumerate(script["shots"]):
-        for name, offset, dur, vol in SCENE_EFFECTS.get(shot["scene"], []):
-            effects.append((name, i, offset, dur, vol))
+        cues = SCENE_EFFECTS.get(shot["scene"], [])
+        if shot.get("event_type") == "nuclear_detonation":
+            cues = [("rumble", .8, 3.6, .3)]
+        for name, offset, dur, vol in cues:
+            remaining = cuts[i + 1] - cuts[i] - offset
+            if remaining > 0:
+                effects.append((name, i, offset, min(dur, remaining), vol))
     lines = json.loads((AUDIO / "narration-lines.json").read_text())
-    cuts, lead = timing["cuts"], timing["lead_in"]
     total = round(cuts[-1] + OUTRO, 2)
     OUT.mkdir(exist_ok=True)
     cmd = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(picture)]
@@ -49,7 +55,7 @@ def main() -> int:
     for j, (name, shot, offset, dur, vol) in enumerate(effects):
         cmd += ["-i", str(AUDIO / f"sfx-{name}.mp3")]
         filters.append(f"[{n}:a]aresample=48000,atrim=duration={dur},afade=t=in:st=0:d=0.08,"
-                       f"afade=t=out:st={max(0, dur - .4)}:d=0.4,volume={vol},adelay={int((cuts[shot] + offset) * 1000)}:all=1[e{j}]")
+                       f"afade=t=out:st={max(0, dur - .4)}:d={min(dur, .4)},volume={vol},adelay={int((cuts[shot] + offset) * 1000)}:all=1[e{j}]")
         mix.append(f"[e{j}]"); n += 1
     cmd += ["-stream_loop", "3", "-i", str(AUDIO / "sfx-music.mp3")]
     filters.append(f"[{n}:a]aresample=48000,atrim=duration={total},afade=t=in:st=0:d=1,afade=t=out:st={total - 3}:d=3,volume=.09[bed]")
@@ -69,8 +75,15 @@ def main() -> int:
     subs = []
     for i, line in enumerate(lines):
         start = cuts[i] + lead
-        end = min(cuts[i + 1] - .1, start + timing["voice_durations"][i] + .15)
-        subs.append(f"{i + 1}\n{stamp(start)} --> {stamp(end)}\n{line}\n")
+        end = min(cuts[i + 1] - .1, start + timing["voice_durations"][i])
+        chunks = script["shots"][i].get("captions") or [line]
+        total_words = sum(len(chunk.split()) for chunk in chunks)
+        spoken_words = 0
+        for chunk in chunks:
+            cue_start = start + (end - start) * spoken_words / total_words
+            spoken_words += len(chunk.split())
+            cue_end = start + (end - start) * spoken_words / total_words
+            subs.append(f"{len(subs) + 1}\n{stamp(cue_start)} --> {stamp(cue_end)}\n{chunk}\n")
     (OUT / f"{stem}.srt").write_text("\n".join(subs), encoding="utf-8")
     print("Video:", video)
     print("Transcript:", OUT / f"{stem}.srt")

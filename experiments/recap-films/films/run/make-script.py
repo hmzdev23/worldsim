@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -32,24 +33,24 @@ EVENTS = {
     "tsunami_warning": ("warning", "tsunami warnings went out{at}"),
     "volcanic_eruption": ("eruption", "a volcano erupted{at}"),
     "meteor_impact": ("sky", "a meteor came down{at}"),
-    "extreme_weather": ("storm", "extreme weather struck{at}"),
+    "extreme_weather": ("map", "extreme weather struck{at}"),
     "flooding": ("flood", "floodwater spread{at}"),
     "disease_outbreak": ("outbreak", "a new illness was reported{at}"),
     "military_strike": ("map", "a military strike was reported{at}"),
     "nuclear_detonation": ("map", "a nuclear detonation was reported{at}"),
-    "cyber_attack": ("outage", "a cyberattack took systems down{at}"),
+    "cyber_attack": ("map", "a cyberattack took systems down{at}"),
     "alien_contact": ("sky", "an unidentified object was sighted{at}"),
-    "other_hazard": ("warning", "{label} was reported{at}"),
-    "infrastructure_failure": ("outage", "infrastructure failed{at}"),
+    "other_hazard": ("map", "{label} was reported{at}"),
+    "infrastructure_failure": ("map", "infrastructure failed{at}"),
     "government_response": ("committee", "officials announced emergency measures{at}"),
     "international_aid": ("aid", "aid arrived{at}{origin}"),
     "evacuation": ("evacuation", "evacuations began{at}"),
-    "contamination": ("outbreak", "contamination was confirmed{at}"),
-    "economic_shock": ("market", "the economy was disrupted{at}"),
+    "contamination": ("map", "contamination was confirmed{at}"),
+    "economic_shock": ("map", "the economy was disrupted{at}"),
     "civil_unrest": ("street", "protests broke out{at}"),
-    "conflict_escalation": ("street", "the conflict escalated{at}"),
+    "conflict_escalation": ("map", "the conflict escalated{at}"),
     "ceasefire": ("tv", "a ceasefire was agreed{at}"),
-    "recovery": ("home-again", "recovery began{at}"),
+    "recovery": ("map", "recovery began{at}"),
 }
 FACILITIES = ("station", "airport", "plant", "hub", "heathrow", "port", "base", "centre", "center", "headquarters")
 # Plausible locals for the setting (first event's country): names, model and colouring.
@@ -92,29 +93,73 @@ def at(name: str) -> str:
     return f"in {name}"
 
 
-def narrate(event: dict, previous: dict | None) -> str:
+def event_detail(event: dict) -> str:
+    description = event.get("payload", {}).get("description") or ""
+    return re.sub(r"^simulated:\s*", "", " ".join(description.split()), flags=re.I)
+
+
+def scene_for(event: dict, detail: str) -> tuple[str, str]:
+    """Choose a specific scene only when the event describes what it depicts."""
+    kind = event["type"]
+    scene = EVENTS.get(kind, ("map", ""))[0]
+    title = kind.replace("_", " ").capitalize()
+    if kind == "other_hazard":
+        title = event["payload"]["label"]
+    if kind in {"economic_shock", "infrastructure_failure"}:
+        aviation = re.search(r"\b(flights?|airspace|airports?|airlines?)\b", detail, re.I)
+        grounded = re.search(r"\b(ground(?:s|ed|ing)?|closes?|closed|closure|cancel\w*)\b", detail, re.I)
+        if aviation and grounded:
+            return "departures", "Flights disrupted"
+    if kind == "infrastructure_failure" and re.search(r"\b(blackout|without power|power fails|power outage)\b", detail, re.I):
+        return "outage", "Power outage"
+    if kind == "extreme_weather" and re.search(r"\b(flooding|floodwater|flooded)\b", detail, re.I):
+        return "storm", "Flooding during severe weather"
+    if kind == "economic_shock" and re.search(r"\b(markets (?:fell|fall|slide)|stock prices)\b", detail, re.I):
+        return "market", "Markets fall"
+    if kind == "recovery" and re.search(r"\b(families|residents|people) (?:can )?(?:return|head) home\b", detail, re.I):
+        return "home-again", "Residents return home"
+    if kind == "disease_outbreak" and re.search(r"\b(pharmacies|pharmacy|clinic|queue)\b", detail, re.I) is None:
+        return "map", title
+    if kind == "government_response" and re.search(r"\b(briefing|announc\w*|meeting)\b", detail, re.I) is None:
+        return "map", title
+    return scene, title
+
+
+def narrate(event: dict, previous: dict | None, detail: str) -> str:
     """Establish the country first, then say what happened."""
     location = event["location"]
     country = location["country"]
     place = location["name"]
     country_name = f"the {country}" if country in COUNTRIES_WITH_ARTICLE else country
-    place_detail = ""
-    if place.casefold() != country.casefold():
-        location_phrase = f"at {place}" if any(word in place.lower() for word in FACILITIES) else at(place)
-        place_detail = f" {location_phrase}"
-    _, template = EVENTS.get(event["type"], ("warning", "an emergency was reported{at}"))
+    lead = f"In {country_name}. " if previous is None or country != previous["location"]["country"] else ""
+    # Keep a complete sentence. If the source text is too long or gives casualty
+    # figures, use the short event template instead.
+    if detail and len(detail.split()) <= 26 and not re.search(r"\b(dead|deaths?|killed|injur(?:ed|ies)|casualties|fatalities)\b", detail, re.I):
+        return lead + detail.rstrip(".!?") + "."
+
+    place_detail = f" {at(place)}" if place.casefold() != country.casefold() else ""
+    _, template = EVENTS.get(event["type"], ("map", "an emergency was reported{at}"))
     payload = event.get("payload") or {}
     origin = payload.get("origin")
     label = str(payload.get("label") or "a new hazard")
     if len(label.split()) > 5:
         label = "a new hazard"
-    target = payload.get("target")
-    if event["type"] == "infrastructure_failure" and isinstance(target, str) and 0 < len(target.split()) <= 5:
-        template = f"the {target} failed{{at}}"
     action = template.format(at=place_detail, label=label, origin=f", sent from {origin}" if isinstance(origin, str) else "")
-    if previous and country == previous["location"]["country"]:
-        return f"Later, {action}."
-    return f"In {country_name}, {action}."
+    if lead:
+        return lead.rstrip(". ") + f", {action}."
+    return action[:1].upper() + action[1:] + "."
+
+
+def caption_chunks(line: str) -> list[str]:
+    chunks, words = [], []
+    for word in line.split():
+        words.append(word)
+        if len(words) == 8 or (len(words) >= 4 and word.endswith((".", ";", "!", "?"))):
+            chunks.append(" ".join(words))
+            words = []
+    if words:
+        chunks.append(" ".join(words))
+    return chunks
 
 
 def pick_events(events: list[dict]) -> list[dict]:
@@ -123,10 +168,13 @@ def pick_events(events: list[dict]) -> list[dict]:
         return list(events)
     first, last, middle = events[0], events[-1], events[1:-1]
     ranked = sorted(middle, key=lambda e: -e["severity"])
-    chosen, types = [], {first["type"], last["type"]}
+    chosen, types = [], {(first["type"], first["location"]["country_code"]),
+                         (last["type"], last["location"]["country_code"])}
     for e in ranked:  # one per type first, then the rest by severity
-        if e["type"] not in types and len(chosen) < MAX_EVENT_SHOTS - 2:
-            chosen.append(e); types.add(e["type"])
+        key = (e["type"], e["location"]["country_code"])
+        if key not in types and len(chosen) < MAX_EVENT_SHOTS - 2:
+            chosen.append(e)
+            types.add(key)
     for e in ranked:
         if e not in chosen and len(chosen) < MAX_EVENT_SHOTS - 2:
             chosen.append(e)
@@ -180,27 +228,50 @@ def build(result: dict, name: str | None = None) -> dict:
     person_name, kind = rng.choice(region["names"])
     person_name = name or person_name
     chosen = pick_events(events)
-    while True:
+
+    def build_shots() -> list[dict]:
         shots = []
         previous = None
         for event in chosen:
-            scene = EVENTS.get(event["type"], ("warning", ""))[0]
+            detail = event_detail(event)
+            scene, title = scene_for(event, detail)
             shots.append({
                 "scene": scene,
+                "title": title,
                 "event_id": event["id"],
                 "event_type": event["type"],
                 "date": format_sim_time(event["sim_time_minutes"]),
                 "place": event["location"]["name"],
                 "country": event["location"]["country"],
-                "narration": narrate(event, previous),
+                "lat": event["location"]["lat"],
+                "lon": event["location"]["lon"],
+                "narration": narrate(event, previous, detail),
             })
             previous = event
-        duration = sum(max(3.5, len(shot["narration"].split()) * SECONDS_PER_WORD + SHOT_OVERHEAD)
-                       for shot in shots) + OUTRO
-        if duration <= BUDGET or len(chosen) <= 3:
-            break
+        return shots
+
+    def estimate(shots: list[dict]) -> float:
+        return sum(max(3.5, len(shot["narration"].split()) * SECONDS_PER_WORD + SHOT_OVERHEAD)
+                   for shot in shots) + OUTRO
+
+    shots = build_shots()
+    while estimate(shots) > BUDGET and len(chosen) > 2:
         drop = min(chosen[1:-1], key=lambda event: event["severity"])
         chosen = [event for event in chosen if event is not drop]
+        shots = build_shots()
+
+    # One optional aside about something actually visible in the scene.
+    # Keep narration factual on response and high-impact shots.
+    for shot in shots:
+        if shot["scene"] == "departures":
+            line = shot["narration"]
+            shot["narration"] = line + " Short read, long wait."
+            if estimate(shots) > BUDGET:
+                shot["narration"] = line
+            break
+
+    for shot in shots:
+        shot["captions"] = caption_chunks(shot["narration"])
 
     places = []
     for e in events:

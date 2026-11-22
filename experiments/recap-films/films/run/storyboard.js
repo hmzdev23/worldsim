@@ -364,6 +364,18 @@ shots.evacuation = (shot) => {
   return s;
 };
 
+shots.departures = () => {
+  const s = new T.Scene();
+  hall(s);
+  sign(s, ['DEPARTURES', 'FLIGHTS DISRUPTED'], 0, 2.6, -5.9, 4.8, 1.8,
+    {bg: '#141821', fg: '#ffcf65', size: 102, w: 1024, h: 420});
+  const traveller = hero(s, .5, -2, Math.PI, 'Idle');
+  block(s, 1, .27, -2, .32, .54, .42, 0x343c4c);
+  s.userData.tick = (t) => traveller.userData.pose('Idle', t);
+  s.userData.camera = {from: [0, 1.8, 4], to: [.25, 1.7, 2.75], look: () => [0, 1.85, -4.4]};
+  return s;
+};
+
 shots.market = (shot) => {
   // A city street under a market board that only ever says one thing.
   const s = new T.Scene(); sky(s, 0x7f98b0, 0xe2d6c2); lights(s); street(s);
@@ -387,7 +399,7 @@ shots.street = (shot) => {
   const jets = conflict ? [0, 1, 2].map(i => { const j = new T.Group(); block(j, 0, 0, 0, .3, .2, 1.6, 0x6b7280); block(j, 0, 0, -.2, 1.4, .05, .5, 0x6b7280); j.rotation.y = Math.PI / 2; j.position.set(-40, 24 + i, -30 - i * 3); s.add(j); return j; }) : [];
   const crowd = []; for (let i = 0; i < 10; i++) {
     const p = person(s, i % 2 ? 'man' : 'woman', -3 + (i % 5) * 1.5, -14 - Math.floor(i / 5) * 1.6, 0, crowdShirts[i % 6], 'Walk', rand(i) * 2); crowd.push(p);
-    if (!conflict && i % 3 === 0) sign(p, [['ENOUGH', 'WHY', 'PLEASE'][i % 3]], 0, 7.5, 0, 3.2, 1.6, {bg: '#ffffff', fg: '#10131b', size: 120, w: 512, h: 256});
+    if (!conflict && i % 3 === 0) sign(p, [['ENOUGH', 'ACT NOW', 'WE NEED ANSWERS'][Math.floor(i / 3) % 3]], 0, 7.5, 0, 3.2, 1.6, {bg: '#ffffff', fg: '#10131b', size: 120, w: 512, h: 256});
   }
   const me = hero(s, 3.8, -6, 0, 'Walk');
   sign(s, [conflict ? 'STAY INDOORS' : 'ROAD CLOSED', UP(shot.place)], -3.2, 4.2, -9.9, 4, 1.8, {bg: '#d7262e', fg: '#ffffff', size: 88, h: 384, w: 768});
@@ -402,29 +414,24 @@ shots.street = (shot) => {
 };
 
 shots.map = (shot) => {
-  // The run's own map: country outlines from the web app's geojson, a pin for every place
-  // the run has reached so far, and the current event marked plainly (no joke).
+  // Mark the exact event location. Several events can share the same place name.
   const s = new T.Scene(); s.background = new T.Color(0x8fb4c0); s.fog = new T.Fog(0x8fb4c0, 60, 160);
   s.add(new T.HemisphereLight(0xffffff, 0x61706b, 2.3)); const sun = new T.DirectionalLight(0xfff0d0, 1.6); sun.position.set(-6, 12, 7); s.add(sun);
   const ocean = new T.Mesh(new T.PlaneGeometry(600, 600), mat(0x6f9fb0)); ocean.rotation.x = -Math.PI / 2; ocean.position.y = -.05; s.add(ocean);
   const [w, e, so, no] = script.map.box, lon0 = (w + e) / 2, lat0 = (so + no) / 2, cos = Math.cos(lat0 * Math.PI / 180);
   const k = 60 / Math.max((e - w) * cos, (no - so), 1);
   const xy = (lon, lat) => [(lon - lon0) * k * cos, -(lat - lat0) * k];
-  const here = script.map.places.find(p => p.event_id === shot.event_id) ?? script.map.places[0];
   for (const rings of Object.values(script.map.countries)) for (const ring of rings) {
     const shape = new T.Shape(); ring.forEach(([lon, lat], i) => { const [x, y] = xy(lon, lat); i ? shape.lineTo(x, -y) : shape.moveTo(x, -y); });
     const m = new T.Mesh(new T.ExtrudeGeometry(shape, {depth: .25, bevelEnabled: false}), mat(0xe3d6b6)); m.rotation.x = -Math.PI / 2; s.add(m);
   }
-  const order = script.map.places.map(p => p.event_id), upTo = Math.max(0, order.indexOf(shot.event_id));
-  script.map.places.slice(0, upTo + 1).forEach((p) => {
-    const [x, z] = xy(p.lon, p.lat), now = p === here;
-    block(s, x, .6, z, .35, 1.2, .35, now ? glow(0xd7262e, 1.2) : 0x10131b);
-    sign(s, [UP(p.name)], x, 2.1, z, Math.min(9, 1.2 + p.name.length * .32), .8, {bg: now ? '#d7262e' : '#10131b', fg: '#ffffff', size: 110}).rotation.x = -.9;
-  });
-  const [hx, hz] = xy(here.lon, here.lat);
+  const [hx, hz] = xy(shot.lon, shot.lat);
+  block(s, hx, .6, hz, .35, 1.2, .35, glow(0xd7262e, 1.2));
+  sign(s, [UP(shot.title)], hx, 2.1, hz, Math.min(11, 2 + shot.title.length * .29), 1,
+    {bg: '#141821', fg: '#ffffff', size: 100}).rotation.x = -.9;
   const ring = new T.Mesh(new T.RingGeometry(.9, 1, 48), new T.MeshBasicMaterial({color: 0xffffff, transparent: true, side: T.DoubleSide}));
   ring.rotation.x = -Math.PI / 2; ring.position.set(hx, .45, hz); s.add(ring);
-  const blast = shot.event_type === 'nuclear_detonation' || shot.event_type === 'military_strike';
+  const blast = shot.event_type === 'nuclear_detonation';
   const cloud = new T.Group(); cloud.position.set(hx, 0, hz); cloud.scale.setScalar(.5); s.add(cloud); cloud.visible = false;
   const stem = new T.Mesh(new T.CylinderGeometry(.35, .6, 1, 12), mat(0x9b938a)); cloud.add(stem);
   const cap = []; for (let i = 0; i < 9; i++) { const c = new T.Mesh(new T.IcosahedronGeometry(1, 1), mat(i % 2 ? 0xb3aaa0 : 0x8f877e)); c.userData.a = i / 9 * Math.PI * 2; cloud.add(c); cap.push(c); }
@@ -460,7 +467,7 @@ shots['home-again'] = () => {
     camera: (t) => t < split ? {from: [1.8, 1.7, -2], to: [1.6, 1.7, -.5], look: [walker.position.x, 1, walker.position.z]} : {from: [3.2, 1.6, 4.4], to: [2.6, 1.5, 3.7], look: [1, .7, .4]}};
 };
 
-const scenes = script.shots.map(shot => (shots[shot.scene] ?? shots.warning)(shot));
+const scenes = script.shots.map(shot => (shots[shot.scene] ?? shots.map)(shot));
 
 // ---- overlays ----------------------------------------------------------------
 const $ = (q) => document.querySelector(q);
@@ -472,6 +479,15 @@ const selected = shotParam === null ? -1 : Number(shotParam);
 if (selected !== -1 && !(Number.isInteger(selected) && selected >= 0 && selected < scenes.length)) throw new Error('Invalid shot');
 window.DUR = selected < 0 ? total : (selected === scenes.length - 1 ? cuts[selected + 1] + OUTRO : cuts[selected + 1]) - cuts[selected];
 const ease = (x) => x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
+
+// Fit caption changes to the measured narration length. Grouping words keeps
+// the scene visible while the narrator reads a longer report.
+const captionTracks = script.shots.map(data => {
+  const chunks = data.captions ?? [data.narration];
+  let words = 0;
+  const segments = chunks.map(text => ({text, end: words += text.trim().split(/\s+/).length}));
+  return {segments, words};
+});
 
 window.render = (localTime) => {
   const time = selected < 0 ? localTime : cuts[selected] + localTime;
@@ -492,7 +508,11 @@ window.render = (localTime) => {
   $('#country').textContent = data.country;
   $('#place').textContent = data.place === data.country ? '' : data.place;
   $('#date').textContent = data.date;
-  $('#caption').textContent = data.narration;
+  const track = captionTracks[i];
+  const elapsed = Math.max(0, local - timing.lead_in);
+  const word = elapsed / Math.max(.01, timing.voice_durations[i]) * track.words;
+  const caption = track.segments.find(segment => word < segment.end) ?? track.segments.at(-1);
+  $('#caption').textContent = caption.text;
   $('#flash').style.opacity = window.FLASH;
   renderer.render(scene, camera);
 };

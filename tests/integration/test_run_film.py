@@ -59,7 +59,7 @@ class RunFilmTests(unittest.TestCase):
                 for shot in script["shots"]:
                     country = shot["country"]
                     if country != previous_country:
-                        self.assertRegex(shot["narration"], rf"^In (the )?{re.escape(country)},")
+                        self.assertRegex(shot["narration"], rf"^In (the )?{re.escape(country)}[,.]")
                     self.assertNotIn("notification", shot)
                     self.assertNotIn("prop", shot)
                     previous_country = country
@@ -73,12 +73,23 @@ class RunFilmTests(unittest.TestCase):
                 seconds = sum(len(s["narration"].split()) * film.SECONDS_PER_WORD + film.SHOT_OVERHEAD
                               for s in script["shots"]) + film.OUTRO
                 self.assertLess(seconds, 50)
-                self.assertTrue(all(len(s["narration"].split()) <= 22 for s in script["shots"]))
+                self.assertTrue(all(len(s["narration"].split()) <= 38 for s in script["shots"]))
 
     def test_two_runs_of_the_same_starter_make_different_films(self):
         a = film.build(result_for("tsunami", 1))
         b = film.build(result_for("tsunami", 2))
         self.assertNotEqual([s["narration"] for s in a["shots"]], [s["narration"] for s in b["shots"]])
+
+    def test_iceland_recap_pairs_the_ash_closure_with_departures(self):
+        script = film.build(result_for("iceland-eruption", 42))
+        departures = [s for s in script["shots"] if s["scene"] == "departures"]
+        self.assertEqual(len(departures), 1)
+        self.assertIn("closes North Atlantic airspace", departures[0]["narration"])
+        self.assertEqual(departures[0]["country"], "United Kingdom")
+        self.assertEqual(sum("Short read, long wait." in s["narration"] for s in script["shots"]), 1)
+        contamination = next(s for s in script["shots"] if s["event_type"] == "contamination")
+        self.assertEqual(contamination["scene"], "map")
+        self.assertIn("volcanic gas plume", contamination["narration"])
 
     def test_seed_stays_in_the_run_metadata(self):
         script = film.build(result_for("iceland-eruption", 5))
