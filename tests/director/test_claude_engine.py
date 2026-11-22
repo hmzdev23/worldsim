@@ -59,12 +59,15 @@ class ClaudeEngineTest(unittest.TestCase):
         self.assertEqual(flag(cmd, "--effort"), "low")
         self.assertEqual(flag(cmd, "--output-format"), "json")
         schema = json.loads(flag(cmd, "--json-schema"))
-        events = schema["properties"].pop("events")
-        self.assertEqual((events.pop("minItems"), events.pop("maxItems")), (1, 12), "Claude Code enforces 1-12 events")
-        expected = json.loads(json.dumps(OUTPUT_SCHEMA))
-        self.assertEqual(events, expected["properties"].pop("events"))
-        self.assertEqual(schema, expected, "otherwise the same schema as Codex")
+        events = schema["properties"]["events"]
+        self.assertEqual((events["minItems"], events["maxItems"]), (6, 12), "a new scenario: 6-12 events")
+        self.assertIn("6-12 events", call["input"])
+        event = events["items"]
+        self.assertTrue(event["additionalProperties"] and event["properties"]["location"]["additionalProperties"])
+        self.assertIn("type", event["required"])
+        self.assertNotIn("magnitude", event["required"], "nullable keys may be left out")
         self.assertNotIn("maxItems", OUTPUT_SCHEMA["properties"]["events"], "the shared schema is unchanged")
+        self.assertFalse(OUTPUT_SCHEMA["properties"]["events"]["items"]["additionalProperties"])
         self.assertEqual(flag(cmd, "--tools"), "", "no tools: the Director only writes JSON")
         self.assertEqual(flag(cmd, "--setting-sources"), "", "no user or project settings")
         self.assertIn("--strict-mcp-config", cmd)
@@ -108,7 +111,7 @@ class ClaudeEngineTest(unittest.TestCase):
 
     def test_a_rejected_answer_is_retried_once_with_the_errors(self, _):
         broken = json.loads(json.dumps(RAW))
-        broken["events"][-1]["impacts"]["injuries"] = 0  # a running total that goes down
+        broken["events"][-1]["location"]["lat"] = 200  # not on Earth: only the model can fix this
         answers = iter([success(broken), success()])
         seen = {}
 
@@ -120,7 +123,7 @@ class ClaudeEngineTest(unittest.TestCase):
         first, second = seen["calls"]
         self.assertNotIn("rejected by the validator", first["input"])
         self.assertIn("rejected by the validator", second["input"])
-        self.assertIn("injuries", second["input"], "the validator's own message is fed back")
+        self.assertIn("lat out of range", second["input"], "the validator's own message is fed back")
         self.assertEqual(len(batch["events"]), len(RAW["events"]))
 
     def test_two_rejected_answers_fail(self, _):
@@ -155,6 +158,43 @@ class ClaudeEngineTest(unittest.TestCase):
         self.assertEqual(call["input"], codex_seen["input"], "the Director prompt is byte-for-byte the same")
         self.assertEqual(flag(call["cmd"], "--system-prompt"), CLAUDE_SYSTEM_PROMPT,
                          "Claude Code's own coding-agent prompt is replaced by one neutral line")
+
+    def test_notes_and_missing_nulls_are_fixed_not_retried(self, _):
+        sloppy = json.loads(json.dumps(RAW))
+        for event in sloppy["events"]:
+            event["location"]["name_note"] = "near the old harbour"
+            event["sim_time_minutes_note"] = "estimate"
+            del event["magnitude"]  # a nullable key left out
+            if event.get("impacts"):
+                event["impacts"].pop("debris_tonnes", None)
+                event["impacts"]["contamination_area_km2"] = 5  # misspelled: dropped, real key becomes null
+        seen = {}
+        batch = generate(PROMPT, runner=claude_runner(success(sloppy), seen=seen))
+        self.assertEqual(len(seen["calls"]), 1, "no rewrite for harmless slips")
+        self.assertEqual(len(batch["events"]), len(RAW["events"]))
+        for event in batch["events"]:
+            self.assertEqual(set(event["location"]), {"name", "country", "country_code", "lat", "lon"})
+
+    def test_a_falling_running_total_is_carried_up_not_retried(self, _):
+        slipped = json.loads(json.dumps(RAW))
+        totals = [e["impacts"]["injuries"] for e in slipped["events"] if e.get("impacts")]
+        slipped["events"][-1]["impacts"]["injuries"] = 1  # the event's own count, not the total
+        last_aid = next(e for e in reversed(slipped["events"]) if (e.get("impacts") or {}).get("aid_contributors"))
+        dropped = last_aid["impacts"]["aid_contributors"].pop(0)  # a country "disappears"
+        seen = {}
+        batch = generate(PROMPT, runner=claude_runner(success(slipped), seen=seen))
+        self.assertEqual(len(seen["calls"]), 1)
+        self.assertEqual(batch["events"][-1]["payload"]["impacts"]["injuries"], max(totals))
+        countries = {c["country"] for e in batch["events"]
+                     for c in (e["payload"].get("impacts") or {}).get("aid_contributors", [])}
+        self.assertIn(dropped["country"], countries)
+
+    def test_missing_required_facts_are_still_rejected(self, _):
+        broken = json.loads(json.dumps(RAW))
+        del broken["events"][0]["severity"]
+        with self.assertRaises(DirectorError) as ctx:
+            generate(PROMPT, runner=claude_runner(success(broken)))
+        self.assertEqual(ctx.exception.code, "invalid_events")
 
     def test_codex_is_still_available(self, _):
         self.assertEqual(director_engine("codex"), "codex")

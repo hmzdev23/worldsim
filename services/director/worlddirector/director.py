@@ -27,7 +27,7 @@ import time
 from pathlib import Path
 from typing import Callable, Optional
 
-from .contract import DEFAULT_TONE, EVENT_TYPES, MAX_EVENTS, MAX_HISTORY_EVENTS, MAX_SCENARIO_CHARS, OUTPUT_SCHEMA, TONES
+from .contract import CONTRIBUTOR_FIELDS, DEFAULT_TONE, EVENT_TYPES, IMPACT_FIELDS, MAX_EVENTS, MAX_HISTORY_EVENTS, MAX_SCENARIO_CHARS, OUTPUT_SCHEMA, TONES
 from .errors import DirectorError
 from .timing import Stages, stage
 from .validate import build_batch, history_state
@@ -76,7 +76,8 @@ Fields:
   Use other_hazard (with a label) only when no other type fits the hazard.
 - sim_time_minutes: minutes since the simulation started (DAY 1 00:00 is 0).
 - location: real place name, accurate latitude/longitude, and ISO 3166-1
-  alpha-3 country_code (e.g. JPN, USA, PER).
+  alpha-3 country_code (e.g. JPN, USA, PER). Exactly these five keys: name,
+  country, country_code, lat, lon. No other keys (no notes or alternatives).
 - severity: 0.0 (minor) to 1.0 (extreme).
 - description: one short sentence (under 200 characters).
 - Detail fields: fill one only when it applies to that event, otherwise null.
@@ -186,6 +187,14 @@ def _tone_rules(tone: str) -> str:
     return SATIRE_RULES.format(tone=tone, tone_detail=TONE_DETAIL[tone])
 
 
+# A new scenario needs enough events to tell a story; a continuation may be short.
+MIN_NEW_EVENTS = 6
+
+
+def min_events(history: Optional[list] = None) -> int:
+    return 1 if history else MIN_NEW_EVENTS
+
+
 def build_prompt(scenario: str, history: Optional[list] = None, tone: str = DEFAULT_TONE,
                  seed: Optional[int] = None) -> str:
     history_rules, history_block = "", ""
@@ -194,7 +203,7 @@ def build_prompt(scenario: str, history: Optional[list] = None, tone: str = DEFA
         history_rules = HISTORY_RULES.format(now=now)
         history_block = f"\n<<<HISTORY\n{_history_lines(history)}\nHISTORY>>>\n"
     return PROMPT.format(
-        min_events=1,
+        min_events=min_events(history),
         max_events=MAX_EVENTS,
         types=", ".join(EVENT_TYPES),
         scenario=_clean_scenario(scenario),
@@ -220,17 +229,120 @@ def codex_command(codex: str, run_dir: str, schema_path: str, out_path: str, mod
     ]  # fmt: skip
 
 
-def claude_schema(max_events: int = MAX_EVENTS) -> dict:
-    """OUTPUT_SCHEMA plus the 1..max_events limit on `events`.
+def _nullable(schema: dict) -> bool:
+    return any(option.get("type") == "null" for option in schema.get("anyOf", []))
+
+
+def _relax(schema: object) -> object:
+    """Copy of `schema` where objects allow extra keys and nullable keys are optional."""
+    if isinstance(schema, list):
+        return [_relax(item) for item in schema]
+    if not isinstance(schema, dict):
+        return schema
+    out = {key: _relax(value) for key, value in schema.items()}
+    if "properties" in schema:
+        out["additionalProperties"] = True
+        out["required"] = [k for k in schema.get("required", []) if not _nullable(schema["properties"][k])]
+    return out
+
+
+def claude_schema(max_events: int = MAX_EVENTS, min_items: int = 1) -> dict:
+    """OUTPUT_SCHEMA for Claude Code: 1..max_events events, forgiving about extra and null keys.
 
     Claude Code checks structured output against --json-schema and makes the
-    model fix it, so a 13th event is corrected instead of failing the whole
-    run. (Codex's strict schema mode does not take array limits, so
-    OUTPUT_SCHEMA itself leaves them to the local validator.)
+    model rewrite the WHOLE answer when it fails, which roughly doubles the
+    wait. Haiku often adds a harmless note key (location.name_note,
+    sim_time_minutes_note, ...) or leaves out a null field, so those are
+    allowed here and fixed by normalize_claude_answer before the usual strict
+    validation. Codex's strict mode already makes those slips impossible.
     """
-    schema = copy.deepcopy(OUTPUT_SCHEMA)
-    schema["properties"]["events"].update(minItems=1, maxItems=max_events)
+    schema = _relax(OUTPUT_SCHEMA)
+    schema["properties"]["events"].update(minItems=min_items, maxItems=max_events)
     return schema
+
+
+def _normalize(value: object, schema: dict) -> object:
+    if "anyOf" in schema:
+        if value is None:
+            return None
+        options = [o for o in schema["anyOf"] if o.get("type") != "null"]
+        return _normalize(value, options[0]) if len(options) == 1 else value
+    if isinstance(value, dict) and "properties" in schema:
+        props = schema["properties"]
+        out = {k: _normalize(v, props[k]) for k, v in value.items() if k in props}
+        for key, sub in props.items():
+            if key not in out and _nullable(sub):
+                out[key] = None
+        return out
+    if isinstance(value, list) and isinstance(schema.get("items"), dict):
+        return [_normalize(item, schema["items"]) for item in value]
+    return value
+
+
+def normalize_claude_answer(raw: object) -> object:
+    """Drop keys the schema doesn't know and fill missing nullable keys with null.
+
+    Only for Claude answers. Required keys, types, ranges and every
+    consistency rule are still checked by the strict validator afterwards.
+    """
+    return _normalize(raw, OUTPUT_SCHEMA)
+
+
+def _number(value: object) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def carry_running_totals(raw: object, history: Optional[list] = None) -> object:
+    """Make running totals never fall, in time order (Claude answers only).
+
+    Haiku sometimes writes an event's own count (9 deaths) where the
+    scenario-wide total belongs (182 so far). A running total cannot fall, so
+    a lower value is carried up to the highest so far, and every aid country
+    already listed stays listed with at least its earlier personnel/cargo.
+    Starts from the last history snapshot, like the validator.
+    """
+    if not isinstance(raw, dict) or not isinstance(raw.get("events"), list):
+        return raw
+    events = [e for e in raw["events"] if isinstance(e, dict)]
+    cumulative = [k for k, (_, _, running) in IMPACT_FIELDS.items() if running]
+    best: dict = {}
+    aid: dict = {}  # country -> last entry
+    last = (history or [])[-1:]
+    base = (last[0].get("payload", {}).get("impacts") if last and isinstance(last[0], dict) else None) or {}
+    for key in cumulative:
+        if _number(base.get(key)):
+            best[key] = base[key]
+    for entry in base.get("aid_contributors") or []:
+        if isinstance(entry, dict) and isinstance(entry.get("country"), str):
+            aid[entry["country"]] = dict(entry)
+    order = sorted(events, key=lambda e: e.get("sim_time_minutes") if _number(e.get("sim_time_minutes")) else 0)
+    for event in order:
+        impacts = event.get("impacts")
+        if not isinstance(impacts, dict):
+            continue
+        for key in cumulative:
+            value = impacts.get(key)
+            if _number(value):
+                if key in best and value < best[key]:
+                    impacts[key] = value = best[key]
+                best[key] = value
+        listed = impacts.get("aid_contributors")
+        if isinstance(listed, list):
+            names = set()
+            for entry in listed:
+                if not isinstance(entry, dict) or not isinstance(entry.get("country"), str):
+                    continue
+                names.add(entry["country"])
+                before = aid.get(entry["country"], {})
+                for key in CONTRIBUTOR_FIELDS:
+                    if _number(entry.get(key)) and _number(before.get(key)) and entry[key] < before[key]:
+                        entry[key] = before[key]
+                aid[entry["country"]] = dict(entry)
+            for country, entry in aid.items():
+                if country not in names:
+                    listed.append({"country": country, "personnel": entry.get("personnel"),
+                                   "cargo_tonnes": entry.get("cargo_tonnes"), "cargo": entry.get("cargo")})
+    return raw
 
 
 # Replaces Claude Code's built-in coding-agent system prompt, so Haiku reads the
@@ -304,7 +416,8 @@ def run_codex(
                 + "\nReturn the whole answer again with every problem fixed."
             )
     with stage(stages, "model"):
-        text, stderr = call(prompt, model=model, effort=effort, timeout_s=timeout_s, runner=runner)
+        text, stderr = call(prompt, model=model, effort=effort, timeout_s=timeout_s, runner=runner,
+                            min_items=min_events(history))
     with stage(stages, "parse"):
         if not text.strip():
             raise DirectorError("invalid_json", "The model returned an empty response", stderr)
@@ -314,13 +427,14 @@ def run_codex(
 run_model = run_codex
 
 
-def _call_claude(prompt: str, *, model: str, effort: str, timeout_s: float, runner: Runner) -> tuple[str, str]:
+def _call_claude(prompt: str, *, model: str, effort: str, timeout_s: float, runner: Runner,
+                 min_items: int = 1) -> tuple[str, str]:
     """Run `claude -p` once in an empty folder. Returns (answer JSON text, stderr)."""
     claude = shutil.which("claude")
     if not claude:
         raise DirectorError("claude_missing", "Claude Code not found. Install it and sign in with `claude`.")
     with tempfile.TemporaryDirectory(prefix="worldsim-director.") as run_dir:
-        cmd = claude_command(claude, model, effort, claude_schema())
+        cmd = claude_command(claude, model, effort, claude_schema(min_items=min_items))
         try:
             proc = runner(cmd, input=prompt, capture_output=True, text=True, encoding="utf-8", timeout=timeout_s,
                           cwd=run_dir, env=dict(os.environ))
@@ -345,7 +459,8 @@ def _call_claude(prompt: str, *, model: str, effort: str, timeout_s: float, runn
     return (answer if isinstance(answer, str) else ""), proc.stderr or ""
 
 
-def _call_codex(prompt: str, *, model: str, effort: str, timeout_s: float, runner: Runner) -> tuple[str, str]:
+def _call_codex(prompt: str, *, model: str, effort: str, timeout_s: float, runner: Runner,
+                min_items: int = 1) -> tuple[str, str]:
     """Run `codex exec` once. Returns (answer text, stderr)."""
     codex = shutil.which("codex")
     if not codex:
@@ -459,6 +574,8 @@ def generate(
             remaining = timeout_s if attempt == 0 else deadline - time.monotonic()
             raw = run_codex(scenario, history=past, model=model, effort=effort, timeout_s=remaining, runner=runner,
                             stages=stages, tone=tone, seed=seed, engine=engine, feedback=feedback)
+            if engine == "claude":
+                raw = carry_running_totals(normalize_claude_answer(raw), past)
             try:
                 with stage(stages, "validate"):
                     return build_batch(raw, simulation_id=simulation_id, branch_id=branch_id, source="model",
