@@ -19,12 +19,12 @@ SAMPLES = {
     "vesuvius-eruption": "volcanic_eruption",
     "iceland-eruption": "volcanic_eruption",
     "global-pandemic": "disease_outbreak",
-    "nuclear-war": "conflict_escalation",
-    "zombie-outbreak": "disease_outbreak",
-    "alien-invasion": "alien_contact",
-    "sun-disappears": "other_hazard",
-    "insect-mutation": "other_hazard",
-    "ai-takeover": "cyber_attack",
+    "north-sea-nuclear-war": "conflict_escalation",
+    "atlanta-zombie-outbreak": "disease_outbreak",
+    "alien-craft-arrival": "alien_contact",
+    "sun-vanishes": "other_hazard",
+    "amazon-giant-insects": "other_hazard",
+    "rogue-ai-takeover": "cyber_attack",
 }
 
 

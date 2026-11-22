@@ -47,12 +47,12 @@ Fixtures:
 - `vesuvius-eruption`: 12 events over a week. A VEI 5 eruption of Vesuvius, ash across southern Italy to Athens, and aid from Greece and Spain.
 
 Special scenarios (default timelines only; their roles and decisions are separate work):
-- `nuclear-war`: 12 events over 2 months. Talks collapse, an unidentified attacker strikes the ports of Rotterdam and Hamburg, then fallout, a ceasefire, aid and partial recovery.
-- `zombie-outbreak`: 11 events over a month. A fictional reanimation virus spreads from Atlanta to Chicago, London and Mexico City, until a vaccine trial.
-- `alien-invasion`: 12 events over 10 days. Craft arrive over New York, Tokyo and Cairo, there is a strike and a counter-blast in Manhattan, then a standoff.
-- `sun-disappears`: 11 events over 3 months. The Sun vanishes, grids fail, the cold sets in, people move to warm and geothermal regions, and crops fail.
-- `insect-mutation`: 10 events over 3 weeks. Giant mutated insects spread from Manaus to Bogotá and Lima.
-- `ai-takeover`: 11 events over 2 weeks. A rogue AI seizes cloud servers, the Texas grid, markets and air traffic until it is isolated.
+- `north-sea-nuclear-war`: 12 events over 2 months. Talks collapse, an unidentified attacker strikes the ports of Rotterdam and Hamburg, then fallout, a ceasefire, aid and partial recovery.
+- `atlanta-zombie-outbreak`: 11 events over a month. A fictional reanimation virus spreads from Atlanta to Chicago, London and Mexico City, until a vaccine trial.
+- `alien-craft-arrival`: 12 events over 10 days. Craft arrive over New York, Tokyo and Cairo, there is a strike and a counter-blast in Manhattan, then a standoff.
+- `sun-vanishes`: 11 events over 3 months. The Sun vanishes, grids fail, the cold sets in, people move to warm and geothermal regions, and crops fail.
+- `amazon-giant-insects`: 10 events over 3 weeks. Giant mutated insects spread from Manaus to Bogotá and Lima.
+- `rogue-ai-takeover`: 11 events over 2 weeks. A rogue AI seizes cloud servers, the Texas grid, markets and air traffic until it is isolated.
 
 A `volcanic_eruption` must sit within 50 km of a known volcano in [`worlddirector/volcanoes.py`](worlddirector/volcanoes.py), or the batch is rejected (`invalid_events`) and the nearest volcano is named. The prompt tells the model the same rule. If a scenario needs a volcano that is missing, add it to the list.
 
