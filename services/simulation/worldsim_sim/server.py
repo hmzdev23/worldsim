@@ -7,6 +7,7 @@ Fixture demo (the simulation the server was started with):
   POST /events     ingest a Director batch; returns it with statuses set
   POST /control    playback control (same body as a WebSocket control message)
   WS   /stream     snapshot on connect, then event and clock messages
+  GET  /satire     satire layer (?tone=satirical|unhinged|straight) for released events
 
 Scenario runs created from a prompt, each fully isolated (see scenarios.py):
   POST /scenarios                 {"prompt": "..."} -> 202, run in `generating`
@@ -14,6 +15,7 @@ Scenario runs created from a prompt, each fully isolated (see scenarios.py):
   GET  /scenarios/{id}/snapshot   like /snapshot, for this run
   GET  /scenarios/{id}/timeline   like /timeline, for this run
   GET  /scenarios/{id}/news       WORLD//WIRE items for this run's released events
+  GET  /scenarios/{id}/satire     satire layer (?tone=, default the run's tone) for released events
   POST /scenarios/{id}/control    like /control, for this run
   WS   /scenarios/{id}/stream     like /stream, for this run
 
@@ -27,14 +29,16 @@ import asyncio
 import contextlib
 import logging
 import math
-from typing import Any
+from typing import Any, Optional
 
 from fastapi import Body, FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .engine import Message, Simulation
-from .scenarios import MAX_PROMPT_CHARS, Channel, RegistryFull, Run, ScenarioRegistry, news_response
+from .scenarios import (
+    DEFAULT_TONE, MAX_PROMPT_CHARS, TONES, Channel, RegistryFull, Run, ScenarioRegistry, news_response, satire_response,
+)
 
 log = logging.getLogger("worldsim_sim")
 
@@ -171,6 +175,17 @@ def create_app(
             "rejections": [r.to_json() for r in rejections],
         }
 
+    def tone_of(value: Optional[str], default: str) -> str:
+        tone = value or default
+        if tone not in TONES:
+            raise HTTPException(status_code=422, detail=f"tone must be one of {', '.join(TONES)}")
+        return tone
+
+    @app.get("/satire")
+    async def satire(tone: Optional[str] = None) -> dict[str, Any]:
+        # Released events only, so it always matches the clock (pause, seek, replay, reset).
+        return satire_response(sim.snapshot(), tone_of(tone, "satirical"))
+
     @app.post("/control")
     async def demo_control(body: dict[str, Any] = Body(...)) -> Message:
         return await control(demo, body)
@@ -197,6 +212,9 @@ def create_app(
     async def create_scenario(body: dict[str, Any] = Body(...)) -> Any:
         prompt = body.get("prompt", "")
         fixture = body.get("fixture")
+        tone = body.get("tone", DEFAULT_TONE)
+        if tone not in TONES:
+            raise HTTPException(status_code=422, detail=f"tone must be one of {', '.join(TONES)}")
         if not isinstance(prompt, str) or len(prompt) > MAX_PROMPT_CHARS:
             raise HTTPException(status_code=422, detail=f"prompt must be text of at most {MAX_PROMPT_CHARS} characters")
         if fixture is not None and not isinstance(fixture, str):
@@ -204,7 +222,7 @@ def create_app(
         if not prompt.strip():
             raise HTTPException(status_code=422, detail="Describe a scenario to simulate")
         try:
-            run = await registry.create(prompt.strip(), fixture)
+            run = await registry.create(prompt.strip(), fixture, tone)
         except RegistryFull as exc:
             return JSONResponse(status_code=429, content={"detail": str(exc)})
         return with_tick(run.to_json())
@@ -225,6 +243,12 @@ def create_app(
     async def scenario_news(run_id: str) -> dict[str, Any]:
         # Released events only (a snapshot), never the future.
         return news_response(ready(run_id).sim.snapshot())
+
+    @app.get("/scenarios/{run_id}/satire")
+    async def scenario_satire(run_id: str, tone: Optional[str] = None) -> dict[str, Any]:
+        run = find(run_id)
+        channel = ready(run_id)
+        return satire_response(channel.sim.snapshot(), tone_of(tone, run.tone))
 
     @app.post("/scenarios/{run_id}/control")
     async def scenario_control(run_id: str, body: dict[str, Any] = Body(...)) -> Message:

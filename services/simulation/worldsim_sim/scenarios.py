@@ -31,6 +31,9 @@ log = logging.getLogger("worldsim_sim")
 ROOT = Path(__file__).resolve().parents[3]
 BRANCH_ID = "main"
 MAX_PROMPT_CHARS = 2000
+# Presentation tone of a run (satire layer). "straight" is the original experience.
+TONES = ("straight", "satirical", "unhinged")
+DEFAULT_TONE = "straight"
 
 # generator(prompt, *, fixture, simulation_id, branch_id, timeout_s) -> proposed batch.
 # Raise an exception with a `code` attribute (worlddirector.DirectorError) to fail.
@@ -70,6 +73,7 @@ def director_generator(
     branch_id: str,
     timeout_s: float,
     on_stage: Callable[[str], None] | None = None,
+    tone: str = DEFAULT_TONE,
 ) -> dict:
     """The real Director: `prepare_scenario` (#50) when present, else `generate`.
 
@@ -83,6 +87,8 @@ def director_generator(
     stages = getattr(worlddirector, "Stages", None)
     if on_stage is not None and stages is not None and _accepts(call, "stages"):
         kwargs["stages"] = stages(on_stage=on_stage)
+    if tone != DEFAULT_TONE and _accepts(call, "tone"):
+        kwargs["tone"] = tone  # same model call also writes the optional payload.satire layer
     return call(prompt, fixture=fixture, simulation_id=simulation_id, branch_id=branch_id, timeout_s=timeout_s, **kwargs)
 
 
@@ -122,6 +128,12 @@ def news_response(snapshot: Message) -> dict[str, Any]:
     }
 
 
+def satire_response(snapshot: Message, tone: str) -> dict[str, Any]:
+    """Satire layer (headlines, fictional posts, absurdity index) for a released snapshot."""
+    worldwire = _import("worldwire", "newsroom")
+    return worldwire.satire_response(snapshot, tone)
+
+
 class GenerationError(Exception):
     def __init__(self, code: str, message: str) -> None:
         super().__init__(message)
@@ -159,6 +171,7 @@ class Run:
     id: str
     prompt: str
     fixture: str | None
+    tone: str = DEFAULT_TONE
     status: str = "generating"
     title: str = ""
     channel: Channel | None = None
@@ -181,6 +194,7 @@ class Run:
             "title": self.title,
             "simulation_id": self.id,
             "branch_id": BRANCH_ID,
+            "tone": self.tone,
         }
         now = time.monotonic()
         if self.status == "generating":
@@ -254,13 +268,13 @@ class ScenarioRegistry:
 
     # ---- lifecycle --------------------------------------------------------
 
-    async def create(self, prompt: str, fixture: str | None = None) -> Run:
+    async def create(self, prompt: str, fixture: str | None = None, tone: str = DEFAULT_TONE) -> Run:
         if sum(r.status == "generating" for r in self._runs.values()) >= self.max_generating:
             raise RegistryFull("Another scenario is still being prepared. Try again shortly.")
         await self._evict()
         run_id = f"run-{secrets.token_hex(5)}"
         fixture = self.fixture or fixture
-        run = Run(id=run_id, prompt=prompt, fixture=fixture, title=_title(prompt))
+        run = Run(id=run_id, prompt=prompt, fixture=fixture, tone=tone, title=_title(prompt))
         self._runs[run_id] = run
         task = asyncio.create_task(self._generate(run))
         self._tasks.add(task)
@@ -269,6 +283,8 @@ class ScenarioRegistry:
 
     async def _generate(self, run: Run) -> None:
         kwargs: dict[str, Any] = {"on_stage": run.enter} if _accepts(self.generator, "on_stage") else {}
+        if run.tone != DEFAULT_TONE and _accepts(self.generator, "tone"):
+            kwargs["tone"] = run.tone
         call = lambda: self.generator(  # noqa: E731
             run.prompt, fixture=run.fixture, simulation_id=run.id, branch_id=BRANCH_ID, timeout_s=self.timeout_s,
             **kwargs,

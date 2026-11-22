@@ -18,6 +18,20 @@ SCHEMA_VERSION: str = _EVENTS_SCHEMA["properties"]["schema_version"]["const"]
 EVENT_TYPES: tuple = tuple(_EVENT_DEF["type"]["enum"])
 CONTRACT_VISUALS: tuple = tuple(_EVENT_DEF["visual"]["enum"])
 SLUG_PATTERN: str = _EVENTS_SCHEMA["$defs"]["slug"]["pattern"]
+_SATIRE_DEF = _EVENTS_SCHEMA["$defs"]["satire"]["properties"]
+_POST_DEF = _SATIRE_DEF["posts"]["items"]["properties"]
+SATIRE_POST_KINDS: tuple = tuple(_POST_DEF["kind"]["enum"])
+SATIRE_HANDLE_PATTERN: str = _POST_DEF["handle"]["pattern"]
+SATIRE_LIMITS: dict = {
+    "headline": _SATIRE_DEF["headline"]["maxLength"],
+    "dek": _SATIRE_DEF["dek"]["maxLength"],
+    "author": _POST_DEF["author"]["maxLength"],
+    "text": _POST_DEF["text"]["maxLength"],
+    "posts": _SATIRE_DEF["posts"]["maxItems"],
+}
+# Presentation tones. "straight" is the original serious experience: no satire.
+TONES: tuple = ("straight", "satirical", "unhinged")
+DEFAULT_TONE = "straight"
 
 MAX_EVENTS = 12
 MAX_HISTORY_EVENTS = 200  # prior events shown to the model when continuing
@@ -145,6 +159,37 @@ IMPACTS_SCHEMA: dict = {
 }
 
 
+SATIRE_SCHEMA: dict = {
+    "anyOf": [
+        {
+            "type": "object",
+            "properties": {
+                "headline": {"type": "string", "description": "Deadpan satirical headline, under 100 characters."},
+                "dek": {"type": "string", "description": "One or two deadpan sentences."},
+                "posts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "author": {"type": "string", "description": "Invented organization or person."},
+                            "handle": {"type": "string", "description": "Invented @handle, letters/digits/_ only."},
+                            "kind": {"type": "string", "enum": list(SATIRE_POST_KINDS)},
+                            "text": {"type": "string", "description": "Under 220 characters."},
+                        },
+                        "required": ["author", "handle", "kind", "text"],
+                        "additionalProperties": False,
+                    },
+                },
+            },
+            "required": ["headline", "dek", "posts"],
+            "additionalProperties": False,
+        },
+        {"type": "null"},
+    ],
+    "description": "Satirical presentation layer for this event, or null in the straight tone.",
+}
+
+
 # Strict structured-output schema: every property required, no extras.
 OUTPUT_SCHEMA: dict = {
     "type": "object",
@@ -175,6 +220,7 @@ OUTPUT_SCHEMA: dict = {
                     "description": {"type": "string"},
                     **{k: _nullable(kind, hint + " Otherwise null.") for k, (kind, _, _, hint) in PAYLOAD_FIELDS.items()},
                     "impacts": IMPACTS_SCHEMA,
+                    "satire": SATIRE_SCHEMA,
                     "caused_by": {
                         "type": "array",
                         "items": {"type": "integer"},
@@ -194,6 +240,7 @@ OUTPUT_SCHEMA: dict = {
                     "description",
                     *PAYLOAD_FIELDS,
                     "impacts",
+                    "satire",
                     "caused_by",
                     "caused_by_events",
                 ],

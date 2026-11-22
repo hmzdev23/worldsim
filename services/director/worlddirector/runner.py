@@ -15,8 +15,8 @@ import re
 import subprocess
 from typing import Optional
 
-from .contract import SLUG_PATTERN
-from .director import DEFAULT_EFFORT, DEFAULT_MODEL, DEFAULT_TIMEOUT_S, Runner, _clean_scenario, generate
+from .contract import DEFAULT_TONE, SLUG_PATTERN
+from .director import DEFAULT_EFFORT, DEFAULT_MODEL, DEFAULT_TIMEOUT_S, Runner, _clean_scenario, check_tone, generate
 from .errors import DirectorError
 from .timing import Stages, stage
 
@@ -55,6 +55,7 @@ def prepare_scenario(
     effort: str = DEFAULT_EFFORT,
     runner: Runner = subprocess.run,
     stages: Optional[Stages] = None,
+    tone: str = DEFAULT_TONE,
 ) -> dict:
     """Predict a new, independent run and return its proposed event batch.
 
@@ -64,8 +65,11 @@ def prepare_scenario(
              (one of RUN_FIXTURES); the prompt is still validated.
     stages: optional `timing.Stages` to record per-stage wall time and hear
             when each stage starts (prompt, model, parse, validate).
+    tone: "straight" | "satirical" | "unhinged"; non-straight tones add the
+          optional payload.satire layer in the same model call.
     Always starts from an empty history. Raises DirectorError on any failure.
     """
+    check_tone(tone)
     for name, value in (("simulation_id", simulation_id), ("branch_id", branch_id)):
         if not isinstance(value, str) or not re.fullmatch(SLUG_PATTERN, value):
             raise DirectorError("invalid_request", f"{name} must match {SLUG_PATTERN}")
@@ -93,6 +97,7 @@ def prepare_scenario(
             timeout_s=timeout_s,
             runner=runner,
             stages=stages,
+            tone=tone,
         )
     except DirectorError:
         raise

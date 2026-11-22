@@ -24,6 +24,31 @@
       "type": "string",
       "pattern": "^evt-[A-Za-z0-9_-]{1,64}$"
     },
+    "satire": {
+      "type": "object",
+      "description": "Optional satirical presentation of this event (additive, presentation only). Written in the run's tone; never changes the event's facts, description or impacts. Every author is invented, never a real person or organization. Clients label it FICTIONAL.",
+      "required": ["headline"],
+      "additionalProperties": false,
+      "properties": {
+        "headline": { "type": "string", "minLength": 1, "maxLength": 140 },
+        "dek": { "type": "string", "minLength": 1, "maxLength": 280 },
+        "posts": {
+          "type": "array",
+          "maxItems": 4,
+          "items": {
+            "type": "object",
+            "required": ["author", "handle", "kind", "text"],
+            "additionalProperties": false,
+            "properties": {
+              "author": { "type": "string", "minLength": 1, "maxLength": 60 },
+              "handle": { "type": "string", "pattern": "^@[A-Za-z0-9_]{2,30}$" },
+              "kind": { "enum": ["airline", "government", "company", "committee", "resident", "anchor", "insurer", "think_tank", "other"] },
+              "text": { "type": "string", "minLength": 1, "maxLength": 280 }
+            }
+          }
+        }
+      }
+    },
     "impacts": {
       "type": "object",
       "description": "Fictional scenario estimates: scenario-wide totals as of this event, never deltas. Read the latest applied event at or before time T to get the state at T. These never decrease: deaths, injuries, economic_loss_usd, flooded_area_km2, contaminated_area_km2, debris_tonnes, and each aid contributor's personnel and cargo_tonnes (a contributor never disappears). These are current levels and can fall: missing, displaced, sheltered, households_without_power, households_without_water. An omitted key means no estimate yet, not zero.",
@@ -179,7 +204,8 @@
             "origin": { "type": "string", "maxLength": 80, "description": "Where it comes from: the aid sender, the attacking country, or 'unknown'." },
             "target": { "type": "string", "maxLength": 80, "description": "What was hit, such as 'power grid' or 'banking'." },
             "pathogen": { "type": "string", "maxLength": 80 },
-            "impacts": { "$ref": "#/$defs/impacts" }
+            "impacts": { "$ref": "#/$defs/impacts" },
+            "satire": { "$ref": "#/$defs/satire" }
           }
         },
         "parent_ids": {

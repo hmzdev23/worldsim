@@ -1,6 +1,6 @@
 """WORLD//SIM World Director (DIR-001)."""
 
-from .contract import EVENT_TYPES, OUTPUT_SCHEMA, SCHEMA_VERSION, VISUALS
+from .contract import DEFAULT_TONE, EVENT_TYPES, OUTPUT_SCHEMA, SCHEMA_VERSION, TONES, VISUALS
 from .director import build_prompt, generate, load_fixture, run_codex
 from .errors import DirectorError
 from .runner import RUN_FIXTURES, prepare_scenario, public_error
@@ -9,7 +9,9 @@ from .timing import Stages
 from .validate import build_batch
 
 __all__ = [
+    "DEFAULT_TONE",
     "EVENT_TYPES",
+    "TONES",
     "OUTPUT_SCHEMA",
     "SCHEMA_VERSION",
     "VISUALS",
