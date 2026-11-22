@@ -935,6 +935,64 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, a:focus-visib
 .step-button { display: grid; place-items: center; min-width: 34px; min-height: 34px; padding: 0 7px; border: 1px solid var(--line); border-radius: 5px; color: var(--muted); background: transparent; }
 .step-button:hover:enabled { background: var(--raised); color: var(--text); }
 .step-button:disabled { opacity: 0.45; }
-.headline-alert-timer { height: 3px; background: var(--line); overflow: hidden; }
-.headline-alert-timer i { display: block; height: 100%; width: 100%; background: var(--accent); transform-origin: left; animation: headline-timer linear forwards; }
-@keyframes headline-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+
+/* AURA: a paper atlas around a charcoal map and command surface. */
+:root {
+  color-scheme: light;
+  --canvas: #e2e4e6; --surface: #f3f4f4; --raised: #d9dcde; --line: #b5babe;
+  --text: #171b21; --muted: #48515a; --accent: #2c2e33; --accent-ink: #fff; --radius: 3px;
+  --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+}
+body { font-family: Inter, "Helvetica Neue", Arial, sans-serif; }
+.simulation-shell { width: min(100%, 1512px); padding-inline: clamp(16px, 4vw, 64px); }
+.masthead { min-height: 72px; border-bottom: 1px solid var(--accent); }
+.wordmark { font-weight: 650; letter-spacing: -.06em; }
+.brand-icon { background: var(--accent); color: #fff; border: 0; border-radius: 3px; }
+.mode-label, .setup-category, .run-bar span, .inspector-meta, .headline-alert-meta, .map-caption span, .timeline-meta { font-family: var(--mono); }
+.sim-intro {
+  position: relative; isolation: isolate; overflow: hidden; align-content: end;
+  min-height: clamp(230px, 23vw, 335px); padding: clamp(24px, 3vw, 48px);
+  color: #f5f5f6; background: #2c2e33;
+}
+.sim-intro::after { content: ""; position: absolute; z-index: -1; inset: 8% -3% 8% 38%; background: url("/atlas.svg") center / contain no-repeat; opacity: .65; }
+.sim-intro h2 { font-size: clamp(52px, 6.5vw, 88px); font-weight: 500; line-height: 1.04; }
+.sim-intro p:last-child { max-width: 31ch; color: #e2e4e6; text-wrap: balance; }
+.view-home { display: grid; grid-template-columns: minmax(0,1.25fr) minmax(300px,.85fr); column-gap: clamp(24px,4vw,64px); align-content: start; }
+.view-home .masthead { grid-column: 1/-1; margin-bottom: 32px; }
+.view-home .sim-intro { grid-area: 2/1; }
+.view-home .scenario-launch { grid-area: 3/1; align-self: start; padding: 24px; gap: 14px; margin: 0; border: 0; border-radius: 0 0 3px 3px; }
+.view-home .starters { grid-area: 2/2/5/3; align-self: start; gap: 12px; margin: 0 0 40px; }
+.scenario-input-row textarea { background: #fff; min-height: 76px; border-color: #acb1b5; }
+.scenario-input-row { grid-template-columns: 1fr; }
+.generate-button { justify-self: start; padding-inline: 18px; border-radius: 8px; }
+.starters-heading h2 { font-size: 25px; font-weight: 500; }
+.starters .setup-scenarios { grid-template-columns: 1fr; gap: 0; border-top: 1px solid var(--accent); }
+.starters .setup-scenario { grid-template-columns: minmax(0,1.25fr) 1fr 18px; align-items: center; align-content: center; gap: 8px; padding: 12px 8px; min-height: 43px; background: transparent; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; }
+.setup-scenario strong { grid-row: 1; grid-column: 1; }
+.setup-scenario .setup-category { grid-row: 1; grid-column: 2; color: var(--muted); font-size: 10px; }
+.setup-scenario .setup-selection { position: static; grid-column: 3; width: 15px; height: 15px; }
+.starters .setup-scenario:hover:enabled, .starters .setup-scenario[aria-pressed=true] { background: var(--surface); box-shadow: inset 3px 0 var(--accent); }
+.setup-primary, .presentation-controls button[aria-pressed=true] { background: var(--accent); color: white; border-color: var(--accent); }
+.run-bar { padding-block: 20px; }
+.run-bar-title { font-weight: 500; font-size: clamp(22px,3vw,38px); }
+.map-caption, .headline-alert { --text: #f6f7f8; --muted: #c4c9cc; --line: #55595e; color: var(--text); }
+.headline-alert { background: #2c2e33; border-radius: 3px; }
+.headline-alert-bar, .headline-alert-actions { background: #25272b; padding: 8px 12px; }
+.headline-alert-dek { display: block; overflow: visible; color: #e2e4e6; }
+.headline-alert-actions .headline-alert-advance { min-height: 34px; padding-inline: 12px; background: #e2e4e6; color: #171b21; }
+.world-wire-list { gap: 0; }
+.world-wire .wire-card { padding: 12px; border-radius: 0; }
+.wire-headline { font-size: 15px; font-weight: 700; }
+.presentation-controls { border-radius: 3px; }
+.wire-card[aria-pressed=true] { background: #dce0e2; }
+@media (max-width: 760px) {
+  .view-home { display: block; }
+  .view-home .masthead { margin-bottom: 16px; }
+  .view-home .starters { margin-top: 26px; }
+  .sim-intro::after { inset: 0 -15% 26% 28%; opacity: .5; }
+}
+
+.speed-control button[aria-pressed="true"], .setup-primary:hover:enabled,
+.generate-button:hover:enabled, .play-button:hover:enabled { background: #42474e; border-color: #42474e; color: #fff; }
+.setup-primary { box-shadow: none; }
+.scenario-launch-footer .launch-error, .watch-inputs .watch-input-note { color: #932e2a; }
