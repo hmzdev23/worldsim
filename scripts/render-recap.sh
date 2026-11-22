@@ -60,7 +60,7 @@ else
   has_module services/newsroom worldwire.storyboard \
     || die "storyboard step is missing: worldwire.storyboard (RECAP-001, #67) isn't on this branch yet. Pass a storyboard.json instead."
   note "1/3 building the storyboard from $input"
-  PYTHONPATH="$ROOT/services/newsroom${PYTHONPATH:+:$PYTHONPATH}" "${PY[@]}" -m worldwire.storyboard "$input" > "$work_tmp/storyboard.json" \
+  PYTHONIOENCODING=utf-8 PYTHONPATH="$ROOT/services/newsroom${PYTHONPATH:+:$PYTHONPATH}" "${PY[@]}" -m worldwire.storyboard "$input" > "$work_tmp/storyboard.json" \
     || die "worldwire.storyboard failed for $input"
 fi
 sim="$(json_field "$work_tmp/storyboard.json" simulation_id)"

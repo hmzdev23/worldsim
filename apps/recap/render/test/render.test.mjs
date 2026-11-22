@@ -91,6 +91,22 @@ test("missing steps fail with a clear message", async () => {
     /Narration clip for scene s01-hook is missing/);
 });
 
+test("the committed Japan and Iceland sample storyboards (RECAP-001) load and render reproducibly", async () => {
+  for (const name of ["japan-earthquake", "iceland-eruption"]) {
+    const sample = join(HERE, "..", "..", "samples", `${name}.storyboard.json`);
+    if (!existsSync(sample)) continue;  // samples land with #67
+    const scenes = JSON.parse(readFileSync(sample, "utf-8")).scenes;
+    const dir = scratch();
+    const first = await render({ storyboard: sample, stub: true, out: join(dir, "a.mp4"), maxFrames: 20 });
+    const second = await render({ storyboard: sample, stub: true, out: join(dir, "b.mp4"), maxFrames: 20 });
+    assert.deepEqual(second.hashes, first.hashes, name);
+    assert.deepEqual(first.timing.scenes.map((s) => s.id), scenes.map((s) => s.id), name);
+    const seconds = scenes.reduce((sum, s) => sum + s.min_duration_s, 0);
+    assert.equal(first.timing.total_frames, Math.round(seconds * 30), name);
+    assert.equal(first.frames, 20);
+  }
+});
+
 test("storyboard format checks", () => {
   assert.deepEqual(checkStoryboard(board), { width: 1080, height: 1920, fps: 30 });
   assert.throws(() => checkStoryboard({ ...board, scenes: [] }), /no scenes/);
