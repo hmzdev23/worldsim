@@ -34,6 +34,50 @@ try {
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto("http://127.0.0.1:4174/");
   await page.waitForFunction(() => !!window.recap);
+  const motion = await page.evaluate(async () => {
+    const { createScene, createCamera } = await import("/src/three-scenes.ts");
+    const shot = { kind: "vignette", data: { vignette: "evacuation" } };
+    const collect = (time) => {
+      const characters = [];
+      createScene(shot, time, 0.5).traverse((object) => {
+        if (object.name === "recap-character")
+          characters.push(object.position.x);
+      });
+      return characters;
+    };
+    return {
+      first: collect(0),
+      later: collect(2),
+      hookCamera: createCamera(0, "hook").position.toArray(),
+      movingCamera: createCamera(3, "hook").position.toArray(),
+      streetCamera: createCamera(0, "vignette", "power_out").position.toArray(),
+      aerialCamera: createCamera(
+        0,
+        "vignette",
+        "evacuation",
+      ).position.toArray(),
+    };
+  });
+  assert(motion.first.length >= 3, "evacuation should have a crowd");
+  assert.notDeepEqual(motion.first, motion.later, "crowd should move");
+  assert.notDeepEqual(
+    motion.hookCamera,
+    motion.movingCamera,
+    "camera should move",
+  );
+  assert.notDeepEqual(
+    motion.streetCamera,
+    motion.aerialCamera,
+    "camera angles should vary",
+  );
+  await page.evaluate(() => {
+    const original = CanvasRenderingContext2D.prototype.fillText;
+    window.__recapText = [];
+    CanvasRenderingContext2D.prototype.fillText = function (text, ...args) {
+      window.__recapText.push(String(text));
+      return original.call(this, text, ...args);
+    };
+  });
   let example;
   for (const name of ["japan-earthquake", "iceland-eruption"]) {
     const storyboard = JSON.parse(
@@ -64,6 +108,13 @@ try {
       result.identical.every(Boolean),
       `${name}: frame depends on previous frame`,
     );
+    assert.deepEqual(
+      result.timeline.scenes.map((scene) => scene.id),
+      storyboard.scenes
+        .filter((scene) => scene.kind !== "explainer")
+        .map((scene) => scene.id),
+      `${name}: recap must include only the timeline scenes, in order`,
+    );
     assert.equal(
       result.timeline.scenes[0].end_frame,
       Math.ceil(7.41 * storyboard.format.fps),
@@ -77,6 +128,11 @@ try {
         result.timeline.scenes[i].start_frame,
         result.timeline.scenes[i - 1].end_frame,
       );
+    const visibleText = await page.evaluate(() => window.__recapText.join(" "));
+    assert(
+      !/fictional|simulated/i.test(visibleText),
+      "recap should not show the old labels",
+    );
     console.log(
       `${name}: ${result.identical.length} deterministic scenes and narration ranges`,
     );
