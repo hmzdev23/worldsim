@@ -1,0 +1,5 @@
+Owner: Amir. Scope services/newsroom/ and tests/newsroom/. Coordinate frontend files with Hamza and simulation files with Anthony.
+
+Improve live WORLD//WIRE so successive rapid events remain distinct and engaging as overlay alerts, without changing existing feed fields. Ensure arbitrary scenario types, fictional estimates and follow-up context read clearly, with concise headlines and supporting lines. Test pandemic spread, infrastructure, disaster, aid/transport and recovery using deterministic fixtures and existing event fields. Keep output grounded in applied events and preserve run isolation, snapshot/seek/replay behavior, and identical story copy in alert and archive. Avoid asserting transport routes or infection prevalence that events do not provide.
+
+Own a cross-service integration test in tests/integration/ that runs a non-Japan scenario through the accelerated 5%-paced stream and newsroom, checking ordered alerts, no lost simultaneous events, no future news after seek, and reproducible playback. Coordinate Anthony's pacing semantics before finalizing it. No web or simulation source edits.

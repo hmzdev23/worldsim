@@ -1,0 +1,7 @@
+Owner: Hamza. Scope: apps/web/components/simulation.tsx, run-console.tsx, headline-alert.tsx, impact-dashboard.tsx, world-wire.tsx, apps/web/app/styles.css, apps/web/lib/scenario-api.ts, desktop E2E. Coordinate before editing world-map.tsx (Mathys owns it).
+
+Build a visually engaging desktop experience using the supplied design reference, SF Pro system font, neutral dark surfaces, and Motion for React. Display each newly applied WORLD//WIRE headline prominently over the map, with a supporting line, time, category, severity, focus action, queue, dismiss/advance, and playback continuing underneath. The existing alert is a starting point. Animate real reported impact values and trends as events arrive. Use meaningful chart labels, time axes, and empty states. Do not invent or interpolate fictional data as measured values. Keep focus, reduced-motion, seek/replay and run-isolation correct. Provide helpful generation progress and elapsed time based on actual service state, without inventing a completion percentage.
+
+Integrate Anthony's scenario-relative playback controls and Mathys's map renderer after their PRs land. Desktop checks only. Validate with deterministic Japan, pandemic and non-Japan fixtures, including rapid events, long and short durations, old news arriving after seek, and overlay visibility.
+
+Issue #52 remains open pending the real runner check and integration. Base on latest main and do not overwrite the local unmerged UI work.

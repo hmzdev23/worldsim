@@ -1,0 +1,333 @@
+{
+  "schema_version": "0.1",
+  "simulation_id": "recap-iceland-eruption",
+  "branch_id": "main",
+  "title": "Volcano erupts near Reykjanes Peninsula, Iceland (VEI 4)",
+  "label": "FICTIONAL SIMULATION",
+  "hazard": "volcanic_eruption",
+  "format": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30
+  },
+  "scenes": [
+    {
+      "id": "s01-hook-volcanic-eruption",
+      "beat": "hook",
+      "kind": "hook",
+      "min_duration_s": 6,
+      "event_ids": [
+        "evt-0001"
+      ],
+      "sim_time_label": "DAY 1 · 03:10",
+      "overlay": "VOLCANO ERUPTS IN ICELAND",
+      "caption": "Volcano erupts near Reykjanes Peninsula, Iceland (VEI 4)",
+      "narration": "In this fictional simulation: Volcano erupts near Reykjanes Peninsula, Iceland (VEI 4). A fissure eruption opens on the Reykjanes Peninsula, sending lava toward Grindavik and ash high into the sky.",
+      "data": {
+        "hazard": "volcanic_eruption",
+        "place": "Reykjanes Peninsula",
+        "country": "Iceland",
+        "lat": 63.88,
+        "lon": -22.27,
+        "vei": 4,
+        "radius_km": 40
+      }
+    },
+    {
+      "id": "s02-first-hours-evacuation",
+      "beat": "first_hours",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0002"
+      ],
+      "sim_time_label": "DAY 1 · 03:50",
+      "overlay": "3,700 DISPLACED",
+      "caption": "Evacuations ordered in Grindavik, Iceland",
+      "narration": "Evacuations ordered in Grindavik, Iceland. An estimated 3,700 people have been forced from their homes.",
+      "data": {
+        "vignette": "evacuation",
+        "event_type": "evacuation",
+        "severity": 0.6,
+        "place": "Grindavik",
+        "country": "Iceland",
+        "lat": 63.84,
+        "lon": -22.43,
+        "figure": {
+          "key": "displaced",
+          "value": 3700,
+          "display": "3,700"
+        }
+      }
+    },
+    {
+      "id": "s03-first-hours-power-out",
+      "beat": "first_hours",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0003"
+      ],
+      "sim_time_label": "DAY 1 · 07:00",
+      "overlay": "9,000 HOMES WITHOUT POWER",
+      "caption": "Geothermal plant knocked out in Svartsengi Power Station, Iceland",
+      "narration": "Geothermal plant knocked out in Svartsengi Power Station, Iceland. An estimated 9,000 households are without power.",
+      "data": {
+        "vignette": "power_out",
+        "event_type": "infrastructure_failure",
+        "severity": 0.7,
+        "place": "Svartsengi Power Station",
+        "country": "Iceland",
+        "lat": 63.88,
+        "lon": -22.43,
+        "figure": {
+          "key": "households_without_power",
+          "value": 9000,
+          "display": "9,000"
+        }
+      }
+    },
+    {
+      "id": "s04-first-hours-contamination",
+      "beat": "first_hours",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0004"
+      ],
+      "sim_time_label": "DAY 1 · 15:00",
+      "overlay": "380 KM² CONTAMINATED",
+      "caption": "Contamination zone declared around Keflavik, Iceland",
+      "narration": "Contamination zone declared around Keflavik, Iceland. An estimated 380 km² of land is contaminated.",
+      "data": {
+        "vignette": "contamination",
+        "event_type": "contamination",
+        "severity": 0.5,
+        "place": "Keflavik",
+        "country": "Iceland",
+        "lat": 64.0,
+        "lon": -22.56,
+        "figure": {
+          "key": "contaminated_area_km2",
+          "value": 380,
+          "display": "380 km²"
+        }
+      }
+    },
+    {
+      "id": "s05-first-hours-economic",
+      "beat": "first_hours",
+      "kind": "vignette",
+      "min_duration_s": 4,
+      "event_ids": [
+        "evt-0005"
+      ],
+      "sim_time_label": "DAY 1 · 18:20",
+      "overlay": "$1.9 BILLION IN LOSSES",
+      "caption": "Economic shock hits London Heathrow, United Kingdom",
+      "narration": "Economic shock hits London Heathrow, United Kingdom. Losses so far are estimated at $1.9 billion.",
+      "data": {
+        "vignette": "economic",
+        "event_type": "economic_shock",
+        "severity": 0.6,
+        "place": "London Heathrow",
+        "country": "United Kingdom",
+        "lat": 51.47,
+        "lon": -0.45,
+        "figure": {
+          "key": "economic_loss_usd",
+          "value": 1900000000,
+          "display": "$1.9 billion"
+        }
+      }
+    },
+    {
+      "id": "s06-explainer-volcanic-eruption",
+      "beat": "explainer",
+      "kind": "explainer",
+      "min_duration_s": 8,
+      "event_ids": [
+        "evt-0001"
+      ],
+      "sim_time_label": "DAY 1 · 03:10",
+      "overlay": "HOW AN ERUPTION UNFOLDS",
+      "caption": "Illustration, not to scale.",
+      "narration": "Illustration: magma rises from a chamber below the surface and forces a fissure open. Lava pours out while gas and ash are thrown high into the sky and drift with the wind.",
+      "data": {
+        "hazard": "volcanic_eruption",
+        "place": "Reykjanes Peninsula",
+        "country": "Iceland",
+        "lat": 63.88,
+        "lon": -22.27,
+        "vei": 4,
+        "radius_km": 40,
+        "illustration": true
+      }
+    },
+    {
+      "id": "s07-response-response",
+      "beat": "response",
+      "kind": "map",
+      "min_duration_s": 8,
+      "event_ids": [
+        "evt-0006",
+        "evt-0007",
+        "evt-0008"
+      ],
+      "sim_time_label": "DAY 3 · 12:00",
+      "overlay": "2 COUNTRIES SEND HELP",
+      "caption": "Power returning across Svartsengi Power Station, Iceland",
+      "narration": "Help arrives from Denmark and Norway. Power returning across Svartsengi Power Station, Iceland.",
+      "data": {
+        "places": [
+          {
+            "place": "Reykjanes Peninsula",
+            "country": "Iceland",
+            "lat": 63.88,
+            "lon": -22.27,
+            "event_type": "volcanic_eruption"
+          },
+          {
+            "place": "Grindavik",
+            "country": "Iceland",
+            "lat": 63.84,
+            "lon": -22.43,
+            "event_type": "evacuation"
+          },
+          {
+            "place": "Svartsengi Power Station",
+            "country": "Iceland",
+            "lat": 63.88,
+            "lon": -22.43,
+            "event_type": "infrastructure_failure"
+          },
+          {
+            "place": "Keflavik",
+            "country": "Iceland",
+            "lat": 64.0,
+            "lon": -22.56,
+            "event_type": "contamination"
+          },
+          {
+            "place": "London Heathrow",
+            "country": "United Kingdom",
+            "lat": 51.47,
+            "lon": -0.45,
+            "event_type": "economic_shock"
+          },
+          {
+            "place": "Reykjavik",
+            "country": "Iceland",
+            "lat": 64.15,
+            "lon": -21.94,
+            "event_type": "international_aid"
+          }
+        ],
+        "aid": [
+          {
+            "country": "Norway",
+            "event_id": "evt-0006",
+            "minutes": 1500,
+            "place": "Reykjavik",
+            "destination_country": "Iceland",
+            "lat": 64.15,
+            "lon": -21.94,
+            "personnel": 60,
+            "cargo_tonnes": 55,
+            "cargo": "gas masks and field shelters"
+          },
+          {
+            "country": "Denmark",
+            "event_id": "evt-0007",
+            "minutes": 2000,
+            "place": "Reykjavik",
+            "destination_country": "Iceland",
+            "lat": 64.15,
+            "lon": -21.94,
+            "personnel": 35,
+            "cargo_tonnes": 42,
+            "cargo": "air-quality monitors and generators"
+          }
+        ],
+        "recovery": [
+          {
+            "event_id": "evt-0008",
+            "minutes": 3600,
+            "place": "Svartsengi Power Station",
+            "country": "Iceland",
+            "lat": 63.88,
+            "lon": -22.43,
+            "headline": "Power returning across Svartsengi Power Station, Iceland"
+          }
+        ]
+      }
+    },
+    {
+      "id": "s08-final-final",
+      "beat": "final",
+      "kind": "stats_card",
+      "min_duration_s": 8,
+      "event_ids": [
+        "evt-0008"
+      ],
+      "sim_time_label": "DAY 3 · 12:00",
+      "overlay": "FINAL SIMULATED ESTIMATES",
+      "caption": "Fictional estimates after 3 days.",
+      "narration": "After 3 days, the simulation estimates 1 dead, 150 injured. Every number here is fictional.",
+      "data": {
+        "stats": [
+          {
+            "key": "deaths",
+            "label": "Deaths",
+            "value": 1,
+            "display": "1"
+          },
+          {
+            "key": "injuries",
+            "label": "Injured",
+            "value": 150,
+            "display": "150"
+          },
+          {
+            "key": "displaced",
+            "label": "Displaced",
+            "value": 3500,
+            "display": "3,500"
+          },
+          {
+            "key": "sheltered",
+            "label": "In shelters",
+            "value": 2200,
+            "display": "2,200"
+          },
+          {
+            "key": "households_without_power",
+            "label": "Homes without power",
+            "value": 1200,
+            "display": "1,200"
+          },
+          {
+            "key": "households_without_water",
+            "label": "Homes without water",
+            "value": 2500,
+            "display": "2,500"
+          },
+          {
+            "key": "economic_loss_usd",
+            "label": "Economic loss",
+            "value": 2150000000,
+            "display": "$2.1 billion"
+          },
+          {
+            "key": "contaminated_area_km2",
+            "label": "Contaminated area",
+            "value": 410,
+            "display": "410 km²"
+          }
+        ],
+        "aid_countries": 2,
+        "days": 3
+      }
+    }
+  ]
+}

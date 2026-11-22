@@ -6,10 +6,12 @@ export function HeadlineAlert({
   item,
   queuedCount,
   onAdvance,
+  onDismiss,
 }: {
   item: NewsItem | undefined;
   queuedCount: number;
   onAdvance: () => void;
+  onDismiss: () => void;
 }) {
   const hasNext = queuedCount > 0;
   const reducedMotion = useReducedMotion();
@@ -20,9 +22,9 @@ export function HeadlineAlert({
         {item && `Simulated headline. ${item.headline}. ${item.dek}`}
       </div>
       {item && (
-        <section className="headline-alert" aria-labelledby="map-headline-title">
+        <section className="headline-alert" data-severity={item.severity >= 0.75 ? "high" : item.severity >= 0.4 ? "moderate" : "low"} aria-labelledby="map-headline-title">
           <header className="headline-alert-bar">
-            <span><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE</span>
+            <span><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE <span className="headline-alert-live">LIVE</span></span>
             <span>{item.label}</span>
           </header>
           <motion.div
@@ -32,11 +34,13 @@ export function HeadlineAlert({
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.16 }}
           >
-            <p className="headline-alert-meta">
-              <span>{item.sim_time_label}</span>
+            <div className="headline-alert-meta">
+              <time>{item.sim_time_label}</time>
               <span>{item.event_type.replaceAll("_", " ")}</span>
-              <span>Severity {Math.round(item.severity * 100)}%</span>
-            </p>
+              <span className="headline-alert-severity" data-level={item.severity >= 0.75 ? "high" : item.severity >= 0.4 ? "moderate" : "low"}>
+                Severity {Math.round(item.severity * 100)}%
+              </span>
+            </div>
             <h2 id="map-headline-title">{item.headline}</h2>
             <p className="headline-alert-dek">{item.dek}</p>
           </motion.div>
@@ -45,10 +49,12 @@ export function HeadlineAlert({
               <Crosshair size={17} aria-hidden="true" /> Focus map
             </button>
             <div className="headline-alert-queue">
-              {hasNext && <span>{queuedCount} queued</span>}
-              <button className="headline-alert-advance" type="button" onClick={onAdvance}>
-                {hasNext ? "Next headline" : "Dismiss"}
-                {hasNext ? <CaretRight size={14} aria-hidden="true" /> : <X size={14} aria-hidden="true" />}
+              <span>{hasNext ? `${queuedCount} queued` : "Latest headline"}</span>
+              {hasNext && <button className="headline-alert-advance" type="button" onClick={onAdvance}>
+                Next headline <CaretRight size={14} aria-hidden="true" />
+              </button>}
+              <button className="headline-alert-dismiss" type="button" onClick={onDismiss}>
+                Dismiss <X size={14} aria-hidden="true" />
               </button>
             </div>
           </footer>

@@ -154,3 +154,32 @@ test("an event from a different scenario can be dismissed and duplicate frames s
   await expect(page.locator(".timeline-meta")).toContainText("DAY 1 · 06:44");
   await expect(alert).toHaveCount(0);
 });
+
+test("an applied event delivered late after a seek does not create a headline", async ({ page }) => {
+  const startMinute = quake.sim_time_minutes - 1;
+  const staleEvent = { ...quake, sim_time_minutes: startMinute };
+  const header = { schema_version: fixture.schema_version, simulation_id: fixture.simulation_id, branch_id: fixture.branch_id };
+
+  await page.routeWebSocket("**/stream", (socket) => {
+    let minute = startMinute;
+    const send = (data: object) => socket.send(JSON.stringify({ ...header, sim_time_minutes: minute, ...data }));
+    socket.onMessage((raw) => {
+      const control = JSON.parse(String(raw));
+      if (control.action === "seek") {
+        minute = control.sim_time_minutes;
+        send({ kind: "snapshot", playback: { state: "paused", speed: 1 }, events: [] });
+        send({ kind: "event", event: staleEvent });
+      } else if (control.action === "play") {
+        minute = quake.sim_time_minutes;
+        send({ kind: "event", event: quake });
+        send({ kind: "clock", playback: { state: "playing", speed: 1 } });
+      }
+    });
+  });
+
+  await page.goto("/");
+  const alert = page.locator(".headline-alert");
+  await expect(alert).toHaveCount(0);
+  await page.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(alert.getByRole("heading")).toHaveText(firstReport.headline);
+});

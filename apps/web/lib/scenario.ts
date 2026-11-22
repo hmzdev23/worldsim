@@ -44,13 +44,53 @@ export type ScenarioEvent = {
 
 export type RunIdentity = { simulation_id: string; branch_id: string };
 
+// How the server paces a run's clock (SIM-005, #58): HTTP-only, from /timeline.
+export type Pacing =
+  | { mode: "relative"; fraction_per_tick: number; span_minutes: number; minutes_per_tick: number; tick_seconds: number }
+  | { mode: "fixed"; minutes_per_tick: number; tick_seconds: number };
+
 export type ScenarioRun = RunIdentity & {
   id: string;
   title: string;
   startMinute: number;
   endMinute: number;
   firstEvent: ScenarioEvent;
+  pacing?: Pacing;
 };
+
+// What the scenario service is doing while a run generates (GET /scenarios/{id}).
+export type GenerationProgress = { stage?: string; elapsedSeconds?: number };
+
+const stageLabels: Record<string, string> = {
+  queued: "Waiting for the Director",
+  starting: "Starting the Director",
+  prompt: "Checking the prompt",
+  model: "The Director is predicting events",
+  fixture: "Loading the sample scenario",
+  parse: "Reading the prediction",
+  validate: "Validating events",
+  applying: "Loading events into the simulation",
+};
+
+export function generationStageLabel(stage?: string) {
+  return stage ? stageLabels[stage] ?? `Working (${stage.replaceAll("_", " ")})` : undefined;
+}
+
+function formatDuration(seconds: number) {
+  return seconds >= 60
+    ? `${Math.floor(seconds / 60)}m ${String(Math.round(seconds % 60)).padStart(2, "0")}s`
+    : `${seconds}s`;
+}
+
+/** "≈5% of the scenario per second" and the wall time left at this speed, or undefined. */
+export function pacingSummary(pacing: Pacing | undefined, speed: number, remainingMinutes: number) {
+  if (!pacing || pacing.mode !== "relative" || !(pacing.tick_seconds > 0)) return undefined;
+  const percent = Math.round(pacing.fraction_per_tick * 100 * speed * 10) / 10;
+  const per = pacing.tick_seconds === 1 ? "second" : `${pacing.tick_seconds} seconds`;
+  const step = pacing.minutes_per_tick * speed;
+  const left = step > 0 ? Math.ceil(Math.max(0, remainingMinutes) / step - 1e-9) * pacing.tick_seconds : 0;
+  return { rate: `≈${percent}% of the scenario per ${per}`, left: left > 0 ? `about ${formatDuration(left)} left` : "at the end" };
+}
 
 export type Playback = { state: "playing" | "paused"; speed: number };
 export type StreamMessage = RunIdentity & { sim_time_minutes: number } & (
