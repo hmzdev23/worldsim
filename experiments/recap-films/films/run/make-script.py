@@ -1,86 +1,60 @@
 #!/usr/bin/env python3
-"""Write script.json: a satirical recap film of ONE simulation run, seen through one invented local.
+"""Write a chronological recap from one run's canonical result.
 
-The film follows the run's canonical result (GET /scenarios/{id}/result), the
-same events the map played: every shot is one of the run's events, in the
-run's order, at its place and simulated time. Nothing is added to the chain.
-The humor format is the one shared by every recap film:
-
-* facts from the run are narrated plainly;
-* the jokes arrive as notifications on the person's phone, taken from
-  worldwire.satire for that very event (institutions only, never victims);
-* a running gag, picked by the run's seed, pays off at the end;
-* a stats card closes: notifications, the absurdity index, the gag stat.
-
-Casualty estimates are never used, and strikes or detonations carry no joke.
-
-    python3 make-script.py --run RUN_ID [--server http://127.0.0.1:8765]
+    python3 make-script.py --run RUN_ID
     python3 make-script.py --result result.json
-    python3 make-script.py --fixture tsunami [--seed 1234]     # offline, like a starter run
-    options: [--tone satirical] [--name NAME]
+    python3 make-script.py --fixture tsunami --seed 1234
 """
 from __future__ import annotations
 
 import argparse
 import json
 import random
+import re
 import sys
 import urllib.request
+from collections import Counter
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = next(p for p in HERE.parents if (p / "services" / "newsroom").is_dir())
 sys.path[:0] = [str(ROOT / "services" / "newsroom"), str(ROOT / "services" / "director")]
 
-from worldwire import satire_for_events  # noqa: E402
+from worlddirector.story import headline_events  # noqa: E402
 from worldwire.wire import format_sim_time  # noqa: E402
 
 COUNTRIES = ROOT / "apps" / "web" / "public" / "countries.geojson"  # the live map's own country shapes
-MAX_EVENT_SHOTS = 6       # plus the opening shot: at most 7 shots, so the film stays under 50 seconds
-MAX_WORDS = 15            # per narration line (about 5 seconds of voice)
+MIN_EVENT_SHOTS, MAX_EVENT_SHOTS = 5, 6
 SECONDS_PER_WORD, SHOT_OVERHEAD, OUTRO = .36, .8, 3.5
 BUDGET = 46.0             # estimated seconds before make-audio.py's hard 50-second check
 
-WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine",
-         10: "ten", 11: "eleven", 12: "twelve", 13: "thirteen", 14: "fourteen", 15: "fifteen", 20: "twenty", 30: "thirty"}
-
 # Event type -> (scene, what happened). Scenes are drawn by storyboard.js; phrases are plain facts.
 EVENTS = {
-    "earthquake": ("quake", "an earthquake struck {at}"),
-    "aftershock": ("quake", "a strong aftershock struck {at}"),
-    "tsunami_warning": ("warning", "tsunami warnings went out {at}"),
-    "volcanic_eruption": ("eruption", "an eruption began {at}"),
-    "meteor_impact": ("sky", "a meteor came down {at}"),
-    "extreme_weather": ("storm", "extreme weather struck {at}"),
-    "flooding": ("flood", "floodwater spread {at}"),
-    "disease_outbreak": ("outbreak", "a new illness was reported {at}"),
-    "military_strike": ("map", "a military strike was reported {at}"),
-    "nuclear_detonation": ("map", "a nuclear detonation was reported {at}"),
-    "cyber_attack": ("outage", "a cyberattack took systems down {at}"),
-    "alien_contact": ("sky", "an unidentified object was sighted {at}"),
-    "other_hazard": ("warning", "{label} was reported {at}"),
-    "infrastructure_failure": ("outage", "power and services failed {at}"),
-    "government_response": ("committee", "officials announced emergency measures {at}"),
-    "international_aid": ("aid", "aid arrived {at}{origin}"),
-    "evacuation": ("evacuation", "evacuations began {at}"),
-    "contamination": ("outbreak", "contamination was confirmed {at}"),
-    "economic_shock": ("market", "markets fell sharply {at}"),
-    "civil_unrest": ("street", "protests broke out {at}"),
-    "conflict_escalation": ("street", "the conflict escalated {at}"),
-    "ceasefire": ("tv", "a ceasefire was agreed {at}"),
-    "recovery": ("home-again", "recovery began {at}"),
+    "earthquake": ("quake", "an earthquake struck{at}"),
+    "aftershock": ("aftershock", "a strong aftershock struck{at}"),
+    "tsunami_warning": ("warning", "tsunami warnings went out{at}"),
+    "volcanic_eruption": ("eruption", "a volcano erupted{at}"),
+    "meteor_impact": ("sky", "a meteor came down{at}"),
+    "extreme_weather": ("map", "extreme weather struck{at}"),
+    "flooding": ("flood", "floodwater spread{at}"),
+    "disease_outbreak": ("outbreak", "a new illness was reported{at}"),
+    "military_strike": ("map", "a military strike was reported{at}"),
+    "nuclear_detonation": ("map", "a nuclear detonation was reported{at}"),
+    "cyber_attack": ("map", "a cyberattack took systems down{at}"),
+    "alien_contact": ("sky", "an unidentified object was sighted{at}"),
+    "other_hazard": ("map", "{label} was reported{at}"),
+    "infrastructure_failure": ("map", "infrastructure failed{at}"),
+    "government_response": ("committee", "officials announced emergency measures{at}"),
+    "international_aid": ("aid", "aid arrived{at}{origin}"),
+    "evacuation": ("evacuation", "evacuations began{at}"),
+    "contamination": ("map", "contamination was confirmed{at}"),
+    "economic_shock": ("map", "the economy was disrupted{at}"),
+    "civil_unrest": ("street", "protests broke out{at}"),
+    "conflict_escalation": ("map", "the conflict escalated{at}"),
+    "ceasefire": ("tv", "a ceasefire was agreed{at}"),
+    "recovery": ("map", "recovery began{at}"),
 }
 FACILITIES = ("station", "airport", "plant", "hub", "heathrow", "port", "base", "centre", "center", "headquarters")
-CALM_ENDINGS = {"recovery", "ceasefire", "international_aid", "government_response"}  # the film can end at home
-NO_JOKE = {"military_strike", "nuclear_detonation"}  # shown plainly, like the standoff film's detonation
-PREFER = {  # which satire post fits each scene best
-    "quake": ("company", "anchor"), "warning": ("anchor", "official"), "eruption": ("airline", "company"),
-    "sky": ("anchor", "official"), "storm": ("company", "airline"), "flood": ("company", "official"),
-    "outbreak": ("official", "company"), "outage": ("company",), "committee": ("committee", "official"),
-    "aid": ("committee",), "evacuation": ("airline", "official"), "market": ("company", "anchor"),
-    "street": ("anchor", "official"), "tv": ("committee",), "home-again": ("company",),
-}
-
 # Plausible locals for the setting (first event's country): names, model and colouring.
 # The protagonist always wears yellow; everyone else is drawn from the same palette.
 REGIONS = {
@@ -102,50 +76,13 @@ REGIONS = {
              "skin": [0xe0b48e, 0xcf9e78, 0xb98762], "hair": [0x1d1510, 0x2e2018, 0x4a3324]},
 }
 REGION_DEFAULT = "western"
-
-# Running gags (picked by the run's seed). Setup on the table in the first shot, payoff at the end.
-GAGS = [
-    {"prop": ["DENTIST", "THURSDAY 9:00"], "prop_end": ["DENTIST", "STILL THURSDAY 9:00"],
-     "setup": "{name} had a dentist appointment on Thursday.", "payoff": "The dentist still expects {name} on Thursday.",
-     "stat": ("Dentist appointments kept", 0)},
-    {"prop": ["BOOK CLUB", "READ CHAPTER 3"], "prop_end": ["BOOK CLUB", "CHAPTER 3. STILL."],
-     "setup": "{name} had one goal this week: finish chapter three.", "payoff": "{name} is still on chapter three.",
-     "stat": ("Chapters read", 0)},
-    {"prop": ["SOURDOUGH", "FEED ME DAILY"], "prop_end": ["SOURDOUGH", "THRIVING"],
-     "setup": "{name} had promised to keep a friend's sourdough alive.", "payoff": "The sourdough, somehow, made it.",
-     "stat": ("Sourdough starters lost", 0)},
-    {"prop": ["PARKING PERMIT", "RENEW BY FRIDAY"], "prop_end": ["PARKING FINE", "PAY BY FRIDAY"],
-     "setup": "{name}'s parking permit ran out on Friday.", "payoff": "The parking fine arrived right on time.",
-     "stat": ("Parking fines received", 1)},
-]
-
+COUNTRIES_WITH_ARTICLE = {
+    "Czech Republic", "Dominican Republic", "Netherlands", "Philippines",
+    "United Arab Emirates", "United Kingdom", "United States", "United States of America",
+}
 
 def region_for(code: str) -> str:
     return next((k for k, r in REGIONS.items() if code in r["codes"].split()), REGION_DEFAULT)
-
-
-def clock(minutes: int) -> str:
-    """'three in the morning', 'ten past six in the evening', 'noon', 'midnight'."""
-    hour, minute = divmod(minutes % 1440, 60)
-    if hour == 12 and minute < 15:
-        return "noon"
-    if (hour, minute) == (0, 0):
-        return "midnight"
-    h = WORDS[hour % 12 or 12]
-    part = "in the morning" if hour < 12 else "in the afternoon" if hour < 18 else "in the evening"
-    if minute >= 45 and hour in (11, 23):
-        return "quarter to noon" if hour == 11 else "quarter to midnight"
-    m = {0: h, 15: f"quarter past {h}", 30: f"half past {h}", 45: f"quarter to {WORDS[(hour + 1) % 12 or 12]}"}
-    return f"{m.get(minute, m.get(minute - minute % 15, h))} {part}"
-
-
-def when(event: dict, previous: dict | None) -> str:
-    """'At three in the morning' on day one, 'On day two' when the day changes."""
-    t = event["sim_time_minutes"]
-    day = t // 1440 + 1
-    if previous is None or day == previous["sim_time_minutes"] // 1440 + 1:
-        return f"At {clock(t)}"
-    return f"On day {WORDS.get(day, day)}"
 
 
 def at(name: str) -> str:
@@ -158,39 +95,101 @@ def at(name: str) -> str:
     return f"in {name}"
 
 
-def phrase(event: dict) -> str:
-    scene, template = EVENTS.get(event["type"], ("warning", "something happened {at}"))
+def event_detail(event: dict) -> str:
+    description = event.get("payload", {}).get("description") or ""
+    return re.sub(r"^simulated:\s*", "", " ".join(description.split()), flags=re.I)
+
+
+def scene_for(event: dict, detail: str) -> tuple[str, str]:
+    """Choose a specific scene only when the event describes what it depicts."""
+    kind = event["type"]
+    scene = EVENTS.get(kind, ("map", ""))[0]
+    title = kind.replace("_", " ").capitalize()
+    if kind == "other_hazard":
+        title = event["payload"]["label"]
+    if kind in {"economic_shock", "infrastructure_failure"}:
+        aviation = re.search(r"\b(flights?|airspace|airports?|airlines?)\b", detail, re.I)
+        grounded = re.search(r"\b(ground(?:s|ed|ing)?|closes?|closed|closure|cancel\w*)\b", detail, re.I)
+        if aviation and grounded:
+            return "departures", "Flights disrupted"
+    if kind == "infrastructure_failure" and re.search(r"\b(blackout|without power|power fails|power outage)\b", detail, re.I):
+        return "outage", "Power outage"
+    if kind == "extreme_weather" and re.search(r"\b(flooding|floodwater|flooded)\b", detail, re.I):
+        return "storm", "Flooding during severe weather"
+    if kind == "economic_shock" and re.search(r"\b(markets (?:fell|fall|slide)|stock prices)\b", detail, re.I):
+        return "market", "Markets fall"
+    if kind == "recovery" and re.search(r"\b(families|residents|people) (?:can )?(?:return|head) home\b", detail, re.I):
+        return "home-again", "Residents return home"
+    if kind == "disease_outbreak" and re.search(r"\b(pharmacies|pharmacy|clinic|queue)\b", detail, re.I) is None:
+        return "map", title
+    if kind == "government_response" and re.search(r"\b(briefing|announc\w*|meeting)\b", detail, re.I) is None:
+        return "map", title
+    return scene, title
+
+
+def narrate(event: dict, previous: dict | None, detail: str) -> str:
+    """Establish the country first, then say what happened."""
+    location = event["location"]
+    country = location["country"]
+    place = location["name"]
+    country_name = f"the {country}" if country in COUNTRIES_WITH_ARTICLE else country
+    lead = f"In {country_name}. " if previous is None or country != previous["location"]["country"] else ""
+    # Keep a complete sentence. If the source text is too long or gives casualty
+    # figures, use the short event template instead.
+    if detail and len(detail.split()) <= 26 and not re.search(r"\b(dead|deaths?|killed|injur(?:ed|ies)|casualties|fatalities)\b", detail, re.I):
+        # The event description already gives the country, so introducing it
+        # again would repeat the location in the same sentence or breath.
+        mentions_country = re.search(r"(?<!\w)" + re.escape(country) + r"(?!\w)", detail, re.I)
+        return ("" if mentions_country else lead) + detail.rstrip(".!?") + "."
+
+    place_detail = f" {at(place)}" if place.casefold() != country.casefold() else ""
+    _, template = EVENTS.get(event["type"], ("map", "an emergency was reported{at}"))
     payload = event.get("payload") or {}
     origin = payload.get("origin")
-    name = event["location"]["name"]
-    return template.format(at=at(name), place=name, label=(payload.get("label") or "a new hazard").lower(),
-                           origin=f", sent from {origin}" if origin else "")
+    label = str(payload.get("label") or "a new hazard")
+    if len(label.split()) > 5:
+        label = "a new hazard"
+    action = template.format(at=place_detail, label=label, origin=f", sent from {origin}" if isinstance(origin, str) else "")
+    if lead:
+        return lead.rstrip(". ") + f", {action}."
+    return action[:1].upper() + action[1:] + "."
 
 
-def span_title(minutes: int) -> str:
-    days = minutes // 1440 + 1
-    if days <= 1:
-        return "day"
-    if days <= 4:
-        return f"{WORDS[days]} days"
-    return "week" if days <= 10 else "month" if days <= 45 else "season"
+def caption_chunks(line: str) -> list[str]:
+    chunks, words = [], []
+    for word in line.split():
+        words.append(word)
+        if len(words) == 8 or (len(words) >= 4 and word.endswith((".", ";", "!", "?"))):
+            chunks.append(" ".join(words))
+            words = []
+    if words:
+        chunks.append(" ".join(words))
+    return chunks
 
 
-def pick_events(events: list[dict]) -> list[dict]:
-    """The first and last events plus the most severe in between (distinct types first), in run order."""
-    if len(events) <= MAX_EVENT_SHOTS:
+def pick_events(events: list[dict], limit: int) -> list[dict]:
+    """Keep the opening and outcome, and prefer a different scene for each beat."""
+    if len(events) <= limit:
         return list(events)
-    first, last, middle = events[0], events[-1], events[1:-1]
-    ranked = sorted(middle, key=lambda e: -e["severity"])
-    chosen, types = [], {first["type"], last["type"]}
-    for e in ranked:  # one per type first, then the rest by severity
-        if e["type"] not in types and len(chosen) < MAX_EVENT_SHOTS - 2:
-            chosen.append(e); types.add(e["type"])
-    for e in ranked:
-        if e not in chosen and len(chosen) < MAX_EVENT_SHOTS - 2:
-            chosen.append(e)
-    keep = {id(e) for e in chosen}
-    return [first] + [e for e in middle if id(e) in keep] + [last]
+
+    scene_keys = [scene_for(event, event_detail(event))[0] for event in events]
+    selected = {0, len(events) - 1}
+    used_scenes = Counter(scene_keys[index] for index in selected)
+    used_types = {events[index]["type"] for index in selected}
+
+    def score(index: int) -> tuple:
+        event = events[index]
+        distance = min(abs(index - other) for other in selected) / len(events)
+        return (-used_scenes[scene_keys[index]],
+                event["type"] not in used_types,
+                event["severity"] + distance)
+
+    while len(selected) < limit:
+        index = max((i for i in range(1, len(events) - 1) if i not in selected), key=score)
+        selected.add(index)
+        used_scenes[scene_keys[index]] += 1
+        used_types.add(events[index]["type"])
+    return [events[index] for index in sorted(selected)]
 
 
 def countries_near(events: list[dict], margin: float = 12.0) -> dict:
@@ -221,15 +220,13 @@ def load_result(args) -> dict:
             "events": [{**e, "status": "applied"} for e in batch["events"]]}
 
 
-def build(result: dict, tone: str, name: str | None = None) -> dict:
+def build(result: dict, name: str | None = None) -> dict:
     events = [e for e in result["events"] if e.get("status", "applied") == "applied"]
     events.sort(key=lambda e: (e["sim_time_minutes"], e.get("sequence", 0)))
     if not events:
         raise SystemExit("The run has no applied events")
     seed = result.get("seed") or 1
     rng = random.Random(seed)
-    layer = satire_for_events(events, tone)
-    posts = layer["posts"]
     # Home is where people live: the first evacuated place, else the first town in the run
     # (not "off the coast of ...", not a power station or an airport).
     def town(e: dict) -> bool:
@@ -237,84 +234,83 @@ def build(result: dict, tone: str, name: str | None = None) -> dict:
         return at(e["location"]["name"]).startswith("in ") and not any(w in name for w in FACILITIES)
     origin = next((e["location"] for e in events if e["type"] == "evacuation" and town(e)),
                   next((e["location"] for e in events if town(e)), events[0]["location"]))
-    home_at = at(origin["name"])
     region = REGIONS[region_for(origin["country_code"])]
     person_name, kind = rng.choice(region["names"])
     person_name = name or person_name
-    gag = rng.choice(GAGS)
+    headline_ids = result.get("headline_event_ids")
+    beats = [event for event in events if event["id"] in headline_ids] if headline_ids else headline_events(events)
+    chosen = pick_events(beats, MAX_EVENT_SHOTS)
 
-    used: set = set()
-
-    def note(event: dict, scene: str) -> dict | None:
-        if event["type"] in NO_JOKE:
-            return None
-        # Each joke is used once per film; an event with only repeats gets no notification.
-        mine = [p for p in posts if p["event_id"] == event["id"] and p["text"] not in used]
-        if not mine:
-            return None
-        pick = next((p for p in mine if p["kind"] in PREFER.get(scene, ())), mine[0])
-        used.add(pick["text"])
-        return {k: pick[k] for k in ("author", "handle", "text")}
-
-    def cap(text: str) -> str:
-        return text[:1].upper() + text[1:]
-
-    chosen = pick_events(events)
-    # Trim the least severe middle events until the estimated length fits the 50-second rule.
-    def estimate(lines: list[str]) -> float:
-        return sum(len(l.split()) * SECONDS_PER_WORD + SHOT_OVERHEAD for l in lines) + OUTRO
-
-    while True:
-        shots = [{"scene": "home", "event_id": None, "date": format_sim_time(max(0, events[0]["sim_time_minutes"] - 60)),
-                  "lower_third": f"{person_name.upper()} · {origin['name'].upper()}",
-                  "narration": f"This is {person_name}, {home_at}. " + gag["setup"].format(name=person_name),
-                  "prop": gag["prop"]}]
-        previous, used = None, set()
-        for i, event in enumerate(chosen):
-            scene = EVENTS.get(event["type"], ("warning", ""))[0]
-            last = i == len(chosen) - 1
-            if last and event["type"] in CALM_ENDINGS:
-                scene = "home-again"
-            line = f"{when(event, previous)}, {phrase(event)}."
-            if last:
-                line += " " + gag["payoff"].format(name=person_name)
-            shot = {"scene": scene, "event_id": event["id"], "event_type": event["type"],
-                    "date": format_sim_time(event["sim_time_minutes"]), "place": event["location"]["name"],
-                    "country": event["location"]["country"], "severity": event["severity"], "narration": cap(line)}
-            n = note(event, scene)
-            if n:
-                shot["notification"] = n
-            if last:
-                shot["prop"] = gag["prop_end"]
-            shots.append(shot)
+    def build_shots(brief_ids: set[str]) -> list[dict]:
+        shots = []
+        previous = None
+        scene_counts: Counter = Counter()
+        for event in chosen:
+            detail = event_detail(event)
+            scene, title = scene_for(event, detail)
+            scene_counts[scene] += 1
+            spoken = detail
+            if event["id"] in brief_ids:
+                spoken = f"{title.rstrip('.')}." if scene == "departures" else ""
+            shots.append({
+                "scene": scene,
+                "title": title,
+                "scene_take": scene_counts[scene] - 1,
+                "event_id": event["id"],
+                "event_type": event["type"],
+                "date": format_sim_time(event["sim_time_minutes"]),
+                "place": event["location"]["name"],
+                "country": event["location"]["country"],
+                "lat": event["location"]["lat"],
+                "lon": event["location"]["lon"],
+                "narration": narrate(event, previous, spoken),
+            })
             previous = event
-        if estimate([s["narration"] for s in shots]) <= BUDGET or len(chosen) <= 3:
+        return shots
+
+    def estimate(shots: list[dict]) -> float:
+        return sum(max(3.5, len(shot["narration"].split()) * SECONDS_PER_WORD + SHOT_OVERHEAD)
+                   for shot in shots) + OUTRO
+
+    brief_ids: set[str] = set()
+    shots = build_shots(brief_ids)
+    if estimate(shots) > BUDGET and len(chosen) > MIN_EVENT_SHOTS:
+        chosen = pick_events(beats, MIN_EVENT_SHOTS)
+        shots = build_shots(brief_ids)
+    while estimate(shots) > BUDGET:
+        candidates = [shot for shot in shots if shot["event_id"] not in brief_ids]
+        if not candidates:
             break
-        middle = chosen[1:-1]
-        drop = min(middle, key=lambda e: e["severity"])
-        chosen = [e for e in chosen if e is not drop]
+        longest = max(candidates, key=lambda shot: len(shot["narration"].split()))
+        brief_ids.add(longest["event_id"])
+        shots = build_shots(brief_ids)
+
+    # One optional aside about something actually visible in the scene.
+    # Keep narration factual on response and high-impact shots.
+    for shot in shots:
+        if shot["scene"] == "departures":
+            line = shot["narration"]
+            shot["narration"] = line + " Short read, long wait."
+            if estimate(shots) > BUDGET:
+                shot["narration"] = line
+            break
+
+    for shot in shots:
+        shot["captions"] = caption_chunks(shot["narration"])
 
     places = []
     for e in events:
         if e["location"]["name"] not in [p["name"] for p in places]:
             places.append({"name": e["location"]["name"], "lat": e["location"]["lat"], "lon": e["location"]["lon"],
                            "event_id": e["id"], "type": e["type"]})
-    stats = [{"label": "Notifications received", "value": sum(1 for s in shots if "notification" in s)}] + [
-        {"label": m["label"], "value": m["value"]} for m in layer["absurdity"] if m["value"]
-    ][:3] + [{"label": gag["stat"][0], "value": gag["stat"][1]}]
     return {
-        "title": f"{person_name}'s {span_title(events[-1]['sim_time_minutes'])}",
+        "title": f"{events[0]['location']['country']} · Run recap",
         "person": {"name": person_name, "home": origin["name"], "kind": kind,
                    "look": {"skin": region["skin"], "hair": region["hair"]}},
-        "tone": tone,
         "outro_seconds": OUTRO,
-        "stats_title": f"{person_name.upper()}'S RECAP",
-        "disclaimer": (f"Fictional simulation, run seed {result.get('seed')}. {person_name}, every company, "
-                       "statement and statistic here is invented. Real places, invented events."),
         "source": {"simulation_id": result.get("simulation_id"), "seed": result.get("seed"),
-                   "prompt": result.get("prompt"), "layer": "worldwire.satire"},
+                   "prompt": result.get("prompt")},
         "map": {**countries_near(events), "places": places},
-        "stats": stats,
         "shots": shots,
     }
 
@@ -327,17 +323,15 @@ def main() -> int:
     src.add_argument("--fixture", help="offline: a starter fixture, varied by --seed like a real run")
     parser.add_argument("--server", default="http://127.0.0.1:8765")
     parser.add_argument("--seed", type=int)
-    parser.add_argument("--tone", choices=("satirical",))
+    parser.add_argument("--tone", choices=("satirical",), help=argparse.SUPPRESS)
     parser.add_argument("--name")
     args = parser.parse_args()
     result = load_result(args)
-    tone = args.tone or (result.get("tone") if result.get("tone") == "satirical" else "satirical")
-    script = build(result, tone, args.name)
+    script = build(result, args.name)
     (HERE / "script.json").write_text(json.dumps(script, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"{script['title']} · seed {result.get('seed')} · {len(script['shots'])} shots")
     for i, shot in enumerate(script["shots"], 1):
-        extra = f"  [phone: {shot['notification']['handle']}]" if "notification" in shot else ""
-        print(f"{i}. {shot['date']} [{shot['scene']}] {shot['narration']}{extra}")
+        print(f"{i}. {shot['date']} [{shot['scene']}] {shot['narration']}")
     return 0
 
 

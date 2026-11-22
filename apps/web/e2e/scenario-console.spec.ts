@@ -97,7 +97,7 @@ test("prompted playback keeps headlines, map focus, and seeks scoped to each run
   await page.goto("/?demo=japan");
   const prompt = page.getByLabel("Scenario prompt");
   const playback = page.getByRole("region", { name: "Simulation playback" });
-  const archive = page.getByRole("region", { name: "WORLD//WIRE" });
+  const archive = page.getByRole("region", { name: "Reports" });
   const overlay = page.locator(".headline-alert");
   const map = page.getByRole("region", { name: "Interactive world map" });
   const slider = playback.getByRole("slider");

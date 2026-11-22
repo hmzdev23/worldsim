@@ -1,4 +1,4 @@
-// A satirical recap of ONE simulation run, followed through one invented local.
+// A recap of ONE simulation run, followed through one invented local.
 // Every shot is one of the run's events, in the run's order (script.json, built by
 // make-script.py from GET /scenarios/{id}/result). Scenes are chosen by event type, so
 // any run can be filmed; place names, dates and the map come from the run itself.
@@ -133,8 +133,6 @@ function apartment(s) {
   const bulb = new T.PointLight(0xffd9a0, 6, 6); bulb.position.y = -.85; lamp.add(bulb);
   return {room, items, lamp};
 }
-// The running gag's prop: a note card on the table.
-const prop = (parent, lines) => sign(parent, lines, .9, .42, .45, .62, .2, {bg: '#ffffff', fg: '#10131b', size: 100, w: 768});
 
 function street(s, {cars = true, fog = 0xd9cbb6, ground = 0x7d7a6c} = {}) {
   // Road and buildings run 120 units into fog, over a ground plane that reaches the horizon.
@@ -176,18 +174,9 @@ function hall(s) {
 }
 
 // ---- shots -----------------------------------------------------------------
-// Each builder gets its shot from script.json (place, country, date, prop) and returns a
+// Each builder gets its shot from script.json (place, country, date) and returns a
 // scene with userData.tick(t) and userData.camera, or {split, tick, camera} for two beats.
 const shots = {};
-
-shots.home = (shot) => {
-  const s = new T.Scene(); s.background = new T.Color(0x2a2f3a); lights(s, {power: 1.4, from: [6, 9, 8]});
-  const a = apartment(s); prop(a.room, shot.prop);
-  const me = hero(a.room, .9, 1.1, Math.PI);
-  s.userData.tick = (t) => me.userData.pose('Idle', t);
-  s.userData.camera = {from: [3, 1.7, 3.9], to: [2.3, 1.5, 3.1], look: () => [1, .7, .3]};
-  return s;
-};
 
 shots.quake = () => {
   const s = new T.Scene(); s.background = new T.Color(0x2a2f3a); lights(s, {power: 1.4, from: [6, 9, 8]});
@@ -205,6 +194,24 @@ shots.quake = () => {
   };
   s.userData.camera = {from: [3.4, 1.7, 4.6], to: [3.6, 1.3, 3.9], look: () => [1.6, .65, -.2]};
   return s;
+};
+
+shots.aftershock = () => {
+  const scene = new T.Scene();
+  sky(scene, 0x7a96ad, 0xd2c8ad);
+  lights(scene);
+  const ground = new T.Group();
+  scene.add(ground);
+  street(ground, { cars: false });
+  const resident = hero(scene, 1.4, -3.5, Math.PI, 'Idle');
+  scene.userData.tick = (t) => {
+    const shaking = Math.max(0, 1 - Math.abs(t - 1.5) / 1.25);
+    ground.position.x = Math.sin(t * 36) * shaking * .13;
+    ground.rotation.z = Math.sin(t * 27) * shaking * .007;
+    resident.userData.pose('Idle', t);
+  };
+  scene.userData.camera = {from: [4, 2.0, 5], to: [2.4, 1.9, 3.7], look: () => [0, 1.4, -10]};
+  return scene;
 };
 
 function beaconStreet(s, label, lines) {
@@ -283,7 +290,7 @@ function waterStreet(shot, {rain = false} = {}) {
   const drops = []; if (rain) for (let i = 0; i < 260; i++) { const d = block(s, (rand(i) - .5) * 30, 0, -rand(i + 1) * 40 + 6, .02, .5, .02, new T.MeshBasicMaterial({color: 0xcfd8e0, transparent: true, opacity: .5})); d.castShadow = false; drops.push(d); }
   const sandbags = []; for (let i = 0; i < 8; i++) sandbags.push(block(s, -3 + i * .62, .12, 3.4, .58, .24, .4, 0xb89a6a));
   const me = hero(s, 1.2, 4.6, Math.PI, 'Idle');
-  sign(s, ['TEMPORARY LAKE', UP(shot.place)], -3.6, 3.4, -9.9, 4, 1.6, {bg: '#ffd23f', fg: '#0f1a33', size: 90, h: 360, w: 768});
+  sign(s, ['FLOODING', UP(shot.place)], -3.6, 3.4, -9.9, 4, 1.6, {bg: '#ffd23f', fg: '#0f1a33', size: 90, h: 360, w: 768});
   block(s, -4.4, 2, -10, .16, 4, .16, 0x555555); block(s, -2.8, 2, -10, .16, 4, .16, 0x555555);
   s.userData.tick = (t) => {
     water.position.y = -.25 + Math.min(.5, t * .12) + Math.sin(t * 2) * .02;
@@ -300,7 +307,7 @@ shots.outbreak = (shot) => {
   // A quiet street: few people, a pharmacy queue, a public-health banner.
   const s = new T.Scene(); sky(s, 0x9db3c2, 0xe3e6dc); lights(s, {power: 1.6}); street(s, {cars: false, fog: 0xc9d3cf});
   block(s, -4.4, 2.4, -10, .16, 4.8, .16, 0x555555); block(s, -2, 2.4, -10, .16, 4.8, .16, 0x555555);
-  sign(s, ['PUBLIC HEALTH NOTICE', 'STAY CALM · WASH HANDS', UP(shot.place)], -3.2, 4.2, -9.9, 4, 2.2, {bg: '#e8f4ee', fg: '#0f3a24', size: 80, h: 420, w: 768, accent: '#2f9e64'});
+  sign(s, ['PUBLIC HEALTH NOTICE', UP(shot.place)], -3.2, 4.2, -9.9, 4, 2.2, {bg: '#e8f4ee', fg: '#0f3a24', size: 80, h: 420, w: 768, accent: '#2f9e64'});
   const queue = []; for (let i = 0; i < 6; i++) queue.push(person(s, i % 2 ? 'man' : 'woman', 6.2, -2 - i * 1.6, Math.PI, crowdShirts[i % 6], 'Idle', i * .4));
   const me = hero(s, 1, -10, 0, 'Walk');
   s.userData.tick = (t) => { queue.forEach(p => p.userData.pose('Idle', t)); go(me, 1, -10, 0, 1, t * WALK); me.userData.pose('Walk', t); };
@@ -340,23 +347,22 @@ function briefing(lines, tvLines, {clap = false} = {}) {
   s.userData.camera = clap ? {from: [4.6, 1.9, 1.6], to: [3.6, 1.8, 1.1], look: () => [-6.7, 1.6, -1.5]} : {from: [.6, 1.6, 3.8], to: [.4, 1.4, 3], look: () => [0, .9, -3.5]};
   return s;
 }
-shots.committee = (shot) => briefing(['EMERGENCY MEETING', '(TO SCHEDULE EMERGENCY MEETING)'], ['LIVE', UP(shot.place)]);
-shots.tv = (shot) => briefing(['COMMITTEE FOR GLOBAL STABILITY', '(INTERIM)'], ['CEASEFIRE', `AGREED IN ${UP(shot.place)}`], {clap: true});
+shots.committee = (shot) => briefing(['EMERGENCY RESPONSE', UP(shot.country)], ['LIVE', UP(shot.place)]);
+shots.tv = (shot) => briefing(['CEASEFIRE BRIEFING', UP(shot.country)], ['CEASEFIRE', `AGREED IN ${UP(shot.place)}`], {clap: true});
 
 shots.aid = (shot) => {
   const s = new T.Scene(); s.background = new T.Color(0x2a3140); lights(s, {power: 1.3, ambient: 1.5, from: [8, 10, 6]});
-  const g = gym(s, {lit: true}), spot = g.spot;
-  const me = person(s, KIND, spot.position.x, spot.position.z, Math.PI * .1, HERO, 'Sitting');
-  block(s, spot.position.x + .05, .56, spot.position.z + .22, .26, .02, .34, 0xffffff);
-  const right = block(s, spot.position.x + .8, .05, spot.position.z - .2, .42, .1, .56, 0xf7f4ea);
-  sign(s, ['CUSTOMS FORM', 'PAGE 1 OF 600'], spot.position.x + .8, 1, spot.position.z + .09, .6, .2, {bg: '#ffffff', fg: '#10131b', size: 110, w: 768});
-  for (let j = 0; j < 6; j++) block(s, 5 + (j % 3) * .9, .4 + Math.floor(j / 3) * .8, -5.5, .8, .75, .8, 0x9c7b56);
-  sign(s, ['RELIEF', UP(shot.place)], 5.9, 2.3, -5.08, 2.6, .7, {bg: '#ffffff', fg: '#0f1a33', size: 90});
+  gym(s, {lit: true});
+  const worker = hero(s, 3.3, -4.9, Math.PI / 2, 'Walk');
+  for (let crate = 0; crate < 6; crate++) {
+    block(s, 5 + (crate % 3) * .9, .4 + Math.floor(crate / 3) * .8, -5.5, .8, .75, .8, 0x9c7b56);
+  }
+  sign(s, ['RELIEF SUPPLIES'], 5.9, 2.3, -5.08, 2.6, .7, {bg: '#ffffff', fg: '#0f1a33', size: 90});
   s.userData.tick = (t) => {
-    right.scale.y = 1 + Math.min(1, t / 4) * 12; right.position.y = .05 * right.scale.y;
-    g.crowd.forEach(p => p.userData.pose('Sitting', 1.2)); me.userData.pose('Sitting', 1.2);
+    go(worker, 3.3, -4.9, 1, 0, Math.min(1.2, t * WALK));
+    worker.userData.pose(t * WALK < 1.2 ? 'Walk' : 'Idle', t);
   };
-  s.userData.camera = {from: [spot.position.x + 1.2, 1.5, spot.position.z + 3.6], to: [spot.position.x + .9, 1.2, spot.position.z + 2.7], look: () => [spot.position.x + .3, .45, spot.position.z]};
+  s.userData.camera = {from: [1.2, 2.2, .4], to: [2.5, 1.9, -.7], look: () => [4.8, 1.1, -5.2]};
   return s;
 };
 
@@ -366,7 +372,7 @@ shots.evacuation = (shot) => {
   const queue = []; for (let i = 0; i < 14; i++) queue.push(person(s, i % 2 ? 'man' : 'woman', i % 2 ? 2.85 : 3.55, 4 - i * 1.25, Math.PI, i === 3 ? HERO : crowdShirts[i % 6], 'Walk', rand(i) * 2));
   const cars = []; for (let i = 0; i < 7; i++) { const c = model(i % 3 === 2 ? 'delivery' : 'sedan', 1.4, -1.6, 6 - i * 3.6, Math.PI); s.add(c); cars.push(c); }
   block(s, 5.4, 3, -9, .16, 6, .16, 0x555555); block(s, 8.2, 3, -9, .16, 6, .16, 0x555555);
-  sign(s, ['EVACUATE IN AN', 'ORDERLY QUEUE :)', UP(shot.place)], 6.8, 5.6, -8.9, 4.6, 2.5, {bg: '#ffd23f', fg: '#0f1a33', size: 86, h: 420, w: 768});
+  sign(s, ['EVACUATION ROUTE', UP(shot.place)], 6.8, 5.6, -8.9, 4.6, 2.5, {bg: '#ffd23f', fg: '#0f1a33', size: 86, h: 420, w: 768});
   const me = queue[3];
   s.userData.tick = (t) => {
     queue.forEach((p, i) => { go(p, i % 2 ? 2.85 : 3.55, 4 - i * 1.25, 0, -1, t * WALK); p.userData.pose('Walk', t); });
@@ -376,11 +382,23 @@ shots.evacuation = (shot) => {
   return s;
 };
 
+shots.departures = () => {
+  const s = new T.Scene();
+  hall(s);
+  sign(s, ['DEPARTURES', 'FLIGHTS DISRUPTED'], 0, 2.6, -5.9, 4.8, 1.8,
+    {bg: '#141821', fg: '#ffcf65', size: 102, w: 1024, h: 420});
+  const traveller = hero(s, .5, -2, Math.PI, 'Idle');
+  block(s, 1, .27, -2, .32, .54, .42, 0x343c4c);
+  s.userData.tick = (t) => traveller.userData.pose('Idle', t);
+  s.userData.camera = {from: [0, 1.8, 4], to: [.25, 1.7, 2.75], look: () => [0, 1.85, -4.4]};
+  return s;
+};
+
 shots.market = (shot) => {
   // A city street under a market board that only ever says one thing.
   const s = new T.Scene(); sky(s, 0x7f98b0, 0xe2d6c2); lights(s); street(s);
   block(s, -4.4, 3, -12, .2, 6, .2, 0x555555); block(s, 4.4, 3, -12, .2, 6, .2, 0x555555);
-  const board = sign(s, ['MARKETS', '▼ ▼ ▼', `PLEASE REMAIN CALM · ${UP(shot.place)}`], 0, 6.4, -11.9, 9, 3.2, {bg: '#111', fg: '#ff4a3a', size: 96, h: 384});
+  const board = sign(s, ['MARKETS', '▼ ▼ ▼', UP(shot.place)], 0, 6.4, -11.9, 9, 3.2, {bg: '#111', fg: '#ff4a3a', size: 96, h: 384});
   const me = hero(s, -.6, -10, 0, 'Walk');
   const others = [0, 1, 2].map(i => person(s, i % 2 ? 'woman' : 'man', 2.4 - i * 2.6, -13 - i * 1.4, 0, crowdShirts[i + 2], 'Walk', i * .5));
   s.userData.tick = (t) => {
@@ -399,7 +417,7 @@ shots.street = (shot) => {
   const jets = conflict ? [0, 1, 2].map(i => { const j = new T.Group(); block(j, 0, 0, 0, .3, .2, 1.6, 0x6b7280); block(j, 0, 0, -.2, 1.4, .05, .5, 0x6b7280); j.rotation.y = Math.PI / 2; j.position.set(-40, 24 + i, -30 - i * 3); s.add(j); return j; }) : [];
   const crowd = []; for (let i = 0; i < 10; i++) {
     const p = person(s, i % 2 ? 'man' : 'woman', -3 + (i % 5) * 1.5, -14 - Math.floor(i / 5) * 1.6, 0, crowdShirts[i % 6], 'Walk', rand(i) * 2); crowd.push(p);
-    if (!conflict && i % 3 === 0) sign(p, [['ENOUGH', 'WHY', 'PLEASE'][i % 3]], 0, 7.5, 0, 3.2, 1.6, {bg: '#ffffff', fg: '#10131b', size: 120, w: 512, h: 256});
+    if (!conflict && i % 3 === 0) sign(p, [['ENOUGH', 'ACT NOW', 'WE NEED ANSWERS'][Math.floor(i / 3) % 3]], 0, 7.5, 0, 3.2, 1.6, {bg: '#ffffff', fg: '#10131b', size: 120, w: 512, h: 256});
   }
   const me = hero(s, 3.8, -6, 0, 'Walk');
   sign(s, [conflict ? 'STAY INDOORS' : 'ROAD CLOSED', UP(shot.place)], -3.2, 4.2, -9.9, 4, 1.8, {bg: '#d7262e', fg: '#ffffff', size: 88, h: 384, w: 768});
@@ -414,29 +432,24 @@ shots.street = (shot) => {
 };
 
 shots.map = (shot) => {
-  // The run's own map: country outlines from the web app's geojson, a pin for every place
-  // the run has reached so far, and the current event marked plainly (no joke).
+  // Mark the exact event location. Several events can share the same place name.
   const s = new T.Scene(); s.background = new T.Color(0x8fb4c0); s.fog = new T.Fog(0x8fb4c0, 60, 160);
   s.add(new T.HemisphereLight(0xffffff, 0x61706b, 2.3)); const sun = new T.DirectionalLight(0xfff0d0, 1.6); sun.position.set(-6, 12, 7); s.add(sun);
   const ocean = new T.Mesh(new T.PlaneGeometry(600, 600), mat(0x6f9fb0)); ocean.rotation.x = -Math.PI / 2; ocean.position.y = -.05; s.add(ocean);
   const [w, e, so, no] = script.map.box, lon0 = (w + e) / 2, lat0 = (so + no) / 2, cos = Math.cos(lat0 * Math.PI / 180);
   const k = 60 / Math.max((e - w) * cos, (no - so), 1);
   const xy = (lon, lat) => [(lon - lon0) * k * cos, -(lat - lat0) * k];
-  const here = script.map.places.find(p => p.event_id === shot.event_id) ?? script.map.places[0];
   for (const rings of Object.values(script.map.countries)) for (const ring of rings) {
     const shape = new T.Shape(); ring.forEach(([lon, lat], i) => { const [x, y] = xy(lon, lat); i ? shape.lineTo(x, -y) : shape.moveTo(x, -y); });
     const m = new T.Mesh(new T.ExtrudeGeometry(shape, {depth: .25, bevelEnabled: false}), mat(0xe3d6b6)); m.rotation.x = -Math.PI / 2; s.add(m);
   }
-  const order = script.map.places.map(p => p.event_id), upTo = Math.max(0, order.indexOf(shot.event_id));
-  script.map.places.slice(0, upTo + 1).forEach((p) => {
-    const [x, z] = xy(p.lon, p.lat), now = p === here;
-    block(s, x, .6, z, .35, 1.2, .35, now ? glow(0xd7262e, 1.2) : 0x10131b);
-    sign(s, [UP(p.name)], x, 2.1, z, Math.min(9, 1.2 + p.name.length * .32), .8, {bg: now ? '#d7262e' : '#10131b', fg: '#ffffff', size: 110}).rotation.x = -.9;
-  });
-  const [hx, hz] = xy(here.lon, here.lat);
+  const [hx, hz] = xy(shot.lon, shot.lat);
+  block(s, hx, .6, hz, .35, 1.2, .35, glow(0xd7262e, 1.2));
+  sign(s, [UP(shot.title)], hx, 2.1, hz, Math.min(11, 2 + shot.title.length * .29), 1,
+    {bg: '#141821', fg: '#ffffff', size: 100}).rotation.x = -.9;
   const ring = new T.Mesh(new T.RingGeometry(.9, 1, 48), new T.MeshBasicMaterial({color: 0xffffff, transparent: true, side: T.DoubleSide}));
   ring.rotation.x = -Math.PI / 2; ring.position.set(hx, .45, hz); s.add(ring);
-  const blast = shot.event_type === 'nuclear_detonation' || shot.event_type === 'military_strike';
+  const blast = shot.event_type === 'nuclear_detonation';
   const cloud = new T.Group(); cloud.position.set(hx, 0, hz); cloud.scale.setScalar(.5); s.add(cloud); cloud.visible = false;
   const stem = new T.Mesh(new T.CylinderGeometry(.35, .6, 1, 12), mat(0x9b938a)); cloud.add(stem);
   const cap = []; for (let i = 0; i < 9; i++) { const c = new T.Mesh(new T.IcosahedronGeometry(1, 1), mat(i % 2 ? 0xb3aaa0 : 0x8f877e)); c.userData.a = i / 9 * Math.PI * 2; cloud.add(c); cap.push(c); }
@@ -449,16 +462,27 @@ shots.map = (shot) => {
       window.FLASH = f > 0 && f < .25 ? 1 - f / .25 : 0;
     }
   };
-  s.userData.camera = {from: [hx, 34, hz + 18], to: [hx, 28, hz + 14], look: () => [hx, 0, hz]};
+  // Later map shots shift framing so a new report does not replay the same camera move.
+  const mapAngles = [
+    [[0, 34, 18], [0, 28, 14]],
+    [[-5, 24, 10], [3, 21, 6]],
+    [[4, 20, 10], [-3, 34, 19]],
+  ];
+  const [from, to] = mapAngles[(shot.scene_take ?? 0) % mapAngles.length];
+  s.userData.camera = {
+    from: [hx + from[0], from[1], hz + from[2]],
+    to: [hx + to[0], to[1], hz + to[2]],
+    look: () => [hx, 0, hz],
+  };
   return s;
 };
 
-shots['home-again'] = (shot) => {
-  // Two beats: walking back up the street, then home, where the running gag pays off.
+shots['home-again'] = () => {
+  // Two beats: a resident heads home as recovery begins.
   const out = new T.Scene(); sky(out, 0x8ec2e6, 0xfbe3c2); lights(out); street(out);
   const walker = hero(out, .6, -10, 0, 'Walk');
   const home = new T.Scene(); home.background = new T.Color(0x2a2f3a); lights(home, {power: 1.6, from: [6, 9, 8]});
-  const a = apartment(home); prop(a.room, shot.prop);
+  const a = apartment(home);
   const me = hero(a.room, 3.2, 1.6, 0, 'Walk');
   const split = 2.6, to = [.9, 1.1], walkLen = Math.hypot(to[0] - 3.2, to[1] - 1.6);
   const tick = (t) => {
@@ -472,15 +496,10 @@ shots['home-again'] = (shot) => {
     camera: (t) => t < split ? {from: [1.8, 1.7, -2], to: [1.6, 1.7, -.5], look: [walker.position.x, 1, walker.position.z]} : {from: [3.2, 1.6, 4.4], to: [2.6, 1.5, 3.7], look: [1, .7, .4]}};
 };
 
-const scenes = script.shots.map(shot => (shots[shot.scene] ?? shots.warning)(shot));
+const scenes = script.shots.map(shot => (shots[shot.scene] ?? shots.map)(shot));
 
 // ---- overlays ----------------------------------------------------------------
 const $ = (q) => document.querySelector(q);
-$('#lower .name').textContent = script.person.name.toUpperCase();
-$('#stats h2').textContent = script.stats_title;
-$('#stats .rows').innerHTML = script.stats.map(m => `<div class="row"><span>${m.label}</span><b data-v="${m.value}">0</b></div>`).join('');
-$('#stats p').textContent = script.disclaimer;
-
 const camera = new T.PerspectiveCamera(50, W / H, .05, 400);
 const OUTRO = script.outro_seconds;
 const cuts = timing.cuts, total = cuts[cuts.length - 1] + OUTRO;
@@ -489,7 +508,15 @@ const selected = shotParam === null ? -1 : Number(shotParam);
 if (selected !== -1 && !(Number.isInteger(selected) && selected >= 0 && selected < scenes.length)) throw new Error('Invalid shot');
 window.DUR = selected < 0 ? total : (selected === scenes.length - 1 ? cuts[selected + 1] + OUTRO : cuts[selected + 1]) - cuts[selected];
 const ease = (x) => x < .5 ? 2 * x * x : 1 - (-2 * x + 2) ** 2 / 2;
-const fade = (x) => Math.min(1, Math.max(0, x));
+
+// Fit caption changes to the measured narration length. Grouping words keeps
+// the scene visible while the narrator reads a longer report.
+const captionTracks = script.shots.map(data => {
+  const chunks = data.captions ?? [data.narration];
+  let words = 0;
+  const segments = chunks.map(text => ({text, end: words += text.trim().split(/\s+/).length}));
+  return {segments, words};
+});
 
 window.render = (localTime) => {
   const time = selected < 0 ? localTime : cuts[selected] + localTime;
@@ -507,21 +534,15 @@ window.render = (localTime) => {
   camera.position.set(...cam.from.map((v, k) => v + (cam.to[k] - v) * f));
   camera.lookAt(...(typeof cam.look === 'function' ? cam.look() : cam.look));
 
+  $('#country').textContent = data.country;
+  $('#place').textContent = data.place === data.country ? '' : data.place;
   $('#date').textContent = data.date;
-  $('#caption').textContent = local < (timing.voice_durations[i] + timing.lead_in + .6) ? data.narration : '';
-  $('#lower').style.opacity = data.lower_third ? fade((local - .4) / .3) * fade((len - 1 - local) / .3) : 0;
+  const track = captionTracks[i];
+  const elapsed = Math.max(0, local - timing.lead_in);
+  const word = elapsed / Math.max(.01, timing.voice_durations[i]) * track.words;
+  const caption = track.segments.find(segment => word < segment.end) ?? track.segments.at(-1);
+  $('#caption').textContent = caption.text;
   $('#flash').style.opacity = window.FLASH;
-  const phone = $('#phone');
-  if (data.notification) {
-    phone.querySelector('.who').replaceChildren(data.notification.author, Object.assign(document.createElement('span'), {textContent: data.notification.handle}));
-    phone.querySelector('.text').textContent = data.notification.text;
-    const k = fade((local - 1.1) / .3) * fade((len - .3 - local) / .3);
-    phone.style.opacity = k; phone.style.transform = `translateY(${(1 - k) * -60}px)`;
-  } else phone.style.opacity = 0;
-  const last = i === scenes.length - 1, outro = last ? time - cuts[cuts.length - 1] : -1;
-  $('#stats').style.opacity = last ? fade(outro / .4) : 0;
-  if (last && outro > 0) phone.style.opacity = 0;
-  if (last) document.querySelectorAll('#stats b').forEach(b => { b.textContent = Math.round(Number(b.dataset.v) * fade((outro - .3) / 2)); });
   renderer.render(scene, camera);
 };
 window.READY = true; window.render(0);

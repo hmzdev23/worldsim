@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "services" / "simulation")]
 
 from worldsim_sim import Simulation  # noqa: E402
+from worldsim_sim.scenarios import set_story_headlines  # noqa: E402
 from worldsim_sim.server import apply_control  # noqa: E402
 
 JAPAN = json.loads((ROOT / "contracts" / "fixtures" / "japan-earthquake.json").read_text(encoding="utf-8"))
@@ -46,6 +47,25 @@ class StoryPlaybackTests(unittest.TestCase):
                 seen += [e["id"] for e in released]
         self.assertEqual(seen, [e["id"] for e in sim.timeline])
         self.assertEqual(stops, len({e["sim_time_minutes"] for e in sim.timeline}))
+
+    def test_demo_holds_on_eight_headlines_and_releases_every_event(self):
+        sim = story_sim(pace=0.2)
+        set_story_headlines(sim)
+        selected = sim.timeline_view()["headline_event_ids"]
+        seen, stops = [], []
+        for _ in range(100):
+            if sim.now == sim.end_minutes:
+                break
+            if sim.state == "paused":
+                sim.play(until_next_event=True)
+            fresh = [message["event"] for message in sim.tick() if message["kind"] == "event"]
+            seen.extend(event["id"] for event in fresh)
+            if sim.state == "paused":
+                stops.extend(event["id"] for event in fresh if event["id"] in selected)
+        self.assertEqual(len(selected), 8)
+        self.assertEqual(stops, selected)
+        self.assertEqual(seen, [event["id"] for event in sim.timeline])
+        self.assertEqual((selected[0], selected[-1]), (seen[0], seen[-1]))
 
     def test_plain_play_still_runs_through(self):
         sim = story_sim(pace=0.5)

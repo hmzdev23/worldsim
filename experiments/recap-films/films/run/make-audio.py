@@ -25,6 +25,7 @@ AUDIO = HERE / "audio"
 VOICE = "XA3P1cj7XJexe6Zq0ATX"  # the team's chosen narrator voice for every recap film
 MODEL = "eleven_multilingual_v2"
 LEAD_IN, TAIL, MIN_SHOT = 0.25, 0.55, 3.5
+MIN_SECONDS = 40.0
 MAX_SECONDS = 50.0  # hard cap for the whole film, outro included
 
 
@@ -82,18 +83,29 @@ def speak(text: str, key: str) -> bytes:
     return data
 
 
+def shot_cuts(voices: list[float], outro: float) -> list[float]:
+    # Give each existing shot a little more screen time when the narration is short.
+    durations = [max(MIN_SHOT, LEAD_IN + length + TAIL) for length in voices]
+    padding = max(0.0, MIN_SECONDS - outro - sum(durations)) / len(durations)
+    cuts = [0.0]
+    elapsed = 0.0
+    for duration_s in durations:
+        elapsed += duration_s + padding
+        cuts.append(round(elapsed, 2))
+    return cuts
+
+
 def main() -> int:
     import sys
     estimate = "--estimate" in sys.argv[1:]
     script = json.loads((HERE / "script.json").read_text(encoding="utf-8"))
     AUDIO.mkdir(exist_ok=True)
     key = None
-    cuts, voices = [0.0], []
+    voices = []
     for i, shot in enumerate(script["shots"], 1):
         if estimate:  # about 0.36 s per word at the narrator's pace
             length = len(shot["narration"].split()) * 0.36
             voices.append(round(length, 3))
-            cuts.append(round(cuts[-1] + max(MIN_SHOT, LEAD_IN + length + TAIL), 2))
             continue
         digest = hashlib.sha256(f"{shot['narration']}|{VOICE}|{MODEL}".encode()).hexdigest()[:16]
         clip, stamp = AUDIO / f"voice-{i:02}.mp3", AUDIO / f"voice-{i:02}.txt"
@@ -106,8 +118,8 @@ def main() -> int:
             print(f"voice-{i:02}: cached")
         length = duration(clip)
         voices.append(round(length, 3))
-        cuts.append(round(cuts[-1] + max(MIN_SHOT, LEAD_IN + length + TAIL), 2))
     outro = float(script.get("outro_seconds", 0))
+    cuts = shot_cuts(voices, outro)
     if cuts[-1] + outro > MAX_SECONDS:
         raise SystemExit(f"film would run {cuts[-1] + outro:.1f}s (limit {MAX_SECONDS:.0f}s): shorten the narration in make-script.py")
     timing = {"estimated": estimate, "cuts": cuts, "outro": outro, "voice_durations": voices, "lead_in": LEAD_IN, "voice_id": VOICE, "model_id": MODEL}

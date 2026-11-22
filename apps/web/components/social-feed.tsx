@@ -9,7 +9,6 @@ export function SocialFeed({ posts, loading }: { posts: SatirePost[]; loading: b
     <section className="social-feed" aria-labelledby="social-feed-title">
       <div className="inspector-heading">
         <h2 id="social-feed-title"><ChatsCircle size={16} aria-hidden="true" /> Reactions</h2>
-        <span className="inspector-meta satire-stamp">Fictional posts</span>
       </div>
       {posts.length === 0 ? (
         <p className="inspector-empty">{loading ? "Loading reactions…" : "No reactions yet. Invented officials and brands react as events land."}</p>

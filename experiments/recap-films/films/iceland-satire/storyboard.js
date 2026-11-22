@@ -220,12 +220,11 @@ const scenes = script.shots.map(shot => builders[shot.scene]());
 
 // ---- overlays ----------------------------------------------------------------
 const $ = (q) => document.querySelector(q);
-const ticker = 'FICTIONAL SIMULATION  ·  NO REAL COMPANIES, OFFICIALS OR VOLCANOES WERE CONSULTED  ·  ' +
-  script.stats.map(m => `${m.label.toUpperCase()}: ${m.value}`).join('  ·  ') + '  ·  ';
+const ticker = 'ICELAND  ·  ' +
+  script.stats.filter(m => !/notification|fictional|absurdity/i.test(m.label)).map(m => `${m.label.toUpperCase()}: ${m.value}`).join('  ·  ') + '  ·  ';
 $('#ticker div').textContent = ticker.repeat(4);
-const stats = script.stats.filter(m => m.value > 0);
+const stats = script.stats.filter(m => m.value > 0 && !/notification|fictional|absurdity/i.test(m.label));
 $('#stats .rows').innerHTML = stats.map(m => `<div class="row"><span>${m.label}</span><b data-v="${m.value}">0</b></div>`).join('');
-$('#stats p').textContent = script.disclaimer;
 const tickerWidth = () => $('#ticker div').scrollWidth / 4;
 
 const camera = new T.PerspectiveCamera(46, W / H, .1, 260);
@@ -245,17 +244,9 @@ window.render = (localTime) => {
   camera.position.set(...cam.from.map((v, k) => v + (cam.to[k] - v) * f)); camera.lookAt(...cam.look);
   scene.userData.tick?.(local);
   const data = script.shots[i];
-  $('#date').textContent = data.date;
+  $('#date').textContent = `ICELAND · ${data.date}`;
   $('#chyron .headline').textContent = data.headline;
   $('#chyron').style.transform = `translateX(${Math.max(0, 1 - local / .35) * -110}%)`;
-  const post = $('#post');
-  if (data.post) {
-    post.querySelector('.avatar').textContent = data.post.author[0];
-    post.querySelector('.name').textContent = data.post.author;
-    post.querySelector('.handle').textContent = data.post.handle;
-    post.querySelector('.text').textContent = data.post.text;
-    const k = Math.min(1, Math.max(0, (local - .8) / .35)); post.style.opacity = k; post.style.transform = `translateY(${(1 - k) * 40}px) scale(${.96 + k * .04})`;
-  } else post.style.opacity = 0;
   const card = $('#stats'), last = i === scenes.length - 1;
   card.style.opacity = last ? Math.min(1, Math.max(0, (local - .5) / .4)) : 0;
   if (last) card.querySelectorAll('b').forEach(b => { b.textContent = Math.round(Number(b.dataset.v) * Math.min(1, Math.max(0, (local - .8) / 2))); });

@@ -85,6 +85,7 @@ class Simulation:
     # Story playback: when set (play with until_next_event), the clock stops exactly at
     # the next event's minute and pauses once it is released, so a viewer can read it.
     hold_at_events: bool = False
+    headline_event_ids: frozenset[str] | None = None
     _timeline: list[Event] = field(default_factory=list)  # applied, canonical order
     _released: int = 0  # how many timeline events the stream has seen
 
@@ -215,8 +216,13 @@ class Simulation:
         if self.state == "playing":
             end = self.end_minutes
             limit = end
-            if self.hold_at_events and self._released < len(self._timeline):
-                limit = min(end, max(self.sim_time, self._timeline[self._released]["sim_time_minutes"]))
+            if self.hold_at_events:
+                next_headline = next(
+                    (event for event in self._timeline[self._released:] if self.is_headline(event)),
+                    None,
+                )
+                if next_headline is not None:
+                    limit = min(end, max(self.sim_time, next_headline["sim_time_minutes"]))
             if self.sim_time < limit:
                 # Rounding to a microminute keeps float drift (20 × 5% of a
                 # span summing to 419.99999…) from holding an event back a tick.
@@ -224,7 +230,7 @@ class Simulation:
             if self.sim_time >= end:
                 self.state = "paused"
         released = self._release_due()
-        if self.hold_at_events and released:
+        if self.hold_at_events and any(self.is_headline(event) for event in released):
             self.state = "paused"  # hold on what just happened; the viewer plays on
         messages = [self._event_message(e) for e in released]
         messages.append(self.clock())
@@ -343,6 +349,9 @@ class Simulation:
         """Sim time of the last applied event, or 0 when there are none."""
         return self._timeline[-1]["sim_time_minutes"] if self._timeline else 0
 
+    def is_headline(self, event: Event) -> bool:
+        return self.headline_event_ids is None or event["id"] in self.headline_event_ids
+
     def timeline_view(self) -> dict[str, Any]:
         """Read-only GET /timeline body: every applied event, including future ones.
 
@@ -356,6 +365,7 @@ class Simulation:
             "pacing": self.pacing,
             "end_minutes": self.end_minutes,
             "events": self.timeline,
+            "headline_event_ids": [event["id"] for event in self._timeline if self.is_headline(event)],
         }
 
 

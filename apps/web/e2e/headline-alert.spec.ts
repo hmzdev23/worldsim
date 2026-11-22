@@ -17,7 +17,7 @@ test("live headlines stay in order while playback and the wire advance", async (
   const map = page.getByRole("region", { name: "Interactive world map" });
   const alert = map.locator(".headline-alert");
   const headline = alert.getByRole("heading");
-  const wire = page.getByRole("region", { name: "WORLD//WIRE" });
+  const wire = page.getByRole("region", { name: "Reports" });
   const playback = page.getByRole("region", { name: "Simulation playback" });
   await expect(map.getByRole("button", { name: "Zoom in" })).toBeEnabled();
   await expect(wire).toContainText("No reports yet");
@@ -72,7 +72,7 @@ test("seek and reset clear queued headlines, then replay can show them again", a
   await page.goto("/");
   await page.goto("/?demo=japan");
   const alert = page.locator(".headline-alert");
-  const wire = page.getByRole("region", { name: "WORLD//WIRE" });
+  const wire = page.getByRole("region", { name: "Reports" });
   const playback = page.getByRole("region", { name: "Simulation playback" });
   const play = playback.getByRole("button", { name: "Play", exact: true });
   const reset = playback.getByRole("button", { name: "Reset playback" });

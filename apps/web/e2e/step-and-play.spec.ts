@@ -1,54 +1,51 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test } from "@playwright/test";
 
-// Story runs: Play moves through the headlines on its own (each shows for a
-// reading time); Pause stops on the current event; Next/Previous event step.
-// Uses an offline starter, so no model is called.
-
-test.beforeEach(({}, testInfo) => {
-  test.skip(testInfo.project.name !== "desktop", "Covered by the desktop project.");
-});
-
-async function startTsunami(page: Page) {
+test("headlines wait for Continue and Previous revisits the prior event", async ({ page }) => {
+  // Playback does not need a paid film render.
+  await page.route("**/api/recap-films/**", route => route.fulfill({ json: { status: "queued" } }));
   await page.goto("/");
   await page.getByRole("group", { name: "Starter scenarios" }).getByRole("button", { name: /Tsunami/ }).click();
   await page.getByRole("region", { name: "Run Tsunami" }).getByRole("button", { name: "Simulate" }).click();
-  const playback = page.getByRole("region", { name: "Simulation playback" });
-  await expect(playback.getByRole("button", { name: "Pause", exact: true })).toBeVisible({ timeout: 20_000 });
-  return playback;
-}
-
-const headline = (page: Page) => page.locator(".headline-alert");
-
-test("Play moves through the headlines on its own; Pause stops on one", async ({ page }) => {
-  const playback = await startTsunami(page);
-  await expect(headline(page)).toBeVisible({ timeout: 20_000 });
-  await expect(page.locator(".headline-alert-timer")).toBeVisible();
-  const first = await headline(page).getAttribute("data-event-id");
-  await expect.poll(() => headline(page).getAttribute("data-event-id"), { timeout: 20_000 }).not.toBe(first);
-
-  await playback.getByRole("button", { name: "Pause", exact: true }).click();
-  await expect(playback.getByRole("button", { name: "Play", exact: true })).toBeVisible();
-  await expect(page.locator(".headline-alert-timer")).toHaveCount(0);
-  const paused = await headline(page).getAttribute("data-event-id");
-  await page.waitForTimeout(8000);
-  expect(await headline(page).getAttribute("data-event-id")).toBe(paused);
+  const card = page.locator(".headline-alert");
+  await expect(card).toBeVisible({ timeout: 20000 });
+  const first = await card.getAttribute("data-event-id");
+  const position = page.getByLabel("Simulation timeline", { exact: true });
+  const minute = await position.inputValue();
+  await page.waitForTimeout(7000);
+  await expect(card).toHaveAttribute("data-event-id", first!);
+  await expect(position).toHaveValue(minute);
+  await card.getByRole("button", { name: /Continue simulation|Next headline/ }).click();
+  await expect.poll(() => card.getAttribute("data-event-id")).not.toBe(first);
+  await expect(card).toBeVisible();
+  await expect(page.locator(".wire-headline").first()).toBeVisible();
+  for (const title of await page.locator(".wire-headline").allTextContents()) {
+    expect(title.trim().split(/\s+/).length).toBeLessThanOrEqual(5);
+  }
+  await page.getByRole("button", { name: "Previous event" }).click();
+  await expect(card).toHaveAttribute("data-event-id", first!);
 });
 
-test("Next and Previous event step one event at a time", async ({ page }) => {
-  const playback = await startTsunami(page);
-  await expect(headline(page)).toBeVisible({ timeout: 20_000 });
-  await playback.getByRole("button", { name: "Pause", exact: true }).click();
-  const ids: string[] = [(await headline(page).getAttribute("data-event-id"))!];
+test("timeline Play auto-advances and the headline button restores manual mode", async ({ page }) => {
+  await page.route("**/api/recap-films/**", route => route.fulfill({ json: { status: "queued" } }));
+  await page.goto("/");
+  await page.getByRole("group", { name: "Starter scenarios" }).getByRole("button", { name: /Tsunami/ }).click();
+  await page.getByRole("region", { name: "Run Tsunami" }).getByRole("button", { name: "Simulate" }).click();
 
-  for (let i = 0; i < 2; i++) {
-    await playback.getByRole("button", { name: "Next event" }).click();
-    await expect.poll(() => headline(page).getAttribute("data-event-id"), { timeout: 20_000 }).not.toBe(ids.at(-1));
-    ids.push((await headline(page).getAttribute("data-event-id"))!);
-  }
-  await page.waitForTimeout(3000);
-  expect(await headline(page).getAttribute("data-event-id")).toBe(ids.at(-1));  // stepping waits
+  const timeline = page.getByRole("region", { name: "Simulation playback" });
+  const card = page.locator(".headline-alert");
+  await expect(card).toBeVisible({ timeout: 15000 });
+  const first = await card.getAttribute("data-event-id");
+  await timeline.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(timeline.getByRole("button", { name: "Pause", exact: true })).toBeVisible();
+  await page.waitForTimeout(4000);
+  await expect(card).toHaveAttribute("data-event-id", first!);
+  await expect.poll(() => card.getAttribute("data-event-id"), { timeout: 12000 }).not.toBe(first);
 
-  await playback.getByRole("button", { name: "Previous event" }).click();
-  await expect.poll(() => headline(page).getAttribute("data-event-id"), { timeout: 20_000 }).toBe(ids[1]);
-  await expect(playback.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  const second = await card.getAttribute("data-event-id");
+  await card.getByRole("button", { name: /Continue simulation|Next headline/ }).click();
+  await expect.poll(() => card.getAttribute("data-event-id"), { timeout: 12000 }).not.toBe(second);
+  const third = await card.getAttribute("data-event-id");
+  await expect(timeline.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await page.waitForTimeout(6500);
+  await expect(card).toHaveAttribute("data-event-id", third!);
 });

@@ -13,9 +13,10 @@ import { WorldMap, type WorldMapHandle } from "./world-map";
 import { WorldWire } from "./world-wire";
 import { PresentationControls } from "./presentation-controls";
 
+import { enableHeadlineSound, soundHeadline } from "../lib/headline-sound";
+
 const speeds = [1, 2, 4];
-// Auto-play: how long each headline stays up before the story moves on (at 1×).
-const READING_MS = 6000;
+const HEADLINE_DWELL_MS = 6000;
 const rate = Number(process.env.NEXT_PUBLIC_SIMULATION_MINUTES_PER_SECOND ?? 60);
 const minutesPerSecond = Number.isFinite(rate) && rate > 0 ? rate : 60;
 const demoReports = new Map<string, NewsItem>(feed.map((item) => [item.event_id, item]));
@@ -101,7 +102,8 @@ function useSatire(run: ScenarioRun, events: EventState, tone: Tone, isDemo: boo
 
 /**
  * One run, watched. Runs started from the home screen (`autoStart`) play as a
- * story: the clock stops on each development and waits for the viewer to advance.
+ * story: the clock stops at each development. The viewer can advance manually
+ * or use timeline Play to turn on timed advances.
  */
 export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, initialSpeed = 1, onRunAgain }: {
   run: ScenarioRun; isDemo: boolean; tone?: Tone; autoStart?: boolean; initialSpeed?: number; onRunAgain?: () => void;
@@ -109,6 +111,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   const mapRef = useRef<WorldMapHandle>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const seekFloorRef = useRef<number | undefined>(undefined);
+  const awaitingSeekSnapshot = useRef(false);
   const waitingForHeadline = useRef(false);
   // Previous event: the headline to show again once the seek's snapshot arrives.
   const replayHeadline = useRef<string | undefined>(undefined);
@@ -125,20 +128,26 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
     for (const [id, item] of facts) merged.set(id, satire.items.get(id) ?? item);
     return merged;
   }, [facts, satire]);
+  const headlineIds = useMemo(() => run.headlineEventIds && new Set(run.headlineEventIds), [run.headlineEventIds]);
+  const appliedHeadlines = useMemo(
+    () => events.applied.filter(event => !headlineIds || headlineIds.has(event.id)),
+    [events.applied, headlineIds],
+  );
   const connected = connection === "connected";
   const atEnd = simTime >= run.endMinute;
   const reportedHeadline = events.queue[0] && reports.get(events.queue[0].id);
   const pacing = pacingSummary(run.pacing, playback.speed, run.endMinute - simTime);
   const progress = Math.max(0, Math.min(1, (simTime - run.startMinute) / Math.max(1, run.endMinute - run.startMinute)));
-  const story = autoStart && !isDemo;
+  const story = autoStart || isDemo;
   const [wantPlaying, setWantPlaying] = useState(false);
-  // Play = auto-play: each headline is read for a moment, then the story moves on.
-  // Off = stepping: the story waits on each headline (Next event / Previous event).
-  const [autoPlay, setAutoPlay] = useState(false);
+  const [autoplay, setAutoplay] = useState(false);
+  const headlinePending = events.queue.length > 0;
+  const storyPlaying = autoplay || (!atEnd && wantPlaying && !headlinePending);
   const [beatReady, setBeatReady] = useState(true);
   const [film, setFilm] = useState<{ status: "idle" | "queued" | "generating" | "ready" | "failed"; stage: string; videoUrl?: string; message?: string }>({ status: "idle", stage: "idle" });
   const [filmOpen, setFilmOpen] = useState(false);
   const [filmDismissed, setFilmDismissed] = useState(false);
+  const [runCompleted, setRunCompleted] = useState(false);
   const [autoFollow, setAutoFollow] = useState(true);
   const [followSuspended, setFollowSuspended] = useState(false);
   const [manualSerial, setManualSerial] = useState(0);
@@ -155,7 +164,6 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
     started.current = true;
     sendControl({ action: "speed", speed: initialSpeed });
     setWantPlaying(true);
-    if (story) setAutoPlay(true);  // a new run opens in Play; pause or step at any time
     if (!story) sendControl({ action: "play" });
     // Story playback is started after the stream connects.
   }, [autoStart, connected, initialSpeed]);
@@ -172,25 +180,31 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
     setBeatReady(true);
   }, []);
 
-  const readingMs = Math.max(1500, READING_MS / Math.max(1, playback.speed));
-  // Auto-play moves past each headline after its reading time.
+  const announced = useRef(new Set<string>());
+  const headlineId = reportedHeadline?.event_id;
   useEffect(() => {
-    if (!story || !autoPlay || !reportedHeadline) return;
-    const timer = setTimeout(advanceStory, readingMs);
+    if (!headlineId || announced.current.has(headlineId)) return;
+    announced.current.add(headlineId);
+    soundHeadline();
+  }, [headlineId]);
+
+  useEffect(() => {
+    if (!story || !autoplay || !headlineId || !connected) return;
+    const timer = setTimeout(advanceStory, HEADLINE_DWELL_MS);
     return () => clearTimeout(timer);
-  }, [story, autoPlay, reportedHeadline?.event_id, readingMs, advanceStory]);
-  // Auto-play ends with the run.
+  }, [advanceStory, autoplay, connected, headlineId, story]);
+
   useEffect(() => {
-    if (autoPlay && atEnd && events.queue.length === 0) setAutoPlay(false);
-  }, [autoPlay, atEnd, events.queue.length]);
+    if (atEnd && events.queue.length === 0) setAutoplay(false);
+  }, [atEnd, events.queue.length]);
 
   // Snapshot boundaries cancel pending cosmetic work; they never replay old reports.
   useEffect(() => { setBeatReady(true); lastBeat.current = simTime; }, [events.revision]);
-  // Keep the simulation stopped until the viewer advances each queued headline.
+  // The clock runs only between headlines in both modes.
   useEffect(() => {
-    if (story && wantPlaying && beatReady && !atEnd &&
+    if (story && wantPlaying && beatReady && !atEnd && !awaitingSeekSnapshot.current &&
         events.queue.length === 0 && playback.state === "paused" && connected) sendControl({action: "play", until_next_event: true});
-  }, [wantPlaying, beatReady, atEnd, events.queue.length, playback.state, connected, story]);
+  }, [wantPlaying, beatReady, atEnd, events.queue.length, events.revision, playback.state, connected, story]);
   useEffect(() => {
     if (reportedHeadline) setSelectedId(reportedHeadline.event_id);
   }, [reportedHeadline?.event_id]);
@@ -206,7 +220,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   }, [selectedId, autoFollow, followSuspended, story, followLocation]);
 
   useEffect(() => {
-    if (!story) return;
+    if (!story || isDemo) return;
     const controller = new AbortController();
     let retry: ReturnType<typeof setTimeout> | undefined;
     async function refresh(start: boolean) {
@@ -228,11 +242,14 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
     }
     void refresh(true);
     return () => { controller.abort(); if (retry) clearTimeout(retry); };
-  }, [run.id, story, tone]);
+  }, [run.id, story, tone, isDemo]);
 
   useEffect(() => {
-    if (story && atEnd && events.queue.length === 0 && film.status !== "idle" && !filmDismissed) setFilmOpen(true);
-  }, [story, atEnd, events.queue.length, film.status, filmDismissed]);
+    if (story && !isDemo && atEnd && events.queue.length === 0) setRunCompleted(true);
+  }, [story, isDemo, atEnd, events.queue.length]);
+  useEffect(() => {
+    if (runCompleted && film.status !== "idle" && !filmDismissed) setFilmOpen(true);
+  }, [runCompleted, film.status, filmDismissed]);
   useEffect(() => {
     if (story) document.querySelector(".workspace")?.scrollIntoView({block: "start"});
   }, [run.id]);
@@ -269,6 +286,8 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
           setSimTime(data.sim_time_minutes);
           setPlayback(data.playback);
           // Read the ref now: React runs the updater below later, after it is cleared.
+          const seeking = awaitingSeekSnapshot.current;
+          awaitingSeekSnapshot.current = false;
           const replay = replayHeadline.current;
           replayHeadline.current = undefined;
           setEvents((previous) => ({
@@ -278,8 +297,9 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
             // A story run opens on its first report; stepping back shows that event's report
             // again; otherwise a snapshot never replays old reports.
             queue: story && replay
-              ? data.events.filter((e) => e.id === replay)
-              : story && previous.applied.length === 0 ? data.events : [],
+              ? data.events.filter((e) => e.id === replay && (!headlineIds || headlineIds.has(e.id)))
+              : story && !seeking ? [...previous.queue.filter(e => data.events.some(a => a.id === e.id)),
+                  ...data.events.filter(e => (!headlineIds || headlineIds.has(e.id)) && !previous.applied.some(a => a.id === e.id))] : [],
           }));
           if (replay) waitingForHeadline.current = true;
         } else if (!initialized) {
@@ -287,7 +307,8 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         } else if (data.kind === "event" && data.event.status === "applied") {
           const { event } = data;
           if (seekFloorRef.current !== undefined && event.sim_time_minutes <= seekFloorRef.current) return;
-          if (story) {
+          const headline = !headlineIds || headlineIds.has(event.id);
+          if (story && headline) {
             // Do not rely only on the server's stop-at-event flag: the direct pause
             // closes the event/clock message race and keeps playback stopped locally.
             socket.send(JSON.stringify({ action: "pause" }));
@@ -299,7 +320,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
             return {
               ...previous,
               applied: [...previous.applied, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence),
-              queue: [...previous.queue, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence),
+              queue: headline ? [...previous.queue, event].sort((a, b) => a.sim_time_minutes - b.sim_time_minutes || a.sequence - b.sequence) : previous.queue,
             };
           });
         } else if (data.kind === "clock") {
@@ -332,7 +353,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
       socketRef.current?.close();
       socketRef.current = null;
     };
-  }, [isDemo, run]);
+  }, [headlineIds, isDemo, run]);
 
   function sendControl(control: { action: "play"; until_next_event?: boolean } | { action: "pause" } | { action: "speed"; speed: number } | { action: "seek"; sim_time_minutes: number }) {
     const socket = socketRef.current;
@@ -344,24 +365,29 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   }
 
   function seek(minute: number) {
-    setAutoPlay(false);  // moving the playhead pauses, like Reset
+    setAutoplay(false);
     setWantPlaying(false); setBeatReady(true);
     waitingForHeadline.current = false;
+    awaitingSeekSnapshot.current = true;
     seekFloorRef.current = minute;
     sendControl({ action: "seek", sim_time_minutes: minute });
   }
 
   function togglePlayback() {
+    enableHeadlineSound();
     if (story) {
-      if (autoPlay) {  // Pause: stop on the current event
-        setAutoPlay(false);
-        if (events.queue.length === 0) { setWantPlaying(false); sendControl({ action: "pause" }); }
+      if (storyPlaying) {
+        setAutoplay(false);
+        setWantPlaying(false);
+        sendControl({ action: "pause" });
         return;
       }
-      if (atEnd && events.queue.length === 0) { seek(run.startMinute); focusFirstEvent(); }
-      setAutoPlay(true);
+      if (atEnd && !headlinePending) {
+        seek(run.startMinute);
+        focusFirstEvent();
+      }
+      setAutoplay(true);
       setWantPlaying(true);
-      if (events.queue.length === 0) sendControl({ action: "play", until_next_event: true });
       return;
     }
     if (playback.state === "playing") {
@@ -377,7 +403,8 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
 
   /** Step forward: past the current headline to the next event, then wait there. */
   function nextEvent() {
-    setAutoPlay(false);
+    enableHeadlineSound();
+    setAutoplay(false);
     setWantPlaying(true);
     if (events.queue.length > 0) advanceStory();
     else if (!atEnd) sendControl({ action: "play", until_next_event: true });
@@ -385,10 +412,9 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
 
   /** Step back: rewind to the event before the current one and show its headline again. */
   function previousEvent() {
-    setAutoPlay(false);
-    const current = events.queue[0] ?? events.applied.at(-1);
-    const index = current ? events.applied.findIndex((e) => e.id === current.id) : -1;
-    const target = index > 0 ? events.applied[index - 1] : undefined;
+    const current = events.queue[0] ?? appliedHeadlines.at(-1);
+    const index = current ? appliedHeadlines.findIndex((e) => e.id === current.id) : -1;
+    const target = index > 0 ? appliedHeadlines[index - 1] : undefined;
     if (!target) return;
     sendControl({ action: "pause" });
     replayHeadline.current = target.id;
@@ -396,12 +422,12 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   }
 
   const currentIndex = (() => {
-    const current = events.queue[0] ?? events.applied.at(-1);
-    return current ? events.applied.findIndex((e) => e.id === current.id) : -1;
+    const current = events.queue[0] ?? appliedHeadlines.at(-1);
+    return current ? appliedHeadlines.findIndex((e) => e.id === current.id) : -1;
   })();
 
   const playbackLabel = story
-    ? autoPlay ? "Pause" : atEnd && events.queue.length === 0 ? "Replay" : "Play"
+    ? storyPlaying ? "Pause" : atEnd && !headlinePending ? "Replay" : "Play"
     : playback.state === "playing" ? "Pause" : atEnd ? "Replay" : "Play";
   const filmPercent = film.stage === "render" ? 80 : film.stage === "assemble" ? 95 : film.stage === "narration" ? 35 : film.stage === "script" ? 15 : 0;
   const status = {
@@ -436,18 +462,19 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         {story && atEnd && events.queue.length === 0 && onRunAgain && (
           <section className="run-complete" aria-label="Run complete">
             <p><strong>Simulation complete.</strong> Run it again for a different future.</p>
+            {runCompleted && <button type="button" onClick={() => setFilmOpen(true)}>Watch recap video</button>}
             <button type="button" onClick={onRunAgain}>Run again with a new seed</button>
           </section>
         )}
         <HeadlineAlert
           item={reportedHeadline}
           queuedCount={Math.max(0, events.queue.length - 1)}
-          onAdvance={() => { setAutoPlay(false); setWantPlaying(true); advanceStory(); }}
-          autoAdvanceMs={story && autoPlay ? readingMs : undefined}
+          onAdvance={nextEvent}
+          autoplay={autoplay}
         />
       </WorldMap>
 
-      {filmOpen && story && atEnd && events.queue.length === 0 && (
+      {filmOpen && runCompleted && (
         <div className="recap-modal-backdrop" role="presentation">
           <section className="recap-modal" role="dialog" aria-modal="true" aria-labelledby="recap-modal-title">
             <button className="recap-modal-close" type="button" onClick={() => { setFilmOpen(false); setFilmDismissed(true); }} aria-label="Close recap">×</button>
@@ -481,15 +508,18 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
             <span>{isDemo ? "Japan demo" : run.seed !== undefined ? `Run · seed ${run.seed}` : "Prompted scenario"}</span>
             <span className="run-stream" role="status"><i data-connected={connected} aria-hidden="true" />{status}</span>
           </div>
-          <h2>{run.title}</h2>
+
           <button className="focus-button" type="button" onClick={focusFirstEvent}>
             <Crosshair size={16} aria-hidden="true" /> {firstPlace}
           </button>
+          {runCompleted && <button className="recap-open-button" type="button" onClick={() => setFilmOpen(true)}>
+            Watch recap video
+          </button>}
         </div>
-        <ImpactDashboard events={events.applied} />
         {satire && <AbsurdityIndex metrics={satire.absurdity} />}
-        <WorldWire items={[...reports.values()].reverse()} loading={newsLoading || Boolean(satire?.loading && satire.items.size === 0)}
-          satire={Boolean(satire)} selectedId={selectedId} onSelect={(item) => { setSelectedId(item.event_id); focusNewsItem(item); }} />
+        <WorldWire items={[...reports.values()].filter(item => !headlineIds || headlineIds.has(item.event_id)).reverse()} loading={newsLoading || Boolean(satire?.loading && satire.items.size === 0)}
+          selectedId={selectedId} onSelect={(item) => { setSelectedId(item.event_id); focusNewsItem(item); }} />
+        <ImpactDashboard events={events.applied} />
         {satire && <SocialFeed posts={satire.posts} loading={satire.loading} />}
       </motion.aside>
 
@@ -500,7 +530,6 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
             type="button"
             onClick={togglePlayback}
             disabled={!connected}
-            title={story ? (autoPlay ? "Pause on this event" : "Play: each headline shows for a moment, then the story moves on") : undefined}
             whileTap={{ scale: 0.96 }}
             transition={{ duration: 0.12 }}
           >
@@ -520,7 +549,6 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
           <button className="reset-button" type="button" aria-label="Reset playback" title="Reset playback"
             disabled={!connected}
             onClick={() => {
-              setAutoPlay(false);
               sendControl({ action: "pause" });
               seek(run.startMinute);
             }}>
@@ -548,7 +576,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
           {pacing && (
             <p className="timeline-pacing" aria-label="Playback pacing">
               <span>{pacing.rate}</span>
-              <span>{story ? (autoPlay ? "playing" : events.queue.length > 0 ? "paused on this event" : atEnd ? "at the end" : "paused") : pacing.left}</span>
+              <span>{story ? (autoplay ? "Auto-play · 6s per headline" : events.queue.length ? "Paused for headline" : atEnd ? "Complete" : playback.state) : pacing.left}</span>
             </p>
           )}
         </div>

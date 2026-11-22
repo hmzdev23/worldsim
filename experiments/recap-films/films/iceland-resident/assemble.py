@@ -16,9 +16,9 @@ HERE = Path(__file__).resolve().parent
 AUDIO, OUT = HERE / "audio", HERE / "output"
 
 # (effect, shot index, offset into the shot, seconds, volume)
-EFFECTS = [("rumble", 1, 0.0, 4.4, .34), ("alert", 1, 1.1, 1.2, .25), ("siren", 2, 0.0, 3.4, .22),
-           ("alert", 2, 1.1, 1.2, .22), ("power", 3, 1.5, 2.8, .32), ("airport", 4, 0.0, 4.4, .24),
-           ("crowd", 5, 0.0, 4.4, .18), ("alert", 6, 1.1, 1.2, .2)]
+EFFECTS = [("rumble", 1, 0.0, 4.4, .34), ("siren", 2, 0.0, 3.4, .22),
+           ("power", 3, 1.5, 2.8, .32), ("airport", 4, 0.0, 4.4, .24),
+           ("crowd", 5, 0.0, 4.4, .18)]
 OUTRO = 3.5  # stats card after the last line (storyboard.js uses the same value)
 
 

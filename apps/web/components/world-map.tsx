@@ -160,7 +160,7 @@ const mapStyle: StyleSpecification = {
         ],
         "fill-opacity": [
           "case",
-          ["boolean", ["feature-state", "hover"], false], 0.28,
+          ["boolean", ["feature-state", "hover"], false], 0.69,
           0.055,
         ],
       },
@@ -302,7 +302,18 @@ export function WorldMap({
   const mapRef = useRef<MapLibreMap | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const [mapUnavailable, setMapUnavailable] = useState(false);
-  const [country, setCountry] = useState("");
+  const [country, setCountry] = useState<{ name: string; code: string }>();
+  const countrySeverity = useMemo(() => Object.fromEntries(
+    events.filter(e => e.status === "applied").map(e => [e.location.country_code, e.severity])
+  ), [events]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!mapReady || !map) return;
+    const severity: ExpressionSpecification = ["coalesce", ["get", ["get", "code"], ["literal", countrySeverity]], 0];
+    map.setPaintProperty("land", "fill-color", ["case", ["boolean", ["feature-state", "hover"], false],
+      ["interpolate", ["linear"], ["number", severity], 0, "#dedfe2", 0.35, "#efada1", 0.7, "#e96250", 1, "#c5182c"], "#eff3ed"]);
+  }, [mapReady, countrySeverity]);
   const eventMarkers = useRef(new Map<string, Marker>());
   const aidMarkers = useRef(new Map<string, { route: AidRoute; marker: Marker; label: Marker }>());
   const cueMarkers = useRef<Marker[]>([]);
@@ -363,7 +374,7 @@ export function WorldMap({
         if (hoveredId === undefined) return;
         map.removeFeatureState({ source: "countries", id: hoveredId }, "hover");
         hoveredId = undefined;
-        setCountry("");
+        setCountry(undefined);
       };
       map.on("mousemove", "land", ({ features }) => {
         const feature = features?.[0];
@@ -372,7 +383,7 @@ export function WorldMap({
         hoveredId = feature.id;
         if (hoveredId === undefined) return;
         map.setFeatureState({ source: "countries", id: hoveredId }, { hover: true });
-        setCountry(String(feature.properties.name));
+        setCountry({ name: String(feature.properties.name), code: String(feature.properties.code) });
       });
       map.on("mouseleave", "land", clearHover);
       if (flashRef.current) motionLayer.current = new MotionLayer(map, flashRef.current);
@@ -617,7 +628,7 @@ export function WorldMap({
       <div className="map-flash" ref={flashRef} aria-hidden="true" />
       <div className="map-caption">
         <h2>World map</h2>
-        <span>{country || "Drag to pan · Scroll to zoom"}</span>
+        <span>{country ? country.name : "Drag to pan · Scroll to zoom"}{country && country.code in countrySeverity && ` · Severity ${Math.round(countrySeverity[country.code] * 100)}%`}</span>
       </div>
       <div className="map-controls" aria-label="Map controls">
         <button type="button" title="Zoom in" aria-label="Zoom in" disabled={!mapReady}

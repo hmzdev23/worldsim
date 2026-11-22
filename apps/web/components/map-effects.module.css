@@ -1,6 +1,8 @@
 /* Map-only styles for event effects (DIR-006). Kept out of app/styles.css. */
 
 .legend {
+  color: #f1f2f3;
+  --muted: #c7cccf;
   position: absolute;
   z-index: 0;
   top: 12px;

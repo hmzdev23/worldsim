@@ -37,8 +37,7 @@ export function ScenarioStarters({ starters, loading, error, busy, onRetry, onLa
 
   return <section className="starters" aria-labelledby="starters-title">
     <div className="starters-heading">
-      <h2 id="starters-title">Or start from a scenario</h2>
-      <p>Each one plays out differently every time you run it.</p>
+      <h2 id="starters-title">Scenario library</h2>
     </div>
     {loading && <p role="status" className="setup-context">Loading starter scenarios…</p>}
     {error && <div className="setup-error" role="alert"><p>{error}</p><button type="button" onClick={onRetry}>Retry connection</button></div>}

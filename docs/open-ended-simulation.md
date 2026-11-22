@@ -5,7 +5,7 @@ Branch: `feat/open-ended-sim`. WORLD//SIM is no longer a game. There are no role
 1. **Start:** type a situation, or pick one of ten starter scenarios.
 2. **Simulate:** the Director predicts the chain of events, and every run gets a new random seed.
 3. **Watch:** the run plays out by itself on the animated map, with WORLD//WIRE (and, if chosen, the satire layer).
-4. **Film:** the same run can be turned into a satirical recap film.
+4. **Film:** the same run can be turned into a recap film.
 
 Running the same prompt again gives a different, plausible future. Each run still stays causally coherent: every event happens after the events that caused it.
 
@@ -101,27 +101,22 @@ These came from #80, #82 and the onboarding work and are now deleted:
 **Kept:**
 - The ten scenario fixtures, now offered as starters (`GET /starters`, `fixtures/starters.json`).
 - The nuclear country picker and "change the starting conditions", now optional exploration.
-- The cinematic presentation: the clock stops at each event, the camera follows it, and the next headline waits for the viewer to advance it.
+- Playback starts in manual mode and stops at up to eight headlines. Other events still update the map and impact figures. **Continue simulation** on a headline steps to the next event. **Play** on the timeline advances headlines every six seconds. The speed buttons control the simulation clock between events.
 - Hamza's map effects.
 
 #79 and #81 also add player mode. They are superseded by this branch.
 
 ## Recap film for any run
 
-Code: `experiments/recap-films/films/run`, the same format as the satire 3D films.
+Code: `experiments/recap-films/films/run`.
 
-**Format:**
-- One invented local follows the run. Locals and names match the first place.
-- The protagonist always wears yellow.
-- The facts are narrated plainly.
-- The jokes arrive as phone notifications from `worldwire.satire` for that exact event. Each joke is used once per film.
-- Strikes and detonations are shown plainly, with no joke.
-- A running gag is picked by the seed and pays off at the end, followed by a stats card.
+The film covers five or six of the walkthrough’s headlines in order, with a shorter selection only if the run has fewer headlines. Each shot
+shows the country, local place, and clock. Narration names the country at the
+start and when the story moves to a different country.
 
 **Rules:**
-- "SATIRE · FICTIONAL" stays on screen.
 - No casualty figures.
-- 50 seconds at most, with the voice `XA3P1cj7XJexe6Zq0ATX`.
+- 40 to 50 seconds, with the voice `XA3P1cj7XJexe6Zq0ATX`.
 - Everything that moves faces its direction of travel.
 - Sets reach the horizon.
 

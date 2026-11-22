@@ -22,6 +22,7 @@ type Timeline = RunIdentity & {
   sim_time_minutes: number;
   end_minutes: number;
   events: ScenarioEvent[];
+  headline_event_ids?: string[];
   pacing?: Pacing;
 };
 
@@ -85,8 +86,14 @@ export async function prepareScenario(
     startMinute,
     endMinute: timeline.end_minutes,
     firstEvent,
+    headlineEventIds: timeline.headline_event_ids,
     pacing: timeline.pacing,
   };
+}
+
+export async function readDemoHeadlines(signal: AbortSignal) {
+  const timeline = await requestJson<Timeline>("/timeline", { signal });
+  return timeline.headline_event_ids;
 }
 
 export async function readScenarioNews(run: ScenarioRun, signal: AbortSignal) {
@@ -105,7 +112,7 @@ export async function listStarters(signal: AbortSignal): Promise<Starter[]> {
 
 /** The run's canonical result (seed, prompt, every event): what the map plays and the recap film follows. */
 export async function readRunResult(run: ScenarioRun, signal?: AbortSignal) {
-  return requestJson<RunIdentity & { seed?: number; prompt: string; events: ScenarioEvent[] }>(
+  return requestJson<RunIdentity & { seed?: number; prompt: string; events: ScenarioEvent[]; headline_event_ids?: string[] }>(
     `${scenarioPath(run.id)}/result`, { signal },
   );
 }

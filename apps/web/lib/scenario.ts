@@ -63,6 +63,7 @@ export type ScenarioRun = RunIdentity & {
   startMinute: number;
   endMinute: number;
   firstEvent: ScenarioEvent;
+  headlineEventIds?: string[];
   pacing?: Pacing;
   // This run's variation seed: every run gets a new one, so no two runs repeat.
   seed?: number;

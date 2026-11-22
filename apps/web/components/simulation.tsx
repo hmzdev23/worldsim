@@ -4,8 +4,9 @@ import { ArrowClockwise, ArrowRight, GlobeHemisphereWest } from "@phosphor-icons
 import { MotionConfig } from "motion/react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { japanDemo } from "../lib/earthquake";
-import { listStarters, pauseRun, prepareScenario } from "../lib/scenario-api";
+import { listStarters, pauseRun, prepareScenario, readDemoHeadlines } from "../lib/scenario-api";
 import { generationStageLabel, type ScenarioRun, type Starter, type Tone } from "../lib/scenario";
+import { enableHeadlineSound } from "../lib/headline-sound";
 import { RunConsole } from "./run-console";
 import { ScenarioStarters, type StarterLaunch } from "./scenario-starters";
 
@@ -39,7 +40,7 @@ function ScenarioWorkspace() {
   const lastRequest = useRef<Request | null>(null);
   const preparingSince = useRef<number | undefined>(undefined);
   const busy = launch.status === "generating";
-  const isDemo = run === japanDemo;
+  const isDemo = run.id === japanDemo.id;
   const runTone = RUN_TONE;
   const nextTone = RUN_TONE;
 
@@ -72,6 +73,7 @@ function ScenarioWorkspace() {
   }
   async function start(next: Request) {
     if (!next.prompt || request.current) return;
+    enableHeadlineSound();
     const controller = new AbortController();
     request.current = controller; preparingSince.current = Date.now(); lastRequest.current = next;
     setLaunch({ status: "generating" }); setElapsedSeconds(0); setStage(undefined);
@@ -92,15 +94,19 @@ function ScenarioWorkspace() {
   function runAgain() {
     if (lastRequest.current) void start({ ...lastRequest.current, tone: runTone });
   }
-  // The fixed Japan earthquake run is no longer on the home screen; tests open it with /?demo=japan.
+  // The reference Japan run is available at /?demo=japan.
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get("demo") === "japan") loadDemo();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (new URLSearchParams(window.location.search).get("demo") !== "japan") return;
+    const controller = new AbortController();
+    void readDemoHeadlines(controller.signal).catch(() => undefined).then(headlineEventIds => {
+      if (controller.signal.aborted || request.current) return;
+      setRun({ ...japanDemo, headlineEventIds });
+      setAutoStart(false);
+      setLaunch({ status: "idle" });
+      setView("watch");
+    });
+    return () => controller.abort();
   }, []);
-  function loadDemo() {
-    pauseCurrent(); request.current?.abort(); request.current = null; lastRequest.current = null;
-    setRun(japanDemo); setAutoStart(false); setLaunch({ status: "idle" }); setView("watch");
-  }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     // An empty box runs the example shown in it, so Enter alone starts a run.
@@ -114,19 +120,18 @@ function ScenarioWorkspace() {
       : "Describe any situation, or press Enter to run the example. Every run rolls a new seed, so it never plays out the same way twice.";
 
   return <main className={`simulation-shell view-${view}`}>
-    <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span><span>WORLD<span className="wordmark-slashes">//</span>SIM</span></h1>
+    <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span><span>What if?</span></h1>
       <div className="masthead-actions">
-        <span className="mode-label">Fictional simulation</span>
         {view !== "home" && <button type="button" className="demo-button" disabled={busy} onClick={goHome}>New scenario</button>}
       </div>
     </header>
 
     {view === "home" && <section className="sim-intro" aria-labelledby="intro-title">
-      <p className="alt-kicker">An open-ended world simulation</p>
+
       <h2 id="intro-title">What if…?</h2>
-      <p>Describe a situation and watch the world respond on the map. Run it again and a different, plausible future unfolds.</p>
+      <p>Trace a scenario across the map, one headline at a time.</p>
     </section>}
-    <form className="scenario-launch" onSubmit={submit}><label htmlFor="scenario-prompt">Scenario prompt</label>
+    {(view === "home" || busy || launch.status === "failed") && <form className="scenario-launch" onSubmit={submit}><label htmlFor="scenario-prompt">Scenario prompt</label>
       <div className="scenario-input-row"><textarea id="scenario-prompt" rows={2} maxLength={2000} value={prompt} disabled={busy}
           placeholder={DEFAULT_PROMPT} aria-describedby="prompt-enter-hint"
           onKeyDown={(e) => {
@@ -140,7 +145,7 @@ function ScenarioWorkspace() {
           <button className="generate-button" type="submit" disabled={busy}>{busy ? "Preparing…" : launch.status === "failed" ? "Try again" : "Simulate"}<ArrowRight size={16} aria-hidden="true" /></button></div>
         <div className="scenario-launch-footer"><p id="prompt-enter-hint" className={launch.status === "failed" ? "launch-error" : undefined} aria-live="polite">{launchMessage}</p>
 </div>
-      </form>
+      </form>}
     {view === "home" && <ScenarioStarters starters={starters} loading={startersLoading} error={startersError} busy={busy}
       onRetry={() => setReload((n) => n + 1)} onLaunch={(s) => void start({ ...s, tone: nextTone })} />}
 

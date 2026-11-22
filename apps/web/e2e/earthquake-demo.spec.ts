@@ -12,7 +12,7 @@ test("earthquake headline appears on play and focuses the map", async ({ page })
   await page.goto("/");
   await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
-  const wire = page.getByRole("region", { name: "WORLD//WIRE" });
+  const wire = page.getByRole("region", { name: "Reports" });
   await expect(wire).toContainText("No reports yet");
   await expect(page.locator(".maplibregl-canvas")).toBeVisible();
 
@@ -43,7 +43,7 @@ test("wire only shows events the stream has applied", async ({ page }) => {
   await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  const wire = page.getByRole("region", { name: "WORLD//WIRE" });
+  const wire = page.getByRole("region", { name: "Reports" });
   await expect(wire.getByRole("button").filter({ hasText: /earthquake strikes/i })).toBeVisible();
   const cards = await wire.getByRole("button").count();
   expect(cards).toBeLessThan(fixture.events.length);
@@ -55,7 +55,7 @@ test("reset hides the headline again", async ({ page }) => {
   await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  const wire = page.getByRole("region", { name: "WORLD//WIRE" });
+  const wire = page.getByRole("region", { name: "Reports" });
   await expect(wire.getByRole("button").first()).toBeVisible();
   await page.getByRole("button", { name: "Reset playback" }).click();
   await expect(wire).toContainText("No reports yet");
