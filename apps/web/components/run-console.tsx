@@ -462,6 +462,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         {story && atEnd && events.queue.length === 0 && onRunAgain && (
           <section className="run-complete" aria-label="Run complete">
             <p><strong>Simulation complete.</strong> Run it again for a different future.</p>
+            {runCompleted && <button type="button" onClick={() => setFilmOpen(true)}>Watch recap video</button>}
             <button type="button" onClick={onRunAgain}>Run again with a new seed</button>
           </section>
         )}

@@ -65,7 +65,7 @@ class RunFilmTests(unittest.TestCase):
                 for shot in script["shots"]:
                     country = shot["country"]
                     if country != previous_country:
-                        self.assertRegex(shot["narration"], rf"^In (the )?{re.escape(country)}[,.]")
+                        self.assertRegex(shot["narration"], re.compile(rf"\b{re.escape(country)}\b", re.I))
                     self.assertNotIn("notification", shot)
                     self.assertNotIn("prop", shot)
                     previous_country = country
@@ -100,6 +100,16 @@ class RunFilmTests(unittest.TestCase):
         detail = film.event_detail(contamination)
         self.assertEqual(film.scene_for(contamination, detail)[0], "map")
         self.assertIn("volcanic gas plume", detail)
+
+    def test_country_introduction_is_not_repeated_when_already_in_description(self):
+        result = result_for("japan-earthquake", 42)
+        event = result["events"][0]
+        event["payload"]["description"] = "A powerful earthquake strikes northeastern Japan."
+        narration = film.narrate(event, None, film.event_detail(event))
+        self.assertEqual(narration, "A powerful earthquake strikes northeastern Japan.")
+        event["payload"]["description"] = "An earthquake strikes near Sendai."
+        narration = film.narrate(event, None, film.event_detail(event))
+        self.assertEqual(narration, "In Japan. An earthquake strikes near Sendai.")
 
     def test_short_narration_gets_a_forty_second_cut_without_extra_shots(self):
         cuts = audio.shot_cuts([1.4, 2.2, 3.0, 4.2, 2.5], film.OUTRO)

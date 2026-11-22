@@ -137,7 +137,10 @@ def narrate(event: dict, previous: dict | None, detail: str) -> str:
     # Keep a complete sentence. If the source text is too long or gives casualty
     # figures, use the short event template instead.
     if detail and len(detail.split()) <= 26 and not re.search(r"\b(dead|deaths?|killed|injur(?:ed|ies)|casualties|fatalities)\b", detail, re.I):
-        return lead + detail.rstrip(".!?") + "."
+        # The event description already gives the country, so introducing it
+        # again would repeat the location in the same sentence or breath.
+        mentions_country = re.search(r"(?<!\w)" + re.escape(country) + r"(?!\w)", detail, re.I)
+        return ("" if mentions_country else lead) + detail.rstrip(".!?") + "."
 
     place_detail = f" {at(place)}" if place.casefold() != country.casefold() else ""
     _, template = EVENTS.get(event["type"], ("map", "an emergency was reported{at}"))
