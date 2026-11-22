@@ -16,6 +16,7 @@ import { PresentationControls } from "./presentation-controls";
 import { enableHeadlineSound, soundHeadline } from "../lib/headline-sound";
 
 const speeds = [1, 2, 4];
+const HEADLINE_DWELL_MS = 6000;
 const rate = Number(process.env.NEXT_PUBLIC_SIMULATION_MINUTES_PER_SECOND ?? 60);
 const minutesPerSecond = Number.isFinite(rate) && rate > 0 ? rate : 60;
 const demoReports = new Map<string, NewsItem>(feed.map((item) => [item.event_id, item]));
@@ -101,7 +102,8 @@ function useSatire(run: ScenarioRun, events: EventState, tone: Tone, isDemo: boo
 
 /**
  * One run, watched. Runs started from the home screen (`autoStart`) play as a
- * story: the clock stops on each development and waits for the viewer to advance.
+ * story: the clock stops at each development. The viewer can advance manually
+ * or use timeline Play to turn on timed advances.
  */
 export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, initialSpeed = 1, onRunAgain }: {
   run: ScenarioRun; isDemo: boolean; tone?: Tone; autoStart?: boolean; initialSpeed?: number; onRunAgain?: () => void;
@@ -133,6 +135,9 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   const progress = Math.max(0, Math.min(1, (simTime - run.startMinute) / Math.max(1, run.endMinute - run.startMinute)));
   const story = autoStart || isDemo;
   const [wantPlaying, setWantPlaying] = useState(false);
+  const [autoplay, setAutoplay] = useState(false);
+  const headlinePending = events.queue.length > 0;
+  const storyPlaying = autoplay || (!atEnd && wantPlaying && !headlinePending);
   const [beatReady, setBeatReady] = useState(true);
   const [film, setFilm] = useState<{ status: "idle" | "queued" | "generating" | "ready" | "failed"; stage: string; videoUrl?: string; message?: string }>({ status: "idle", stage: "idle" });
   const [filmOpen, setFilmOpen] = useState(false);
@@ -177,13 +182,23 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
     soundHeadline();
   }, [headlineId]);
 
+  useEffect(() => {
+    if (!story || !autoplay || !headlineId || !connected) return;
+    const timer = setTimeout(advanceStory, HEADLINE_DWELL_MS);
+    return () => clearTimeout(timer);
+  }, [advanceStory, autoplay, connected, headlineId, story]);
+
+  useEffect(() => {
+    if (atEnd && events.queue.length === 0) setAutoplay(false);
+  }, [atEnd, events.queue.length]);
+
   // Snapshot boundaries cancel pending cosmetic work; they never replay old reports.
   useEffect(() => { setBeatReady(true); lastBeat.current = simTime; }, [events.revision]);
-  // Keep the simulation stopped until the viewer advances each queued headline.
+  // The clock runs only between headlines in both modes.
   useEffect(() => {
-    if (story && wantPlaying && beatReady && !atEnd &&
+    if (story && wantPlaying && beatReady && !atEnd && !awaitingSeekSnapshot.current &&
         events.queue.length === 0 && playback.state === "paused" && connected) sendControl({action: "play", until_next_event: true});
-  }, [wantPlaying, beatReady, atEnd, events.queue.length, playback.state, connected, story]);
+  }, [wantPlaying, beatReady, atEnd, events.queue.length, events.revision, playback.state, connected, story]);
   useEffect(() => {
     if (reportedHeadline) setSelectedId(reportedHeadline.event_id);
   }, [reportedHeadline?.event_id]);
@@ -340,6 +355,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   }
 
   function seek(minute: number) {
+    setAutoplay(false);
     setWantPlaying(false); setBeatReady(true);
     waitingForHeadline.current = false;
     awaitingSeekSnapshot.current = true;
@@ -350,15 +366,18 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   function togglePlayback() {
     enableHeadlineSound();
     if (story) {
-      if (events.queue.length) { nextEvent(); return; }
-      if (!atEnd && wantPlaying) {
+      if (storyPlaying) {
+        setAutoplay(false);
         setWantPlaying(false);
         sendControl({ action: "pause" });
         return;
       }
-      if (atEnd) { seek(run.startMinute); focusFirstEvent(); }
+      if (atEnd && !headlinePending) {
+        seek(run.startMinute);
+        focusFirstEvent();
+      }
+      setAutoplay(true);
       setWantPlaying(true);
-      if (!atEnd) sendControl({ action: "play", until_next_event: true });
       return;
     }
     if (playback.state === "playing") {
@@ -375,6 +394,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   /** Step forward: past the current headline to the next event, then wait there. */
   function nextEvent() {
     enableHeadlineSound();
+    setAutoplay(false);
     setWantPlaying(true);
     if (events.queue.length > 0) advanceStory();
     else if (!atEnd) sendControl({ action: "play", until_next_event: true });
@@ -397,7 +417,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   })();
 
   const playbackLabel = story
-    ? events.queue.length ? "Continue" : atEnd ? "Replay" : wantPlaying ? "Pause" : "Play"
+    ? storyPlaying ? "Pause" : atEnd && !headlinePending ? "Replay" : "Play"
     : playback.state === "playing" ? "Pause" : atEnd ? "Replay" : "Play";
   const filmPercent = film.stage === "render" ? 80 : film.stage === "assemble" ? 95 : film.stage === "narration" ? 35 : film.stage === "script" ? 15 : 0;
   const status = {
@@ -438,7 +458,8 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         <HeadlineAlert
           item={reportedHeadline}
           queuedCount={Math.max(0, events.queue.length - 1)}
-          onAdvance={() => { nextEvent(); }}
+          onAdvance={nextEvent}
+          autoplay={autoplay}
         />
       </WorldMap>
 
@@ -541,7 +562,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
           {pacing && (
             <p className="timeline-pacing" aria-label="Playback pacing">
               <span>{pacing.rate}</span>
-              <span>{story ? (events.queue.length ? "Paused for headline" : atEnd ? "Complete" : playback.state) : pacing.left}</span>
+              <span>{story ? (autoplay ? "Auto-play · 6s per headline" : events.queue.length ? "Paused for headline" : atEnd ? "Complete" : playback.state) : pacing.left}</span>
             </p>
           )}
         </div>

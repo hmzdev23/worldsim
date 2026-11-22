@@ -24,3 +24,28 @@ test("headlines wait for Continue and Previous revisits the prior event", async 
   await page.getByRole("button", { name: "Previous event" }).click();
   await expect(card).toHaveAttribute("data-event-id", first!);
 });
+
+test("timeline Play auto-advances and the headline button restores manual mode", async ({ page }) => {
+  await page.route("**/api/recap-films/**", route => route.fulfill({ json: { status: "queued" } }));
+  await page.goto("/");
+  await page.getByRole("group", { name: "Starter scenarios" }).getByRole("button", { name: /Tsunami/ }).click();
+  await page.getByRole("region", { name: "Run Tsunami" }).getByRole("button", { name: "Simulate" }).click();
+
+  const timeline = page.getByRole("region", { name: "Simulation playback" });
+  const card = page.locator(".headline-alert");
+  await expect(card).toBeVisible({ timeout: 15000 });
+  const first = await card.getAttribute("data-event-id");
+  await timeline.getByRole("button", { name: "Play", exact: true }).click();
+  await expect(timeline.getByRole("button", { name: "Pause", exact: true })).toBeVisible();
+  await page.waitForTimeout(4000);
+  await expect(card).toHaveAttribute("data-event-id", first!);
+  await expect.poll(() => card.getAttribute("data-event-id"), { timeout: 12000 }).not.toBe(first);
+
+  const second = await card.getAttribute("data-event-id");
+  await card.getByRole("button", { name: /Continue simulation|Next headline/ }).click();
+  await expect.poll(() => card.getAttribute("data-event-id"), { timeout: 12000 }).not.toBe(second);
+  const third = await card.getAttribute("data-event-id");
+  await expect(timeline.getByRole("button", { name: "Play", exact: true })).toBeVisible();
+  await page.waitForTimeout(6500);
+  await expect(card).toHaveAttribute("data-event-id", third!);
+});

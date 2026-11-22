@@ -101,7 +101,7 @@ These came from #80, #82 and the onboarding work and are now deleted:
 **Kept:**
 - The ten scenario fixtures, now offered as starters (`GET /starters`, `fixtures/starters.json`).
 - The nuclear country picker and "change the starting conditions", now optional exploration.
-- The cinematic presentation: the clock stops at each event, the camera follows it, and the next headline waits for the viewer to advance it.
+- Playback starts in manual mode. **Continue simulation** on a headline steps to the next event. **Play** on the timeline advances headlines every six seconds. The speed buttons control the simulation clock between events.
 - Hamza's map effects.
 
 #79 and #81 also add player mode. They are superseded by this branch.

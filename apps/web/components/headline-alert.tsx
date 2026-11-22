@@ -6,10 +6,12 @@ export function HeadlineAlert({
   item,
   queuedCount,
   onAdvance,
+  autoplay,
 }: {
   item: NewsItem | undefined;
   queuedCount: number;
   onAdvance: () => void;
+  autoplay: boolean;
 }) {
   const hasNext = queuedCount > 0;
   const reducedMotion = useReducedMotion();
@@ -47,7 +49,7 @@ export function HeadlineAlert({
               <Crosshair size={17} aria-hidden="true" /> Focus map
             </button>
             <div className="headline-alert-queue">
-              <span>{hasNext ? `${queuedCount} queued` : "Paused"}</span>
+              <span>{hasNext ? `${queuedCount} queued` : autoplay ? "Auto-play" : "Paused"}</span>
               <button className="headline-alert-advance" type="button" onClick={onAdvance}>
                 {hasNext ? "Next headline" : "Continue simulation"} <CaretRight size={14} aria-hidden="true" />
               </button>
