@@ -15,6 +15,13 @@ The Japan earthquake fixture, seen through one invented resident. Mika wears a y
 
 The film ends on a "Mika's four days" card: notifications received, the absurdity index, and pieces of toast finished (0).
 
+## Rules the film follows
+
+- **Length:** 50 seconds at most (`make-audio.py` enforces it). The current cut is 48.5 seconds, including the 3.5-second stats card.
+- **Voice:** narration uses the ElevenLabs voice `XA3P1cj7XJexe6Zq0ATX`.
+- **Motion:** every model (people, Kenney cars, train cabs) faces local +Z, and anything that moves is placed with `go()`, which turns it to face its direction of travel. Walking and running speeds match the animation clips, so feet don't slide.
+- **Sets:** outdoor sets sit on a ground plane that reaches the horizon, with fog, and the streets run 120 units deep. Interiors are closed rooms with a ceiling.
+
 ## Build
 
 ```sh

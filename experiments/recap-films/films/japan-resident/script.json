@@ -5,6 +5,7 @@
     "home": "Ishinomaki"
   },
   "tone": "satirical",
+  "outro_seconds": 3.5,
   "disclaimer": "Fictional simulation. Mika, every company, statement and statistic here is invented.",
   "source": {
     "fixture": "japan-earthquake",
@@ -46,7 +47,7 @@
       "event_id": "evt-0001",
       "date": "DAY 1 · 06:41",
       "lower_third": "MIKA · ISHINOMAKI",
-      "narration": "This is Mika. She lives in Ishinomaki. At six forty-one, her biggest problem was the toaster."
+      "narration": "This is Mika, in Ishinomaki. At six forty-one, her biggest problem was the toaster."
     },
     {
       "scene": "quake",
@@ -57,7 +58,7 @@
         "handle": "@MinistryOfReassurance",
         "text": "We can confirm the ground has been asked to remain still. The situation remains fluid."
       },
-      "narration": "At six forty-two, a magnitude 7.8 earthquake struck off the coast of Miyagi. Her phone already had a statement ready."
+      "narration": "At six forty-two, a magnitude 7.8 earthquake. Her phone already had a statement ready."
     },
     {
       "scene": "warning",
@@ -68,7 +69,7 @@
         "handle": "@ShrugMutual",
         "text": "Water damage is covered unless the water came from the sea, a river, the sky or a pipe. See clause 94(b)."
       },
-      "narration": "Three minutes later came a tsunami warning, and a helpful note about her insurance."
+      "narration": "Three minutes later: a tsunami warning, plus a note about her insurance."
     },
     {
       "scene": "evacuation",
@@ -79,7 +80,7 @@
         "handle": "@ThriftJetAir",
         "text": "ThriftJet now offers Evacuation Class: same seat, louder announcements. Bags extra."
       },
-      "narration": "Mika joined the walk to higher ground. Her phone offered her an upgrade."
+      "narration": "Mika walked to higher ground. Her phone offered an upgrade."
     },
     {
       "scene": "shelter",
@@ -90,7 +91,7 @@
         "handle": "@Synergexa",
         "text": "Introducing CandleBox™ Premium: the outage-ready subscription. Now three times the price."
       },
-      "narration": "At the shelter, the power went out. Her phone, on four percent, suggested a candle subscription."
+      "narration": "At the shelter, the power went out. Her phone suggested candles. Premium ones."
     },
     {
       "scene": "aid",
@@ -101,7 +102,7 @@
         "handle": "@StabilityCommittee",
         "text": "We warmly welcome the aid from the United States and have formed a working group to decide where to put it."
       },
-      "narration": "On day two, rescue teams arrived from the United States, along with a form. Mika started page one of six hundred."
+      "narration": "Day two: rescue teams from the United States, and a six-hundred-page form."
     },
     {
       "scene": "aftershock",
@@ -112,7 +113,7 @@
         "handle": "@StabilityCommittee",
         "text": "We have established a subcommittee to determine whether this constitutes a precedent."
       },
-      "narration": "That evening, another aftershock. A subcommittee met to decide whether it set a precedent. Mika reached page two hundred."
+      "narration": "That evening, another aftershock. Mika reached page two hundred."
     },
     {
       "scene": "home-again",
@@ -123,7 +124,7 @@
         "handle": "@BrandwellInc",
         "text": "We apologise for any inconvenience the crisis caused. The crisis was not us. Use code BACK20."
       },
-      "narration": "On day four, the trains came back, and so did Mika. The toast was exactly where she left it."
+      "narration": "Day four: the trains came back, and so did Mika. The toast was waiting."
     }
   ]
 }

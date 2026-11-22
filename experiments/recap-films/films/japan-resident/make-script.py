@@ -68,33 +68,32 @@ def main() -> int:
     shots = [
         {"scene": "home", "event_id": quake["id"], "date": format_sim_time(quake["sim_time_minutes"] - 1),
          "lower_third": f"{name.upper()} · {home.upper()}",
-         "narration": f"This is {name}. She lives in {home}. At {spoken_time(quake['sim_time_minutes'] - 1)}, "
+         "narration": f"This is {name}, in {home}. At {spoken_time(quake['sim_time_minutes'] - 1)}, "
                       "her biggest problem was the toaster."},
         {"scene": "quake", "event_id": quake["id"], "date": format_sim_time(quake["sim_time_minutes"]),
          "notification": note(quake, ("government",)),
-         "narration": f"At {spoken_time(quake['sim_time_minutes'])}, a magnitude {magnitude} earthquake struck "
-                      f"{quake['location']['name']}. Her phone already had a statement ready."},
+         "narration": f"At {spoken_time(quake['sim_time_minutes'])}, a magnitude {magnitude} earthquake. "
+                      "Her phone already had a statement ready."},
         {"scene": "warning", "event_id": warning["id"], "date": format_sim_time(warning["sim_time_minutes"]),
          "notification": note(warning, ("insurer",)),
-         "narration": "Three minutes later came a tsunami warning, and a helpful note about her insurance."},
+         "narration": "Three minutes later: a tsunami warning, plus a note about her insurance."},
         {"scene": "evacuation", "event_id": evac["id"], "date": format_sim_time(evac["sim_time_minutes"]),
          "notification": note(evac, ("airline",)),
-         "narration": f"{name} joined the walk to higher ground. Her phone offered her an upgrade."},
+         "narration": f"{name} walked to higher ground. Her phone offered an upgrade."},
         {"scene": "shelter", "event_id": outage["id"], "date": format_sim_time(outage["sim_time_minutes"]),
          "notification": note(outage, ("company",)),
-         "narration": "At the shelter, the power went out. Her phone, on four percent, suggested a candle subscription."},
+         "narration": "At the shelter, the power went out. Her phone suggested candles. Premium ones."},
         {"scene": "aid", "event_id": aid["id"], "date": format_sim_time(aid["sim_time_minutes"]),
          "notification": note(aid, ("committee",)),
-         "narration": f"On day {NUMBERS[day(aid)]}, rescue teams arrived from {country(aid['payload']['origin'])}, along with a form. "
-                      f"{name} started page one of six hundred."},
+         "narration": f"Day {NUMBERS[day(aid)]}: rescue teams from {country(aid['payload']['origin'])}, "
+                      "and a six-hundred-page form."},
         {"scene": "aftershock", "event_id": aftershock["id"], "date": format_sim_time(aftershock["sim_time_minutes"]),
          "notification": note(aftershock, ("committee",)),
-         "narration": f"That evening, another aftershock. A subcommittee met to decide whether it set a precedent. "
-                      f"{name} reached page two hundred."},
+         "narration": f"That evening, another aftershock. {name} reached page two hundred."},
         {"scene": "home-again", "event_id": recovery["id"], "date": format_sim_time(recovery["sim_time_minutes"]),
          "notification": note(recovery, ("company",)),
-         "narration": f"On day {NUMBERS[day(recovery)]}, the trains came back, and so did {name}. "
-                      "The toast was exactly where she left it."},
+         "narration": f"Day {NUMBERS[day(recovery)]}: the trains came back, and so did {name}. "
+                      "The toast was waiting."},
     ]
     for shot in shots:
         shot["narration"] = shot["narration"].replace("™", "")
@@ -105,6 +104,7 @@ def main() -> int:
         "title": f"{name}'s four days",
         "person": {"name": name, "home": home},
         "tone": args.tone,
+        "outro_seconds": 3.5,
         "disclaimer": f"Fictional simulation. {name}, every company, statement and statistic here is invented.",
         "source": {"fixture": "japan-earthquake", "layer": "worldwire.satire"},
         "stats": stats,

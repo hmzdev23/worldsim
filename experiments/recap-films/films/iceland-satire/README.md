@@ -1,6 +1,6 @@
 # Iceland satire recap (local experiment)
 
-A 57-second, 1080×1920 satirical recap of the Iceland eruption fixture, styled as an alternate-reality news broadcast. It has a WORLD//WIRE SATIRE chyron, fictional social posts, an absurdity index and a ticker. Every headline, post and number comes from `worldwire.satire` run over `services/director/fixtures/iceland-eruption.json`, so the film says exactly what the live app's Satirical tone says. Impact estimates (deaths, injuries and so on) are never used for jokes and don't appear.
+A 45-second, 1080×1920 satirical recap of the Iceland eruption fixture, styled as an alternate-reality news broadcast. It has a WORLD//WIRE SATIRE chyron, fictional social posts, an absurdity index and a ticker. Every headline, post and number comes from `worldwire.satire` run over `services/director/fixtures/iceland-eruption.json`, so the film says exactly what the live app's Satirical tone says. Impact estimates (deaths, injuries and so on) are never used for jokes and don't appear.
 
 ## Shots
 
@@ -24,6 +24,7 @@ python3 assemble.py                                 # output/iceland-satire.mp4 
 
 - **Rendering:** `render-local.mjs` drives `window.render(t)` in headless Chromium (Playwright from `apps/web`) and pipes the frames to ffmpeg. It replaces the external Lemo-Opuscar checkout for this film. Use `--still SECONDS --out frame.png` for a single frame.
 - **Three.js:** comes from `npm install three@0.170.0` in any folder outside the repo.
-- **Voice:** the narration uses the premade ElevenLabs voice "George". The key comes from `ELEVENLABS_API_KEY` or the repo's untracked `.env.local`.
+- **Voice:** the narration uses the team's chosen ElevenLabs voice `XA3P1cj7XJexe6Zq0ATX`, which is fixed in `make-audio.py`. The key comes from `ELEVENLABS_API_KEY` or the repo's untracked `.env.local`.
 - **Sound:** effects and music are reused from the Japan and Montreal films, so there are no sound-generation calls.
-- **Timing:** shot lengths are fitted to the narration (`timing.json`).
+- **Timing:** shot lengths are fitted to the narration (`timing.json`), and `make-audio.py` refuses to produce a film longer than 50 seconds.
+- **Ground:** every outdoor set stands on a ground plane that reaches the horizon, with fog, so the set never ends inside the frame. Cars face the way they drive.

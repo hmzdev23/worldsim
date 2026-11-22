@@ -59,7 +59,7 @@ def main() -> int:
     shots = [
         {"scene": "map", "event_id": "evt-0001", "date": when("evt-0001"),
          "headline": item["evt-0001"]["headline"],
-         "narration": f"Good evening. Tonight's top story: {item['evt-0001']['headline'].rstrip('.')}."},
+         "narration": f"Good evening. {item['evt-0001']['headline'].rstrip('.')}."},
         {"scene": "eruption", "event_id": "evt-0001", "date": when("evt-0001"),
          "headline": "Volcano declines to comment",
          "narration": item["evt-0001"]["dek"]},
@@ -68,22 +68,22 @@ def main() -> int:
          "narration": f"{item['evt-0002']['headline']}."},
         {"scene": "power", "event_id": "evt-0003", "date": when("evt-0003"),
          "headline": item["evt-0003"]["headline"],
-         "narration": f"{item['evt-0003']['headline']}. {item['evt-0003']['dek']}"},
+         "narration": f"{item['evt-0003']['headline']}."},
         {"scene": "airport", "event_id": "evt-0005", "date": when("evt-0005"),
          "headline": item["evt-0005"]["headline"], "post": airline,
-         "narration": f"Flights are grounded. {airline['author']} has responded with a new fare."},
+         "narration": f"Flights are grounded. {airline['author']} has a new fare."},
         {"scene": "briefing", "event_id": briefing["event_id"], "date": when(briefing["event_id"]),
          "headline": "The situation remains fluid", "post": briefing,
-         "narration": f"The {briefing['author']} held a press conference to confirm the situation remains fluid."},
+         "narration": f"The {briefing['author']} confirms the situation remains fluid."},
         {"scene": "aid", "event_id": "evt-0006", "date": when("evt-0006"),
          "headline": item["evt-0006"]["headline"], "post": committee,
          "narration": f"{item['evt-0006']['headline']}."},
         {"scene": "summary", "event_id": "evt-0008", "date": when("evt-0008"),
          "headline": item["evt-0008"]["headline"],
-         "narration": (f"After {days} days: {count(stats['committees'], 'committee')}, "
+         "narration": (f"Day {days}: {count(stats['committees'], 'committee')}, "
                        f"{count(stats['press_conferences'], 'press conference')} and "
                        f"{count(stats['apologies'], 'corporate apology').replace('apologys', 'apologies')}. "
-                       "The volcano has declined to comment.")},
+                       "The volcano declined to comment.")},
     ]
     for shot in shots:
         shot["narration"] = spoken(shot["narration"])

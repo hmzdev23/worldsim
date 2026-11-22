@@ -68,7 +68,8 @@ function aircraft(g, x, y, z, rot = 0, livery = 0xf1ede2) {
   block(p, 0, 0, 0, 2.1, .16, 8.2, 0xc9c9bf); block(p, 3.7, .35, 0, 1.8, .12, 2.8, 0xc9c9bf); block(p, 3.7, .95, 0, 1.1, 1.6, .12, 0xd7262e);
   for (let i = -3; i < 3; i += .8) block(p, i, .18, .62, .26, .22, .04, 0x415c68); return p;
 }
-const ground = (scene, c, size = 60) => block(scene, 0, -.15, 0, size, .3, size, c);
+// Ground always reaches the horizon (400 units) and fog hides where it ends.
+const ground = (scene, c) => block(scene, 0, -.15, 0, 400, .3, 400, c);
 
 // ---- scenes ----------------------------------------------------------------
 function mapScene(pullOut) {
@@ -103,7 +104,7 @@ function mapScene(pullOut) {
 
 function eruptionScene() {
   const s = new T.Scene(); sky(s, 0x37394a, 0xd9774a); lights(s, {sun: 0xffb27a, power: 1.6, ambient: 1.3}); s.fog = new T.Fog(0x8a6a5c, 25, 80);
-  ground(s, 0x3b3532, 90);
+  ground(s, 0x3b3532);
   for (let i = 0; i < 30; i++) block(s, (rand(i) - .5) * 60, .2, -10 - rand(i + 3) * 30, 2 + rand(i + 5) * 4, .4 + rand(i + 7), 2 + rand(i + 8) * 3, 0x4a423c);
   const ridge = block(s, 0, .7, -14, 22, 1.4, 2.2, 0x2e2a28);
   const fissure = block(s, 0, 1.45, -14, 21, .14, .7, glow(0xff5a1a, 2.2));
@@ -127,12 +128,17 @@ function eruptionScene() {
 }
 
 function streetScene(lightsOn = true) {
-  const s = new T.Scene(); sky(s, 0x6f8fae, 0xe7c9b0); lights(s, {power: lightsOn ? 2.4 : 1.2});
-  block(s, 0, -.14, -5, 24, .25, 44, 0x484945); block(s, -5, .03, -5, 3.2, .18, 44, 0xb9ac98); block(s, 5, .03, -5, 3.2, .18, 44, 0xb9ac98);
-  for (let z = -24; z < 14; z += 4) block(s, 0, .015, z, .1, .02, 1.8, 0xe9d1a1);
+  // Road and two building rows run 120 units into fog over a horizon-wide ground plane.
+  const s = new T.Scene(); sky(s, 0x6f8fae, 0xe7c9b0); lights(s, {power: lightsOn ? 2.4 : 1.2}); s.fog = new T.Fog(0xd9cbb6, 30, 95);
+  block(s, 0, -.3, -30, 400, .2, 400, 0x7d7a6c);
+  block(s, 0, -.14, -40, 24, .25, 130, 0x484945); block(s, -5, .03, -40, 3.2, .18, 130, 0xb9ac98); block(s, 5, .03, -40, 3.2, .18, 130, 0xb9ac98);
+  for (let z = -100; z < 22; z += 4) block(s, 0, .015, z, .1, .02, 1.8, 0xe9d1a1);
   const types = ['building-a', 'building-d', 'building-f', 'building-type-e'];
-  for (const side of [-1, 1]) for (let i = 0; i < 8; i++) s.add(model(types[(i + (side > 0)) % 4], 4 + (i % 3) * 1.6, side * 8.3, -22 + i * 4.6, side === 1 ? -Math.PI / 2 : Math.PI / 2));
-  for (let z = -18; z < 12; z += 8) { s.add(model('light-curved', 4, -3.1, z)); s.add(model('tree-small', 2.3, 3.8, z)); }
+  for (const side of [-1, 1]) for (let i = 0; i < 26; i++) {
+    s.add(model(types[(i + (side > 0)) % 4], 4 + (i % 3) * 1.6, side * 8.3, -100 + i * 4.6, side === 1 ? -Math.PI / 2 : Math.PI / 2));
+    s.add(model(types[(i + 2) % 4], 6 + (i % 4) * 1.8, side * 14, -98 + i * 4.6, side === 1 ? -Math.PI / 2 : Math.PI / 2));
+  }
+  for (let z = -90; z < 20; z += 8) { s.add(model('light-curved', 4, -3.1, z)); s.add(model('tree-small', 2.3, 3.8, z)); }
   return s;
 }
 
@@ -149,7 +155,7 @@ function evacuationScene() {
 
 function powerScene(restored) {
   const s = new T.Scene(); sky(s, restored ? 0x5d7fa6 : 0x1d2436, restored ? 0xf0c8a0 : 0x48506a); lights(s, {power: restored ? 2.2 : .7, ambient: restored ? 1.8 : .8});
-  ground(s, 0x5a5a52, 80);
+  ground(s, 0x5a5a52); s.fog = new T.Fog(restored ? 0xe6cfae : 0x3a4054, 30, 100);
   const windows = [];
   const hall = (x, z, w, h) => { block(s, x, h / 2, z, w, h, 5, 0xcfd3d4); for (let i = 0; i < Math.floor(w / 1.3); i++) for (let j = 0; j < Math.floor(h / 1.6); j++) { const win = block(s, x - w / 2 + .9 + i * 1.3, 1 + j * 1.6, z + 2.52, .7, .7, .05, glow(0xffe08a, 1.6)); windows.push(win); } };
   hall(-5, -8, 8, 5); hall(5, -10, 7, 7);
@@ -168,7 +174,7 @@ function powerScene(restored) {
 
 function airportScene() {
   const s = new T.Scene(); sky(s, 0x8d8a86, 0xc8b9a6); lights(s, {power: 1.4}); s.fog = new T.Fog(0xa29a90, 14, 55);
-  ground(s, 0x6f6e68, 90); for (let n = -4; n <= 4; n++) block(s, 0, .02, n * 5, .25, .02, 2.6, 0xf2e1bc);
+  ground(s, 0x6f6e68); for (let n = -4; n <= 4; n++) block(s, 0, .02, n * 5, .25, .02, 2.6, 0xf2e1bc);
   block(s, -2, 3, -16, 30, 6, 6, 0xc9c2b4); for (let j = 0; j < 10; j++) block(s, -15 + j * 3, 3.2, -12.95, 2.2, 2.2, .1, 0x5d7682);
   aircraft(s, -7, 2, -4, .25); aircraft(s, 4, 2, -6, -.2, 0xe8eef4); aircraft(s, 11, 2, 3, -.6);
   const board = sign(s, ['DEPARTURES', 'REYKJAVIK   CANCELLED', 'NEW YORK    CANCELLED'], -3, 7.6, -12.9, 9, 3.4, {bg: '#111', fg: '#ffd23f', size: 92, h: 384});
@@ -180,7 +186,10 @@ function airportScene() {
 
 function briefingScene() {
   const s = new T.Scene(); s.background = new T.Color(0x1c2436); lights(s, {power: 1.2, ambient: 1.4});
-  block(s, 0, -.1, 0, 30, .2, 30, 0x2c3550); block(s, 0, 5, -8, 30, 10, .3, 0x24304c);
+  // A closed briefing room: floor, four walls, ceiling.
+  block(s, 0, -.1, 2, 30, .2, 30, 0x2c3550); block(s, 0, 5, -8, 30, 10, .3, 0x24304c);
+  for (const x of [-9, 9]) block(s, x, 5, 2, .3, 10, 30, 0x24304c); block(s, 0, 5, 16, 30, 10, .3, 0x24304c).castShadow = false;
+  block(s, 0, 7, 2, 30, .2, 30, 0x1b2438).castShadow = false;
   sign(s, ['THE SITUATION', 'REMAINS FLUID'], 0, 4.4, -7.8, 7.5, 2.4, {bg: '#0f1a33', fg: '#ffffff', accent: '#ffd23f', size: 112, h: 320});
   block(s, 0, 1.3, -4, 2.6, 2.6, 1.2, 0x7a5a3a);
   sign(s, ['DEPT. OF', 'SITUATIONAL AWARENESS'], 0, 1.7, -3.38, 2.4, .9, {bg: '#f6f1e3', fg: '#0f1a33', size: 96, w: 1024});
@@ -194,7 +203,7 @@ function briefingScene() {
 
 function aidScene() {
   const s = new T.Scene(); sky(s, 0x6d92b8, 0xf0d3b0); lights(s);
-  ground(s, 0x7a776d, 80); aircraft(s, -3, 2, -6, .15);
+  ground(s, 0x7a776d); s.fog = new T.Fog(0xeed6b8, 30, 100); aircraft(s, -3, 2, -6, .15);
   for (let j = 0; j < 8; j++) block(s, -3 + (j % 4) * 1.2, .5 + Math.floor(j / 4), 1, 1, .9, 1, 0x9c7b56);
   s.add(model('delivery', 2.1, -9, 3, -Math.PI / 2));
   // The 600-page customs form, growing one page at a time.

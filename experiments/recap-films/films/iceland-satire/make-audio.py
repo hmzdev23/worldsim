@@ -18,9 +18,10 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 ROOT = next(p for p in HERE.parents if (p / "services").is_dir())
 AUDIO = HERE / "audio"
-VOICE = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")  # premade "George": dry, newsreader-like
+VOICE = "XA3P1cj7XJexe6Zq0ATX"  # the team's chosen narrator voice for every recap film
 MODEL = "eleven_multilingual_v2"
-LEAD_IN, TAIL, MIN_SHOT = 0.35, 0.9, 4.0
+LEAD_IN, TAIL, MIN_SHOT = 0.25, 0.55, 3.5
+MAX_SECONDS = 50.0  # hard cap for the whole film, outro included
 
 
 def api_key() -> str:
@@ -44,7 +45,7 @@ def duration(path: Path) -> float:
 
 def speak(text: str, key: str) -> bytes:
     body = {"text": text, "model_id": MODEL,
-            "voice_settings": {"stability": 0.7, "similarity_boost": 0.75, "speed": 1.05}}
+            "voice_settings": {"stability": 0.6, "similarity_boost": 0.75, "speed": 1.08}}
     req = urllib.request.Request(
         f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE}?output_format=mp3_44100_128",
         data=json.dumps(body).encode(), method="POST",
@@ -77,11 +78,14 @@ def main() -> int:
         length = duration(clip)
         voices.append(round(length, 3))
         cuts.append(round(cuts[-1] + max(MIN_SHOT, LEAD_IN + length + TAIL), 2))
-    timing = {"cuts": cuts, "voice_durations": voices, "lead_in": LEAD_IN, "voice_id": VOICE, "model_id": MODEL}
+    outro = float(script.get("outro_seconds", 0))
+    if cuts[-1] + outro > MAX_SECONDS:
+        raise SystemExit(f"film would run {cuts[-1] + outro:.1f}s (limit {MAX_SECONDS:.0f}s): shorten the narration in make-script.py")
+    timing = {"cuts": cuts, "outro": outro, "voice_durations": voices, "lead_in": LEAD_IN, "voice_id": VOICE, "model_id": MODEL}
     (HERE / "timing.json").write_text(json.dumps(timing, indent=2) + "\n", encoding="utf-8")
     (AUDIO / "narration-lines.json").write_text(
         json.dumps([s["narration"] for s in script["shots"]], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"total {cuts[-1]:.1f}s, cuts {cuts}")
+    print(f"total {cuts[-1] + outro:.1f}s (outro {outro}s), cuts {cuts}")
     return 0
 
 

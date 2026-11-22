@@ -87,13 +87,26 @@ function person(parent, kind, x, z, rot, shirt, clip = 'Idle', phase = 0) {
   };
   p.userData.pose(clip, 0); p.userData.clip = clip; return p;
 }
+// Every model here (people, Kenney cars, train cabs) faces local +Z. Anything that moves
+// is placed with go(): heading always follows velocity, so nothing travels backwards.
+// Speeds match the clips (about 1 unit/s walking, 2.4 running) so feet don't slide.
+const WALK = 1.0, RUN = 2.4;
+function go(obj, x0, z0, dx, dz, dist) {
+  const len = Math.hypot(dx, dz) || 1;
+  obj.position.x = x0 + dx / len * dist; obj.position.z = z0 + dz / len * dist;
+  obj.rotation.y = Math.atan2(dx, dz);
+}
 const crowdShirts = [0x5b7aa6, 0x8c5a4a, 0x4f7a5a, 0x6c6c78, 0x9a7b4f, 0x7a4f6c];
 
 // ---- sets ------------------------------------------------------------------
 function apartment(s, {morning = true} = {}) {
   const room = new T.Group(); s.add(room);
-  block(room, 0, -.05, 0, 9, .1, 8, 0xb48a60);
-  block(room, 0, 1.6, -3, 9, 3.2, .15, 0xe9ddc7); block(room, -4.4, 1.6, 0, .15, 3.2, 8, 0xdfd0b5);
+  // A closed room (floor, four walls, ceiling) so no edge of the set is ever in frame.
+  block(room, 0, -.05, 2, 9, .1, 12, 0xb48a60);
+  block(room, 0, 1.6, -3, 9, 3.2, .15, 0xe9ddc7); block(room, -4.4, 1.6, 2, .15, 3.2, 12, 0xdfd0b5);
+  block(room, 4.4, 1.6, 2, .15, 3.2, 12, 0xdfd0b5).castShadow = false; block(room, 0, 1.6, 8, 9, 3.2, .15, 0xe9ddc7).castShadow = false;
+  block(room, 0, 3.25, 2, 9, .1, 12, 0xf3ede0).castShadow = false;
+  const fill = new T.PointLight(0xfff0d8, 10, 14); fill.position.set(1, 2.8, 3); room.add(fill);
   const win = block(room, 1.6, 1.9, -2.9, 2.2, 1.3, .05, glow(morning ? 0xffd9a8 : 0x9fc9e8, morning ? .9 : .7));
   block(room, 1.6, 1.9, -2.88, .06, 1.3, .06, 0xffffff); block(room, 1.6, 1.9, -2.88, 2.2, .06, .06, 0xffffff);
   block(room, -1.6, .45, -2.55, 3, .9, .7, 0xc8b79c); block(room, -1.6, .92, -2.55, 3.05, .05, .75, 0x8a7b67);   // counter
@@ -110,18 +123,26 @@ function apartment(s, {morning = true} = {}) {
   return {room, toaster, toast, items, lamp};
 }
 
-function street(s, {cars = true} = {}) {
-  block(s, 0, -.14, -5, 24, .25, 44, 0x484945); block(s, -5, .03, -5, 3.2, .18, 44, 0xb9ac98); block(s, 5, .03, -5, 3.2, .18, 44, 0xb9ac98);
-  for (let z = -24; z < 14; z += 4) block(s, 0, .015, z, .1, .02, 1.8, 0xe9d1a1);
+function street(s, {cars = true, fog = 0xd9cbb6} = {}) {
+  // The road and two rows of buildings run 120 units into fog, over a ground plane
+  // that reaches the horizon, so the set never ends inside the frame.
+  s.fog = new T.Fog(fog, 30, 95);
+  block(s, 0, -.3, -30, 400, .2, 400, 0x7d7a6c);
+  block(s, 0, -.14, -40, 24, .25, 130, 0x484945); block(s, -5, .03, -40, 3.2, .18, 130, 0xb9ac98); block(s, 5, .03, -40, 3.2, .18, 130, 0xb9ac98);
+  for (let z = -100; z < 22; z += 4) block(s, 0, .015, z, .1, .02, 1.8, 0xe9d1a1);
   const types = ['building-a', 'building-d', 'building-f', 'building-type-e'];
-  for (const side of [-1, 1]) for (let i = 0; i < 8; i++) s.add(model(types[(i + (side > 0)) % 4], 4 + (i % 3) * 1.6, side * 8.3, -22 + i * 4.6, side === 1 ? -Math.PI / 2 : Math.PI / 2));
-  for (let z = -18; z < 12; z += 8) { s.add(model('light-curved', 4, -3.1, z)); s.add(model('tree-small', 2.3, 3.8, z)); }
-  if (cars) for (let j = 0; j < 3; j++) s.add(model('sedan', 1.4, j % 2 ? 1.6 : -1.6, -14 + j * 6, j % 2 ? 0 : Math.PI));
+  for (const side of [-1, 1]) for (let i = 0; i < 26; i++) {
+    s.add(model(types[(i + (side > 0)) % 4], 4 + (i % 3) * 1.6, side * 8.3, -100 + i * 4.6, side === 1 ? -Math.PI / 2 : Math.PI / 2));
+    s.add(model(types[(i + 2) % 4], 6 + (i % 4) * 1.8, side * 14, -98 + i * 4.6, side === 1 ? -Math.PI / 2 : Math.PI / 2));
+  }
+  for (let z = -90; z < 20; z += 8) { s.add(model('light-curved', 4, -3.1, z)); s.add(model('tree-small', 2.3, 3.8, z)); }
+  if (cars) for (let j = 0; j < 3; j++) s.add(model('sedan', 1.4, j % 2 ? 1.6 : -1.6, -14 + j * 6, j % 2 ? 0 : Math.PI));  // parked
 }
 
 function gym(s, {lit = true} = {}) {
   block(s, 0, -.05, 0, 16, .1, 14, 0xc9a57a);
   for (const x of [-7.9, 7.9]) block(s, x, 2.6, 0, .2, 5.2, 14, 0xd8d2c4); block(s, 0, 2.6, -6.9, 16, 5.2, .2, 0xd8d2c4);
+  block(s, 0, 2.6, 6.9, 16, 5.2, .2, 0xd8d2c4).castShadow = false; block(s, 0, 5.3, 0, 16, .1, 14, 0xbfb8a8).castShadow = false;  // closed hall
   block(s, 0, .012, -1, 8, .02, .08, 0xffffff); const circle = new T.Mesh(new T.RingGeometry(1.4, 1.5, 40), new T.MeshBasicMaterial({color: 0xffffff})); circle.rotation.x = -Math.PI / 2; circle.position.set(0, .02, -1); s.add(circle);
   block(s, 0, 3.6, -6.75, 1.8, 1.2, .1, 0xffffff); block(s, 0, 3.6, -6.7, .9, .6, .1, 0xd7262e); // hoop board
   const panels = []; for (let i = 0; i < 6; i++) panels.push(block(s, -5 + (i % 3) * 5, 5.1, -4 + Math.floor(i / 3) * 6, 1.6, .1, .6, glow(0xfff2d6, lit ? 1.6 : 0)));
@@ -154,9 +175,10 @@ shots.quake = () => {
     a.lamp.rotation.z = Math.sin(t * 5) * .35 * Math.max(0, 1 - t / 7);
     a.items.forEach((it, i) => { const t0 = .5 + rand(i) * 1.5; if (t > t0) { it.position.y = Math.max(.1, it.userData.y0 - 4.9 * (t - t0) ** 2); it.position.x = -4.15 + Math.min(.6, (t - t0) * .8); it.rotation.z = Math.min(1.5, (t - t0) * 3); } });
     // Mika takes cover under the table: a quick run, then she crouches there.
+    const to = [2.45, .55], dist = Math.hypot(to[0] + 1.2, to[1] + 1.75), arrive = .5 + dist / RUN;
     if (t < .5) { mika.position.set(-1.2, 0, -1.75); mika.userData.pose('Idle', t); }
-    else if (t < 1.6) { const f = (t - .5) / 1.1; mika.position.set(-1.2 + 2.4 * f, 0, -1.75 + 2 * f); mika.rotation.y = Math.atan2(2.4, 2); mika.userData.pose('Run', t); }
-    else { mika.position.set(2.45, 0, .55); mika.rotation.y = -Math.PI * .4; mika.userData.pose('Sitting', 0); }
+    else if (t < arrive) { go(mika, -1.2, -1.75, to[0] + 1.2, to[1] + 1.75, (t - .5) * RUN); mika.userData.pose('Run', t); }
+    else { mika.position.set(to[0], 0, to[1]); mika.rotation.y = -Math.PI * .4; mika.userData.pose('Sitting', 0); }
   };
   s.userData.camera = {from: [3.4, 1.7, 4.6], to: [3.6, 1.3, 3.9], look: () => [1.6, .65, -.2]};
   return s;
@@ -166,12 +188,13 @@ shots.warning = () => {
   const s = new T.Scene(); sky(s, 0x79b9dc, 0xf3d9b8); lights(s); street(s);
   const pole = block(s, 4, 3.1, -6, .15, 6.2, .15, 0x595959); const beacon = block(s, 4, 6.5, -6, .9, .5, .7, 0xb84331);
   block(s, 4, 6, -6, .7, .7, .6, 0xcea64f);
-  const mika = person(s, 'woman', -.5, -9, Math.PI, MIKA, 'Walk');
-  const others = [0, 1, 2, 3].map(i => person(s, i % 2 ? 'man' : 'woman', -3.6 + (i % 2) * 7.4, -12 - i * 2.2, Math.PI, crowdShirts[i], 'Walk', i * .4));
+  const mika = person(s, 'woman', -.5, -9, 0, MIKA, 'Walk');
+  const others = [0, 1, 2, 3].map(i => person(s, i % 2 ? 'man' : 'woman', -3.6 + (i % 2) * 7.4, -12 - i * 2.2, 0, crowdShirts[i], 'Walk', i * .4));
   s.userData.tick = (t) => {
     beacon.material.color.setHex(Math.sin(t * 9) > 0 ? 0xff3b2f : 0x7a1d18); beacon.material.emissive.setHex(Math.sin(t * 9) > 0 ? 0xff2a1a : 0); beacon.material.emissiveIntensity = 1.2;
-    mika.position.z = -9 + t * 1.4; mika.userData.pose(t > 2.5 ? 'Run' : 'Walk', t);
-    others.forEach((p, i) => { p.position.z = -12 - i * 2.2 + t * 1.5; p.userData.pose(t > 2 ? 'Run' : 'Walk', t); });
+    const along = (t0) => t < t0 ? t * WALK : t0 * WALK + (t - t0) * RUN;  // walk, then run, toward the camera
+    go(mika, -.5, -9, 0, 1, along(2.5)); mika.userData.pose(t > 2.5 ? 'Run' : 'Walk', t);
+    others.forEach((p, i) => { go(p, -3.6 + (i % 2) * 7.4, -12 - i * 2.2, 0, 1, along(2)); p.userData.pose(t > 2 ? 'Run' : 'Walk', t); });
   };
   s.userData.camera = {from: [1.6, 1.8, 2], to: [1.2, 1.7, 4.5], look: () => [mika.position.x, 1, mika.position.z]};
   return s;
@@ -184,7 +207,7 @@ shots.evacuation = () => {
   block(s, 2.6, 3, -9, .16, 6, .16, 0x555555); block(s, 5.4, 3, -9, .16, 6, .16, 0x555555);
   sign(s, ['EVACUATE IN AN', 'ORDERLY QUEUE :)', 'OFFICIAL BROCHURE · PAGE 1 OF 48'], 4, 5.6, -8.9, 4.6, 2.5, {bg: '#ffd23f', fg: '#0f1a33', size: 86, h: 420, w: 768});
   const mika = queue[3];
-  s.userData.tick = (t) => queue.forEach((p, i) => { p.position.z = 4 - i * 1.25 - t * 1.1; p.userData.pose('Walk', t); });
+  s.userData.tick = (t) => queue.forEach((p, i) => { go(p, i % 2 ? -.35 : .35, 4 - i * 1.25, 0, -1, t * WALK); p.userData.pose('Walk', t); });
   s.userData.camera = {from: [-2.2, 2.6, 7], to: [-1.6, 2.4, 2.5], look: () => [mika.position.x, 1.1, mika.position.z - 2]};
   return s;
 };
@@ -232,24 +255,33 @@ shots.aftershock = () => shelterDay(.33, .34, true, 200);
 
 shots['home-again'] = () => {
   // Two beats in one shot: the train comes back, then Mika is home with her toast.
-  const station = new T.Scene(); sky(station, 0x8ec2e6, 0xfbe3c2); lights(station);
-  block(station, 0, -.12, -5, 24, .24, 38, 0x8d8980); block(station, -3.2, .35, -5, 3.3, .7, 34, 0xc8c0ad);
-  for (const x of [-.8, .8]) block(station, x, .08, -6, .08, .12, 30, 0x948f87);
-  for (let i = 0; i < 4; i++) station.add(model('building-d', 5 + i % 2 * 1.5, 7, -16 + i * 5, -Math.PI / 2));
-  const train = model('train-electric-city-a', 2.9, 0, -26, 0); station.add(train);
-  const stationMika = person(station, 'woman', -3, -3, 0, MIKA, 'Idle'); stationMika.position.y = .7;
+  const station = new T.Scene(); sky(station, 0x8ec2e6, 0xfbe3c2); lights(station); station.fog = new T.Fog(0xe9dcc6, 30, 95);
+  block(station, 0, -.3, -30, 400, .2, 400, 0x7d7a6c);
+  block(station, 0, -.12, -30, 24, .24, 130, 0x8d8980); block(station, -3.2, .35, -30, 3.3, .7, 120, 0xc8c0ad);
+  for (const x of [-.8, .8]) block(station, x, .08, -30, .08, .12, 130, 0x948f87);
+  for (let z = -90; z < 20; z += 1.1) block(station, 0, .04, z, 1.9, .08, .18, 0x544c41);
+  for (let i = 0; i < 22; i++) { station.add(model('building-d', 5 + i % 2 * 1.5, 7, -90 + i * 5, -Math.PI / 2)); station.add(model('building-a', 6 + i % 3, -11, -88 + i * 5, Math.PI / 2)); }
+  // The cab faces +Z and drives +Z toward the platform, easing to a stop.
+  const train = model('train-electric-city-a', 2.9, 0, -30, 0); station.add(train);
+  const stationMika = person(station, 'woman', -3, -4, 0, MIKA, 'Idle'); stationMika.position.y = .7;
   const home = new T.Scene(); home.background = new T.Color(0x2a2f3a); lights(home, {power: 1.6, from: [6, 9, 8]});
-  const a = apartment(home); const mika = person(a.room, 'woman', 3.4, -1, -Math.PI / 2, MIKA, 'Walk');
-  const split = 3.2;
+  const a = apartment(home); const mika = person(a.room, 'woman', 1.6, -.2, 0, MIKA, 'Walk');
+  const split = 3.0, walkTo = [-1.2, -1.75], walkLen = Math.hypot(walkTo[0] - 1.6, walkTo[1] + .2);
   const tick = (t) => {
-    if (t < split) { train.position.z = -26 + Math.min(1, t / 2.6) ** .6 * 22; stationMika.userData.pose(t > 2.4 ? 'Walk' : 'Idle', t); return station; }
-    const u = t - split, f = Math.min(1, u / 2.2);
-    mika.position.set(3.4 - 4.6 * f, 0, -1 - .75 * f); mika.rotation.y = f < 1 ? -Math.PI / 2 - .25 : Math.PI * .92; mika.userData.pose(f < 1 ? 'Walk' : 'Idle', u);
-    const pop = Math.max(0, Math.min(1, (u - 2.6) * 4)); a.toast.forEach(tt => { tt.position.y = 1.12 + pop * .16; });
+    if (t < split) {
+      const f = Math.min(1, t / 2.2); train.position.z = -30 + (1 - (1 - f) ** 3) * 24;
+      if (t < 2.2) stationMika.userData.pose('Idle', t);
+      else { go(stationMika, -3, -4, 0, 1, (t - 2.2) * WALK); stationMika.userData.pose('Walk', t); }
+      return station;
+    }
+    const u = t - split, d = Math.min(walkLen, u * WALK);
+    if (d < walkLen) { go(mika, 1.6, -.2, walkTo[0] - 1.6, walkTo[1] + .2, d); mika.userData.pose('Walk', u); }
+    else { mika.position.set(walkTo[0], 0, walkTo[1]); mika.rotation.y = Math.PI; mika.userData.pose('Idle', u); }
+    const pop = Math.max(0, Math.min(1, (u - walkLen / WALK - .2) * 4)); a.toast.forEach(tt => { tt.position.y = 1.12 + pop * .16; });
     return home;
   };
   return {split, tick, station, home,
-    camera: (t) => t < split ? {from: [-6, 2.2, 6], to: [-5, 2, 3.5], look: [-2, 1.3, -6]} : {from: [2.8, 1.6, 4.4], to: [1.8, 1.45, 3.4], look: [-1, 1, -2]}};
+    camera: (t) => t < split ? {from: [-6.5, 2.2, 6], to: [-5.5, 2, 3.5], look: [-2, 1.3, -8]} : {from: [2.9, 1.6, 4.4], to: [2.2, 1.5, 3.6], look: [-.6, 1, -1.5]}};
 };
 
 const scenes = script.shots.map(shot => shots[shot.scene]());
@@ -262,7 +294,7 @@ $('#stats .rows').innerHTML = script.stats.map(m => `<div class="row"><span>${m.
 $('#stats p').textContent = script.disclaimer;
 
 const camera = new T.PerspectiveCamera(50, W / H, .05, 260);
-const OUTRO = 4.5;
+const OUTRO = 3.5;
 const cuts = timing.cuts, total = cuts[cuts.length - 1] + OUTRO;
 const shotParam = new URLSearchParams(location.search).get('shot');
 const selected = shotParam === null ? -1 : Number(shotParam);
