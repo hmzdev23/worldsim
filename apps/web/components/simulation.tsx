@@ -120,7 +120,7 @@ function ScenarioWorkspace() {
       : "Describe any situation, or press Enter to run the example. Every run rolls a new seed, so it never plays out the same way twice.";
 
   return <main className={`simulation-shell view-${view}`}>
-    <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span><span>WORLD<span className="wordmark-slashes">//</span>SIM</span></h1>
+    <header className="masthead"><h1 className="wordmark"><span className="brand-icon"><GlobeHemisphereWest size={20} weight="duotone" /></span><span>What if?</span></h1>
       <div className="masthead-actions">
         {view !== "home" && <button type="button" className="demo-button" disabled={busy} onClick={goHome}>New scenario</button>}
       </div>

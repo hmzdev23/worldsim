@@ -18,7 +18,7 @@ test("runs keep the straight-faced experience", async ({ page }) => {
   await page.goto("/?demo=japan");
   await expect(page.getByRole("status")).toContainText("stream connected");
   await page.getByRole("button", { name: "Play", exact: true }).click();
-  const wire = page.getByRole("region", { name: "WORLD//WIRE" });
+  const wire = page.getByRole("region", { name: "Reports" });
   await expect(wire.getByRole("button").filter({ hasText: /earthquake strikes/i })).toBeVisible();
   await expect(wire).not.toContainText("SATIRE");
   await expect(page.getByRole("region", { name: "Reactions" })).toHaveCount(0);

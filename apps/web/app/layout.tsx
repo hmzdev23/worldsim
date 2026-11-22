@@ -4,7 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import "./styles.css";
 
 export const metadata: Metadata = {
-  title: "WORLD//SIM",
+  title: "What if?",
   description: "Describe a fictional scenario and watch it play out on an interactive world map.",
 };
 

@@ -33,7 +33,7 @@ export function WorldWire({ items, loading, selectedId, onSelect }: {
   return (
     <section className="world-wire" aria-labelledby="world-wire-title">
       <div className="inspector-heading">
-        <h2 id="world-wire-title"><Broadcast size={16} aria-hidden="true" /> WORLD//WIRE</h2>
+        <h2 id="world-wire-title"><Broadcast size={16} aria-hidden="true" /> Reports</h2>
         <span className="inspector-meta">
           {items.length} {items.length === 1 ? "report" : "reports"}
         </span>
