@@ -21,19 +21,18 @@ Running the Japan earthquake demo does not require Codex or a model login.
 
 ### 3. Pick your task by name
 
-The previous Japan demo tasks are complete. The next implementation is
-split across these open issues. Check the linked live issue before coding.
+The original Japan demo tasks are complete. Follow-up work is tracked in the
+live issues; check the linked issue and #13 before coding.
 
 | Team member | Active task | Owned files |
 | --- | --- | --- |
-| Hamza | [#40 — Prominent event headline alerts](https://github.com/hmzdev23/worldsim/issues/40) | Web alert component, simulation/map integration, styles, desktop E2E |
-| Amir | [#41 — Alert-ready news copy](https://github.com/hmzdev23/worldsim/issues/41) | `services/newsroom/` and newsroom tests |
+| Hamza | Done: [#40 — Prominent event headline alerts](https://github.com/hmzdev23/worldsim/issues/40) (PR #48) | Web alert component, simulation/map integration, styles, desktop E2E |
+| Amir | Done: [#41 — Alert-ready news copy](https://github.com/hmzdev23/worldsim/issues/41) (PR #47) | `services/newsroom/` and newsroom tests |
 | Anthony | Done: [#42 — Stop clock at scenario end](https://github.com/hmzdev23/worldsim/issues/42) (PR #45). Next task TBD | `services/simulation/` and simulation tests |
 | Mathys | Done: [#43 — Non-Japan pipeline proof](https://github.com/hmzdev23/worldsim/issues/43) (PR #46) | New test-only fixtures and tests under `tests/director/` |
 
-These assignments own separate paths. Do not edit another owner's files or
-shared contracts for this work. Hamza's alert consumes the existing news item
-shape; tell the team in issue #13 before proposing any shared interface change.
+These original assignments owned separate paths. Do not edit another owner's
+files or shared contracts without coordinating in issue #13.
 
 Use this prompt for your assigned issue:
 
