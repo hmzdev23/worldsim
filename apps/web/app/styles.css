@@ -1006,3 +1006,17 @@ body:has(.view-home) { background: #101929; }
   --muted: #b7c1d1;
 }
 .view-home .sim-intro { background: #202e46; }
+
+.recap-open-button {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 5px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 650;
+  text-align: center;
+}
+.recap-open-button:hover { background: var(--raised); color: var(--text); }

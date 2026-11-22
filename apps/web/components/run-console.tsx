@@ -147,6 +147,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   const [film, setFilm] = useState<{ status: "idle" | "queued" | "generating" | "ready" | "failed"; stage: string; videoUrl?: string; message?: string }>({ status: "idle", stage: "idle" });
   const [filmOpen, setFilmOpen] = useState(false);
   const [filmDismissed, setFilmDismissed] = useState(false);
+  const [runCompleted, setRunCompleted] = useState(false);
   const [autoFollow, setAutoFollow] = useState(true);
   const [followSuspended, setFollowSuspended] = useState(false);
   const [manualSerial, setManualSerial] = useState(0);
@@ -244,8 +245,11 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
   }, [run.id, story, tone, isDemo]);
 
   useEffect(() => {
-    if (story && atEnd && events.queue.length === 0 && film.status !== "idle" && !filmDismissed) setFilmOpen(true);
-  }, [story, atEnd, events.queue.length, film.status, filmDismissed]);
+    if (story && !isDemo && atEnd && events.queue.length === 0) setRunCompleted(true);
+  }, [story, isDemo, atEnd, events.queue.length]);
+  useEffect(() => {
+    if (runCompleted && film.status !== "idle" && !filmDismissed) setFilmOpen(true);
+  }, [runCompleted, film.status, filmDismissed]);
   useEffect(() => {
     if (story) document.querySelector(".workspace")?.scrollIntoView({block: "start"});
   }, [run.id]);
@@ -469,7 +473,7 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
         />
       </WorldMap>
 
-      {filmOpen && story && atEnd && events.queue.length === 0 && (
+      {filmOpen && runCompleted && (
         <div className="recap-modal-backdrop" role="presentation">
           <section className="recap-modal" role="dialog" aria-modal="true" aria-labelledby="recap-modal-title">
             <button className="recap-modal-close" type="button" onClick={() => { setFilmOpen(false); setFilmDismissed(true); }} aria-label="Close recap">×</button>
@@ -507,6 +511,9 @@ export function RunConsole({ run, isDemo, tone = "straight", autoStart = false, 
           <button className="focus-button" type="button" onClick={focusFirstEvent}>
             <Crosshair size={16} aria-hidden="true" /> {firstPlace}
           </button>
+          {runCompleted && <button className="recap-open-button" type="button" onClick={() => setFilmOpen(true)}>
+            Watch recap video
+          </button>}
         </div>
         {satire && <AbsurdityIndex metrics={satire.absurdity} />}
         <WorldWire items={[...reports.values()].filter(item => !headlineIds || headlineIds.has(item.event_id)).reverse()} loading={newsLoading || Boolean(satire?.loading && satire.items.size === 0)}
